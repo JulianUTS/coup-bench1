@@ -7,46 +7,33 @@ public class Player {
 
     private final String id;
     private final String name;
-    private int coins;
+    private int coins = 2;
     private final List<Card> cards = new ArrayList<>();
 
     public Player(String id, String name) {
         this.id = id;
         this.name = name;
-        this.coins = 2; // Coup starting coins
     }
 
-    public String getId() {
-        return id;
-    }
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public int getCoins() { return coins; }
+    public List<Card> getCards() { return cards; }
 
-    public String getName() {
-        return name;
-    }
+    public void addCoins(int amount) { coins += amount; }
+    public void removeCoins(int amount) { coins = Math.max(0, coins - amount); }
 
-    public int getCoins() {
-        return coins;
-    }
-
-    public void addCoins(int amount) {
-        coins += amount;
-    }
-
-    public void removeCoins(int amount) {
-        coins -= amount;
-        if (coins < 0) coins = 0;
-    }
-
-    public List<Card> getCards() {
-        return cards;
-    }
+    public void addCard(Card card) { cards.add(card); }
 
     public boolean isAlive() {
         return cards.stream().anyMatch(c -> !c.isRevealed());
     }
 
-    public void addCard(Card card) {
-        cards.add(card);
+    public void revealAny() {
+        cards.stream()
+                .filter(c -> !c.isRevealed())
+                .findFirst()
+                .ifPresent(Card::reveal);
     }
 
     public void revealCard(CardType type) {

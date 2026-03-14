@@ -16,26 +16,35 @@ public class Game {
     private String actingPlayerId;
     private String targetPlayerId;
 
+    private String blockingPlayerId;
+    private CardType blockingRole;
+    private String challengerId;
+
     public Game(String id) {
         this.id = id;
     }
 
-    public String getId() {
-        return id;
-    }
+    public String getId() { return id; }
+    public List<Player> getPlayers() { return players; }
+    public GameState getState() { return state; }
+    public void setState(GameState state) { this.state = state; }
 
-    public List<Player> getPlayers() {
-        return players;
-    }
+    public ActionType getDeclaredAction() { return declaredAction; }
+    public String getActingPlayerId() { return actingPlayerId; }
+    public String getTargetPlayerId() { return targetPlayerId; }
 
-    public GameState getState() {
-        return state;
-    }
+    public String getBlockingPlayerId() { return blockingPlayerId; }
+    public void setBlockingPlayerId(String id) { this.blockingPlayerId = id; }
+
+    public CardType getBlockingRole() { return blockingRole; }
+    public void setBlockingRole(CardType role) { this.blockingRole = role; }
+
+    public String getChallengerId() { return challengerId; }
+    public void setChallengerId(String id) { this.challengerId = id; }
 
     public void addPlayer(Player player) {
         if (state != GameState.WAITING_FOR_PLAYERS)
             throw new IllegalStateException("Game already started");
-
         players.add(player);
     }
 
@@ -70,24 +79,34 @@ public class Game {
     }
 
     public void nextTurn() {
+        if (players.stream().filter(Player::isAlive).count() <= 1) {
+            state = GameState.FINISHED;
+            return;
+        }
         do {
             currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
         } while (!players.get(currentPlayerIndex).isAlive());
     }
 
-    public Card drawCard() {
-        return deck.pop();
-    }
+    public Card drawCard() { return deck.pop(); }
+    public void discard(Card card) { discardPile.add(card); }
 
-    public void discard(Card card) {
-        discardPile.add(card);
+    public Player getPlayer(String id) {
+        return players.stream()
+                .filter(p -> p.getId().equals(id))
+                .findFirst()
+                .orElseThrow();
     }
 
     public void declareAction(String playerId, ActionType action, String targetId) {
+        if (!getCurrentPlayer().getId().equals(playerId))
+            throw new IllegalStateException("Not your turn");
         this.actingPlayerId = playerId;
         this.declaredAction = action;
         this.targetPlayerId = targetId;
+        this.blockingPlayerId = null;
+        this.blockingRole = null;
+        this.challengerId = null;
         this.state = GameState.ACTION_DECLARED;
     }
 }
-
