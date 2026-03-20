@@ -26,23 +26,18 @@ public class AiTestController {
     @GetMapping("/test")
     public AiDecision getAiDecision() {
 
-        // Get a test game snapshot
         var snapshot = coupTestService.playTestGame();
 
-        // Choose the first player as the AI-controlled player
         Player player = snapshot.players().get(0);
 
-        // Everyone else is an opponent
         List<Player> opponents = snapshot.players().subList(1, snapshot.players().size());
 
-        // Build the AI prompt
         String prompt = aiPromptBuilder.buildExplanationPrompt(
                 player,
                 opponents,
                 snapshot.state()
         );
 
-        // Call the AI model
         return chatClient
                 .prompt(prompt)
                 .call()
