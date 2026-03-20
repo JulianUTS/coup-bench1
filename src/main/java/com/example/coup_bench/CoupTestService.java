@@ -14,8 +14,8 @@ public class CoupTestService {
     public CoupTestSnapshot playTestGame() {
 
         // Create players
-        Player p1 = new Player("p1", "Alice");
-        Player p2 = new Player("p2", "Bob");
+        Player p1 = new Player("p1", "Julian");
+        Player p2 = new Player("p2", "GPT");
 
         // Give them cards
         p1.addCard(new Card(CardType.DUKE));
@@ -26,12 +26,12 @@ public class CoupTestService {
 
         // Simulate a simple action
         p1.addCoins(1);
-        String action = "Alice takes income (+1 coin)";
+        String action = "Julian takes income (+1 coin)";
 
         return new CoupTestSnapshot(
                 GameState.IN_PROGRESS,
                 List.of(p1, p2),
-                "p2",          // Bob's turn next
+                "p2",
                 action
         );
     }
