@@ -6,29 +6,27 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/prompt")
-public class TestController {
+public class AiTestController {
     private final ChatClient chatClient;
-    private final PromptBuilder promptBuilder;
+    private final AiPromptBuilder aiPromptBuilder;
 
 
-    public TestController(ChatClient chatClient, PromptBuilder promptBuilder) {
+    public AiTestController(ChatClient chatClient, AiPromptBuilder aiPromptBuilder) {
         this.chatClient = chatClient;
-        this.promptBuilder = promptBuilder;
+        this.aiPromptBuilder = aiPromptBuilder;
     }
 
     @GetMapping(path = "/test")
-    public TestResult generate(
+    public AiTestResult generate(
             @RequestParam String topic
     ) {
-        String prompt = promptBuilder.buildExplanationPrompt(topic);
+        String prompt = aiPromptBuilder.buildExplanationPrompt(topic);
         return chatClient
                 .prompt(prompt)
                 .call()
-                .entity(TestResult.class);
+                .entity(AiTestResult.class);
     }
 }
 

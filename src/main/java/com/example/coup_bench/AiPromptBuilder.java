@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 
 @Service
-public class PromptBuilder {
+public class AiPromptBuilder {
 
     public String buildExplanationPrompt(String topic) {
         PromptTemplate template = new PromptTemplate("""
