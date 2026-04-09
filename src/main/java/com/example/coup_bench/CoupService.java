@@ -130,30 +130,78 @@ public class CoupService {
                 ? game.getPlayer(game.getTargetPlayerId())
                 : null;
 
+        // --- APPLY ACTION EFFECTS ---
         switch (action) {
-            case INCOME -> actor.addCoins(1);
-            case FOREIGN_AID -> actor.addCoins(2);
-            case TAX -> actor.addCoins(3);
+            case INCOME -> {
+                actor.addCoins(1);
+                game.logAction(new ActionRecord(
+                        actor.getId(), action, null,
+                        actor.getName() + " gains 1 coin (INCOME)"
+                ));
+            }
+
+            case FOREIGN_AID -> {
+                actor.addCoins(2);
+                game.logAction(new ActionRecord(
+                        actor.getId(), action, null,
+                        actor.getName() + " gains 2 coins (FOREIGN AID)"
+                ));
+            }
+
+            case TAX -> {
+                actor.addCoins(3);
+                game.logAction(new ActionRecord(
+                        actor.getId(), action, null,
+                        actor.getName() + " gains 3 coins (DUKE TAX)"
+                ));
+            }
+
             case STEAL -> {
                 int stolen = Math.min(2, target.getCoins());
                 target.removeCoins(stolen);
                 actor.addCoins(stolen);
+
+                game.logAction(new ActionRecord(
+                        actor.getId(), action, target.getId(),
+                        actor.getName() + " steals " + stolen + " coins from " + target.getName()
+                ));
             }
+
             case ASSASSINATE -> {
                 actor.removeCoins(3);
                 if (target != null) target.revealAny();
+
+                game.logAction(new ActionRecord(
+                        actor.getId(), action, target.getId(),
+                        actor.getName() + " assassinates " + target.getName()
+                ));
             }
+
             case COUP -> {
                 actor.removeCoins(7);
                 if (target != null) target.revealAny();
+
+                game.logAction(new ActionRecord(
+                        actor.getId(), action, target.getId(),
+                        actor.getName() + " coups " + target.getName()
+                ));
             }
+
             case EXCHANGE -> {
-                // Minimal: draw 2 and keep them all; real game would let player choose
-                actor.addCard(game.drawCard());
-                actor.addCard(game.drawCard());
+                // Minimal version: draw 2 cards and keep both
+                Card c1 = game.drawCard();
+                Card c2 = game.drawCard();
+                actor.addCard(c1);
+                actor.addCard(c2);
+
+                game.logAction(new ActionRecord(
+                        actor.getId(), action, null,
+                        actor.getName() + " exchanges cards"
+                ));
             }
         }
 
+        // --- NEXT TURN ---
         game.nextTurn();
         if (game.getState() != GameState.FINISHED) {
             game.setState(GameState.IN_PROGRESS);
@@ -162,6 +210,8 @@ public class CoupService {
         repo.save(game);
         return game;
     }
+
+
 
     private CardType roleForAction(ActionType action) {
         return switch (action) {
