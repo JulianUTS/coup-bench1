@@ -1,4 +1,4 @@
-package com.example.coup_bench;
+package com.example.coup_bench.old;
 
 import com.example.coup_bench.model.GameState;
 import com.example.coup_bench.model.Player;

@@ -1,4 +1,4 @@
-package com.example.coup_bench;
+package com.example.coup_bench.old;
 
 public record AiTestResult(
         String line1,
