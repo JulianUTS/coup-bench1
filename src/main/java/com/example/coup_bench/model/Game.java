@@ -8,6 +8,7 @@ public class Game {
     private final List<Player> players = new ArrayList<>();
     private final Deque<Card> deck = new ArrayDeque<>();
     private final List<Card> discardPile = new ArrayList<>();
+    private final List<ActionRecord> actionLog = new ArrayList<>();
 
     private int currentPlayerIndex = 0;
     private GameState state = GameState.WAITING_FOR_PLAYERS;
@@ -24,6 +25,12 @@ public class Game {
         this.id = id;
     }
 
+    public List<ActionRecord> getActionLog() {
+        return actionLog;
+    }
+    public void logAction(ActionRecord record) {
+        actionLog.add(record);
+    }
     public String getId() { return id; }
     public List<Player> getPlayers() { return players; }
     public GameState getState() { return state; }
