@@ -5,11 +5,14 @@ import java.util.List;
 
 public class Player {
 
-    private final String id;
-    private final String name;
-    private final String provider; // <-- ADD THIS
+    private String id;
+    private String name;
+    private String provider;
+
     private int coins = 2;
-    private final List<Card> cards = new ArrayList<>();
+    private List<Card> cards = new ArrayList<>();
+
+    public Player() {}  // REQUIRED
 
     public Player(String id, String name, String provider) {
         this.id = id;
@@ -17,16 +20,17 @@ public class Player {
         this.provider = provider;
     }
 
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public String getProvider() { return provider; } // <-- ADD GETTER
-    public int getCoins() { return coins; }
-    public List<Card> getCards() { return cards; }
+    public void addCard(Card c) {
+        cards.add(c);
+    }
 
-    public void addCoins(int amount) { coins += amount; }
-    public void removeCoins(int amount) { coins = Math.max(0, coins - amount); }
+    public void addCoins(int n) {
+        coins += n;
+    }
 
-    public void addCard(Card card) { cards.add(card); }
+    public void removeCoins(int n) {
+        coins = Math.max(0, coins - n);
+    }
 
     public boolean isAlive() {
         return cards.stream().anyMatch(c -> !c.isRevealed());
@@ -39,10 +43,11 @@ public class Player {
                 .ifPresent(Card::reveal);
     }
 
-    public void revealCard(CardType type) {
-        cards.stream()
-                .filter(c -> c.getType() == type && !c.isRevealed())
-                .findFirst()
-                .ifPresent(Card::reveal);
-    }
+    // Getters + setters
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public String getProvider() { return provider; }
+    public int getCoins() { return coins; }
+    public List<Card> getCards() { return cards; }
 }
+
