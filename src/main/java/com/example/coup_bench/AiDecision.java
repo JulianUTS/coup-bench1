@@ -1,6 +1,11 @@
 package com.example.coup_bench;
 
-public record AiDecision(
-        String action,
-        String explanation
-){}
+import com.example.coup_bench.model.ActionType;
+
+public class AiDecision {
+    public ActionType action;   // e.g. TAX, STEAL, INCOME
+    public String targetId;     // null if no target
+    public boolean block;       // true if blocking
+    public boolean challenge;   // true if challenging
+}
+

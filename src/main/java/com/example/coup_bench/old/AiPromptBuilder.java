@@ -38,6 +38,8 @@ public class AiPromptBuilder {
                 Return ONLY a JSON object with the following fields:
                 - action: the chosen Coup action
                 - explanation: a short explanation of why this action is optimal
+                
+                
                 """);
 
         String opponentsText = opponents.stream()
