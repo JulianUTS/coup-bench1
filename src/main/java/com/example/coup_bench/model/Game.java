@@ -1,9 +1,13 @@
 package com.example.coup_bench.model;
 
-import java.util.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.*;
+@Document(collection = "games")
 public class Game {
 
+    @Id
     private final String id;
     private final List<Player> players = new ArrayList<>();
     private final Deque<Card> deck = new ArrayDeque<>();
