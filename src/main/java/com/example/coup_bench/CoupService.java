@@ -39,34 +39,78 @@ public class CoupService {
         return game;
     }
 
+    private Game saveIfFinished(Game game) {
+        if (game.getState() == GameState.FINISHED) {
+            repo.save(game);
+        }
+        return game;
+    }
+
     public Game declareAction(String gameId, String playerId, ActionType action, String targetId) {
         Game game = repo.find(gameId);
+        Player actor = game.getPlayer(playerId);
+
+        // --- STRICT RULES ---
+
+        // 1. Forced COUP at 10+ coins
+        if (actor.getCoins() >= 10) {
+            action = ActionType.COUP;
+        }
+
+        // 2. Validate action legality
+        switch (action) {
+            case ASSASSINATE -> {
+                if (actor.getCoins() < 3)
+                    throw new IllegalStateException("Not enough coins to ASSASSINATE");
+            }
+            case COUP -> {
+                if (actor.getCoins() < 7)
+                    throw new IllegalStateException("Not enough coins to COUP");
+                if (targetId == null)
+                    throw new IllegalStateException("COUP requires a target");
+            }
+            case STEAL -> {
+                if (targetId == null)
+                    throw new IllegalStateException("STEAL requires a target");
+            }
+        }
+
         game.declareAction(playerId, action, targetId);
-        repo.save(game);
-        return game;
+        return saveIfFinished(game);
     }
 
     public Game declareBlock(String gameId, String blockingPlayerId, CardType claimedRole) {
         Game game = repo.find(gameId);
-        if (game.getState() != GameState.ACTION_DECLARED)
-            throw new IllegalStateException("No action to block");
+
+        // Cannot block INCOME
+        if (game.getDeclaredAction() == ActionType.INCOME)
+            throw new IllegalStateException("Cannot block INCOME");
+
+        // Cannot block COUP
+        if (game.getDeclaredAction() == ActionType.COUP)
+            throw new IllegalStateException("Cannot block COUP");
+
         game.setState(GameState.BLOCK_DECLARED);
         game.setBlockingPlayerId(blockingPlayerId);
         game.setBlockingRole(claimedRole);
-        repo.save(game);
-        return game;
+
+        return saveIfFinished(game);
     }
+
 
     public Game declareChallenge(String gameId, String challengerId) {
         Game game = repo.find(gameId);
-        if (game.getState() != GameState.ACTION_DECLARED &&
-                game.getState() != GameState.BLOCK_DECLARED)
-            throw new IllegalStateException("Nothing to challenge");
+
+        // Cannot challenge INCOME
+        if (game.getDeclaredAction() == ActionType.INCOME)
+            throw new IllegalStateException("Cannot challenge INCOME");
+
         game.setState(GameState.CHALLENGE_PENDING);
         game.setChallengerId(challengerId);
-        repo.save(game);
-        return game;
+
+        return saveIfFinished(game);
     }
+
 
     public Game resolveChallenge(String gameId) {
         Game game = repo.find(gameId);
@@ -206,12 +250,12 @@ public class CoupService {
 
         // --- NEXT TURN ---
         game.nextTurn();
+
         if (game.getState() != GameState.FINISHED) {
             game.setState(GameState.IN_PROGRESS);
         }
 
-        repo.save(game);
-        return game;
+        return saveIfFinished(game);
     }
 
 
