@@ -2,9 +2,9 @@ package com.example.coup_bench;
 
 import com.example.coup_bench.AiServices.MultiModelRouter;
 import com.example.coup_bench.model.ActionType;
+import com.example.coup_bench.model.AiDecision;
 import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.Player;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
@@ -57,45 +57,110 @@ public class AiDecisionService {
 
 
     private String buildPrompt(Game game, Player player) {
+        String aggressiveRules = """
+                ### PERSONALITY — AGGRESSIVE
+                - You prefer high‑impact actions.
+                - You prioritize COUP, ASSASSINATE, STEAL, and TAX.
+                - You rarely choose INCOME unless forced.
+                - You frequently challenge opponents.
+                - You block aggressively whenever possible.
+                """;
+
+        String defensiveRules = """
+                ### PERSONALITY — DEFENSIVE
+                - You avoid unnecessary risks.
+                - You rarely challenge unless confident.
+                - You block only when safe.
+                - You prefer TAX, INCOME, and EXCHANGE.
+                - You avoid STEAL unless advantageous.
+                """;
+
+        String chaoticRules = """
+                ### PERSONALITY — CHAOTIC
+                - You choose actions unpredictably.
+                - You challenge frequently.
+                - You block aggressively even when risky.
+                - You may choose EXCHANGE or STEAL unexpectedly.
+                """;
+
+        String personalityRules = switch (player.getPersonality()) {
+            case "aggressive" -> aggressiveRules;
+            case "defensive" -> defensiveRules;
+            case "chaotic" -> chaoticRules;
+            default -> "";
+        };
 
         return """
-        You are an AI agent playing Coup.
-
-        Your ID: %s
-        Your coins: %d
-        Your cards: %s
-        Alive: %s
-
-        Other players:
-        %s
-
-        Game state: %s
-        Declared action: %s
-        Acting player: %s
-        Blocking player: %s
-        Challenger: %s
-
-        Respond ONLY in JSON:
-        {
-          "action": "INCOME | FOREIGN_AID | TAX | STEAL | ASSASSINATE | COUP | EXCHANGE | null",
-          "targetId": "player-id-or-null",
-          "block": true/false,
-          "challenge": true/false
-        }
-        
-        Respond with ONLY valid JSON.
-        Do NOT include backticks.
-        Do NOT include markdown.
-        Do NOT include explanations.
-        Do NOT include code blocks.
-        If you cannot decide, output exactly:
-        {"action":"INCOME","targetId":null,"block":false,"challenge":false}
-        
-        Never output "null" as a string.
-        If you do not want to take an action, output:
-        "action": null
-     
-        """.formatted(
+                You are an AI agent playing Coup.
+                Your playstyle: %s
+                
+                ### GAME INFO
+                Your ID: %s
+                Your coins: %d
+                Your cards: %s
+                Alive: %s
+                
+                Other players:
+                %s
+                
+                Game state: %s
+                Declared action: %s
+                Acting player: %s
+                Blocking player: %s
+                Challenger: %s
+                
+                ### ACTION RULES
+                - If it is YOUR turn:
+                    - If you have 10 or more coins, you MUST choose:
+                        "action": "COUP"
+                        "targetId": the ID of any other alive player
+                        "block": false
+                        "challenge": false
+                    - Otherwise choose exactly ONE of the 7 valid actions.
+                    - Set block = false and challenge = false.
+                
+                - If it is NOT your turn (someone else declared an action):
+                    - Ignore the "action" field.
+                    - Always set:
+                        "action": "INCOME"
+                        "targetId": null
+                    - Decide ONLY whether to block or challenge.
+                    - If the declared action is INCOME, you MUST set:
+                        "block": false
+                        "challenge": false
+                
+                ### VALID ACTIONS
+                INCOME, FOREIGN_AID, TAX, STEAL, ASSASSINATE, COUP, EXCHANGE
+                
+                ### JSON SCHEMA (FOLLOW EXACTLY)
+                {
+                  "action": "INCOME" | "FOREIGN_AID" | "TAX" | "STEAL" | "ASSASSINATE" | "COUP" | "EXCHANGE",
+                  "targetId": string | null,
+                  "block": boolean,
+                  "challenge": boolean,
+                  "reason": string
+                }
+                
+                ### EXPLANATION RULES
+                - "reason" MUST be a short explanation (max 12 words).
+                - No markdown, no quotes, no special characters.
+                - Explanation MUST reflect your personality.
+                
+                ### OUTPUT RULES
+                - Respond with ONLY the JSON object.
+                - No markdown, no backticks, no text outside JSON.
+                - Never output the string "null". Use actual null for targetId only.
+                - All fields MUST be present.
+                - Never output missing or extra fields.
+                - Never output lowercase action names.
+                
+                ### FALLBACK
+                If you cannot decide, output:
+                {"action":"INCOME","targetId":null,"block":false,"challenge":false,"reason":"fallback"}
+                
+                %s
+                """.formatted(
+                player.getPersonality(),
                 player.getId(),
                 player.getCoins(),
                 player.getCards().stream().map(c -> c.getType().name()).toList(),
@@ -108,7 +173,8 @@ public class AiDecisionService {
                 game.getDeclaredAction(),
                 game.getActingPlayerId(),
                 game.getBlockingPlayerId(),
-                game.getChallengerId()
+                game.getChallengerId(),
+                personalityRules
         );
     }
 }

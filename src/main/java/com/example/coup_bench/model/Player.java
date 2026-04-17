@@ -7,17 +7,20 @@ public class Player {
 
     private final String id;
     private final String provider; // <-- ADD THIS
+    private final String personality;
     private int coins = 2;
     private final List<Card> cards = new ArrayList<>();
 
 
-    public Player(String id, String provider) {
+    public Player(String id, String provider, String personality) {
         this.id = id;
         this.provider = provider;
+        this.personality = personality;
     }
 
     public String getId() { return id; }
-    public String getProvider() { return provider; } // <-- ADD GETTER
+    public String getProvider() { return provider; }
+    public String getPersonality() { return personality; }// <-- ADD GETTER
     public int getCoins() { return coins; }
     public List<Card> getCards() { return cards; }
 

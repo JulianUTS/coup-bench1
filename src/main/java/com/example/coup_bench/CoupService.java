@@ -25,9 +25,9 @@ public class CoupService {
         return repo.find(gameId);
     }
 
-    public Game joinGame(String gameId, String playerId, String name, String provider) {
+    public Game joinGame(String gameId, String playerId, String provider, String personality) {
         Game game = repo.find(gameId);
-        game.addPlayer(new Player(playerId, provider));
+        game.addPlayer(new Player(playerId, provider, personality));
         repo.save(game);
         return game;
     }

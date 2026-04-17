@@ -22,8 +22,8 @@ public class AiGameController {
 
         Game game = coup.createGame();
 
-        coup.joinGame(game.getId(), "p1", "Alice", "openai");
-        coup.joinGame(game.getId(), "p2", "Bob", "claude");
+        coup.joinGame(game.getId(), "p1" , "openai", "aggressive");
+        coup.joinGame(game.getId(), "p2", "claude", "defensive");
 
         coup.startGame(game.getId());
 
