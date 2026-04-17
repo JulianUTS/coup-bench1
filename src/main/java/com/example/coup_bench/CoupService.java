@@ -27,7 +27,7 @@ public class CoupService {
 
     public Game joinGame(String gameId, String playerId, String name, String provider) {
         Game game = repo.find(gameId);
-        game.addPlayer(new Player(playerId, name, provider));
+        game.addPlayer(new Player(playerId, provider));
         repo.save(game);
         return game;
     }
@@ -174,8 +174,8 @@ public class CoupService {
                 ? game.getPlayer(game.getTargetPlayerId())
                 : null;
 
-        System.out.println("[ACTION TAKEN] " + actor.getName() + " performs " + action +
-                (target != null ? " on " + target.getName() : ""));
+        System.out.println("[ACTION TAKEN] " + actor.getId() + " performs " + action +
+                (target != null ? " on " + target.getId() : ""));
 
         // --- APPLY ACTION EFFECTS ---
         switch (action) {
@@ -183,7 +183,7 @@ public class CoupService {
                 actor.addCoins(1);
                 game.logAction(new ActionRecord(
                         actor.getId(), action, null,
-                        actor.getName() + " gains 1 coin (INCOME)"
+                        actor.getId() + " gains 1 coin (INCOME)"
                 ));
             }
 
@@ -191,7 +191,7 @@ public class CoupService {
                 actor.addCoins(2);
                 game.logAction(new ActionRecord(
                         actor.getId(), action, null,
-                        actor.getName() + " gains 2 coins (FOREIGN AID)"
+                        actor.getId() + " gains 2 coins (FOREIGN AID)"
                 ));
             }
 
@@ -199,7 +199,7 @@ public class CoupService {
                 actor.addCoins(3);
                 game.logAction(new ActionRecord(
                         actor.getId(), action, null,
-                        actor.getName() + " gains 3 coins (DUKE TAX)"
+                        actor.getId() + " gains 3 coins (DUKE TAX)"
                 ));
             }
 
@@ -210,7 +210,7 @@ public class CoupService {
 
                 game.logAction(new ActionRecord(
                         actor.getId(), action, target.getId(),
-                        actor.getName() + " steals " + stolen + " coins from " + target.getName()
+                        actor.getId() + " steals " + stolen + " coins from " + target.getId()
                 ));
             }
 
@@ -220,7 +220,7 @@ public class CoupService {
 
                 game.logAction(new ActionRecord(
                         actor.getId(), action, target.getId(),
-                        actor.getName() + " assassinates " + target.getName()
+                        actor.getId() + " assassinates " + target.getId()
                 ));
             }
 
@@ -230,7 +230,7 @@ public class CoupService {
 
                 game.logAction(new ActionRecord(
                         actor.getId(), action, target.getId(),
-                        actor.getName() + " coups " + target.getName()
+                        actor.getId() + " coups " + target.getId()
                 ));
             }
 
@@ -243,7 +243,7 @@ public class CoupService {
 
                 game.logAction(new ActionRecord(
                         actor.getId(), action, null,
-                        actor.getName() + " exchanges cards"
+                        actor.getId() + " exchanges cards"
                 ));
             }
         }

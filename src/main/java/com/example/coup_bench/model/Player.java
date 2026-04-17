@@ -6,19 +6,17 @@ import java.util.List;
 public class Player {
 
     private final String id;
-    private final String name;
     private final String provider; // <-- ADD THIS
     private int coins = 2;
     private final List<Card> cards = new ArrayList<>();
 
-    public Player(String id, String name, String provider) {
+
+    public Player(String id, String provider) {
         this.id = id;
-        this.name = name;
         this.provider = provider;
     }
 
     public String getId() { return id; }
-    public String getName() { return name; }
     public String getProvider() { return provider; } // <-- ADD GETTER
     public int getCoins() { return coins; }
     public List<Card> getCards() { return cards; }
