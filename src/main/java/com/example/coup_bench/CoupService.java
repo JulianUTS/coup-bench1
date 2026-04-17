@@ -130,6 +130,9 @@ public class CoupService {
                 ? game.getPlayer(game.getTargetPlayerId())
                 : null;
 
+        System.out.println("[ACTION TAKEN] " + actor.getName() + " performs " + action +
+                (target != null ? " on " + target.getName() : ""));
+
         // --- APPLY ACTION EFFECTS ---
         switch (action) {
             case INCOME -> {

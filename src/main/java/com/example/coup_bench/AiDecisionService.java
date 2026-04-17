@@ -22,6 +22,8 @@ public class AiDecisionService {
 
         String prompt = buildPrompt(game, player);
         String response = router.ask(player.getProvider(), prompt);
+        System.out.println(prompt);
+        System.out.println("[RAW AI OUTPUT] " + response);
         String cleaned = response
                 .trim()
                 .replace("```json", "")
