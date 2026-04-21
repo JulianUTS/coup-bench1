@@ -7,6 +7,10 @@ import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.Player;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
+import com.example.coup_bench.model.CardType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class AiDecisionService {
@@ -22,8 +26,9 @@ public class AiDecisionService {
 
         String prompt = buildPrompt(game, player);
         String response = router.ask(player.getProvider(), prompt);
-        System.out.println(prompt);
-        System.out.println("[RAW AI OUTPUT] " + response);
+
+        System.out.println("[" + player.getId() + "] " + response);
+
         String cleaned = response
                 .trim()
                 .replace("```json", "")
@@ -55,8 +60,7 @@ public class AiDecisionService {
 
     }
 
-
-    private String buildPrompt(Game game, Player player) {
+    private String personalityPrompt( String personality ) {
         String aggressiveRules = """
                 ### PERSONALITY — AGGRESSIVE
                 - You prefer high‑impact actions.
@@ -83,12 +87,43 @@ public class AiDecisionService {
                 - You may choose EXCHANGE or STEAL unexpectedly.
                 """;
 
-        String personalityRules = switch (player.getPersonality()) {
+        return  (switch (personality) {
             case "aggressive" -> aggressiveRules;
             case "defensive" -> defensiveRules;
             case "chaotic" -> chaoticRules;
             default -> "";
-        };
+        });
+    }
+
+    private List<String> allowedActions( Player player){
+        List<String> allowedActions = new ArrayList<>();
+        allowedActions.add("INCOME");
+        allowedActions.add("FOREIGN_AID");
+        allowedActions.add("TAX");
+        allowedActions.add("STEAL");
+        allowedActions.add("ASSASSINATE");
+        allowedActions.add("EXCHANGE");
+        if (player.getCoins() >= 7) {
+            allowedActions.add("COUP");
+        }
+
+        if (player.getCoins() >= 10) {
+            allowedActions.clear();
+            allowedActions.add("COUP");
+        }
+        return allowedActions;
+    }
+
+    private String buildPrompt(Game game, Player player) {
+
+        String personalityRules = personalityPrompt(player.getPersonality());
+
+        List<String> allowedActions = allowedActions(player);
+        String memoryText = String.join("\n", player.getMemory().history);
+
+
+        System.out.println(memoryText);
+
 
         return """
                 You are an AI agent playing Coup.
@@ -98,7 +133,9 @@ public class AiDecisionService {
                 Your ID: %s
                 Your coins: %d
                 Your cards: %s
-                Alive: %s
+                
+                ### MEMORY
+                %s
                 
                 Other players:
                 %s
@@ -109,6 +146,15 @@ public class AiDecisionService {
                 Blocking player: %s
                 Challenger: %s
                 
+                ### COUP RULES
+                - You may ONLY choose COUP if you have 7 or more coins.
+                - If you have 10 or more coins, COUP is the ONLY valid action.
+                - When choosing COUP, you MUST select a valid targetId (any other alive player).
+                - Never choose COUP with fewer than 7 coins.
+                
+                ### ALLOWED ACTIONS FOR YOU
+                %s
+                
                 ### ACTION RULES
                 - If it is YOUR turn:
                     - If you have 10 or more coins, you MUST choose:
@@ -116,7 +162,7 @@ public class AiDecisionService {
                         "targetId": the ID of any other alive player
                         "block": false
                         "challenge": false
-                    - Otherwise choose exactly ONE of the 7 valid actions.
+                    - Otherwise choose exactly ONE allowed action.
                     - Set block = false and challenge = false.
                 
                 - If it is NOT your turn (someone else declared an action):
@@ -128,9 +174,6 @@ public class AiDecisionService {
                     - If the declared action is INCOME, you MUST set:
                         "block": false
                         "challenge": false
-                
-                ### VALID ACTIONS
-                INCOME, FOREIGN_AID, TAX, STEAL, ASSASSINATE, COUP, EXCHANGE
                 
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
@@ -164,7 +207,7 @@ public class AiDecisionService {
                 player.getId(),
                 player.getCoins(),
                 player.getCards().stream().map(c -> c.getType().name()).toList(),
-                player.isAlive(),
+                memoryText,
                 game.getPlayers().stream()
                         .filter(p -> !p.getId().equals(player.getId()))
                         .map(p -> p.getId() + " (" + p.getCoins() + " coins)")
@@ -174,7 +217,8 @@ public class AiDecisionService {
                 game.getActingPlayerId(),
                 game.getBlockingPlayerId(),
                 game.getChallengerId(),
-                personalityRules
+                allowedActions,          // <-- FIXED: now included
+                personalityRules         // <-- FIXED: still included
         );
     }
 }

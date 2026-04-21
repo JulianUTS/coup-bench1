@@ -174,8 +174,17 @@ public class CoupService {
                 ? game.getPlayer(game.getTargetPlayerId())
                 : null;
 
+//System Comment
         System.out.println("[ACTION TAKEN] " + actor.getId() + " performs " + action +
                 (target != null ? " on " + target.getId() : ""));
+
+        String log = actor.getId() + " performed " + action +
+                (target != null ? " on " + target.getId() : "");
+
+        for (Player p : game.getPlayers()) {
+            p.getMemory().history.add(log);
+        }
+
 
         // --- APPLY ACTION EFFECTS ---
         switch (action) {
