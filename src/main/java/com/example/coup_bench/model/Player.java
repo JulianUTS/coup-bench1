@@ -37,12 +37,17 @@ public class Player {
 
     public PlayerMemory getMemory() { return memory; }
 
-    public void revealAny() {
-        cards.stream()
-                .filter(c -> !c.isRevealed())
-                .findFirst()
-                .ifPresent(Card::reveal);
+    public Card removeAnyCard() {
+        for (Card c : cards) {
+            if (!c.isRevealed()) {
+                c.reveal();
+                cards.remove(c);
+                return c;
+            }
+        }
+        throw new IllegalStateException("Player has no unrevealed cards to remove");
     }
+
 
     public void revealCard(CardType type) {
         cards.stream()

@@ -7,6 +7,12 @@ public enum ActionType {
     STEAL,        // Captain
     ASSASSINATE,  // Assassin
     EXCHANGE,     // Ambassador
-    COUP
+    COUP,
+    BLOCK,
+    CHALLENGE,
+    DO_NOTHING,
+    LOSE_CARD,
+
+
 }
 

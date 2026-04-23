@@ -94,6 +94,13 @@ public class CoupService {
         game.setBlockingPlayerId(blockingPlayerId);
         game.setBlockingRole(claimedRole);
 
+        game.logAction(new ActionRecord(
+                blockingPlayerId,
+                ActionType.BLOCK,
+                game.getActingPlayerId(),
+                blockingPlayerId + " blocks " + game.getDeclaredAction() + " claiming " + claimedRole
+        ));
+
         return saveIfFinished(game);
     }
 
@@ -107,6 +114,13 @@ public class CoupService {
 
         game.setState(GameState.CHALLENGE_PENDING);
         game.setChallengerId(challengerId);
+
+        game.logAction(new ActionRecord(
+                challengerId,
+                ActionType.CHALLENGE,
+                game.getBlockingPlayerId() != null ? game.getBlockingPlayerId() : game.getActingPlayerId(),
+                challengerId + " challenges the claim"
+        ));
 
         return saveIfFinished(game);
     }
@@ -134,7 +148,21 @@ public class CoupService {
 
         if (challengedHasRole) {
             // Challenger loses
-            challenger.revealAny();
+
+            game.logAction(new ActionRecord(
+                    challenger.getId(),
+                    ActionType.CHALLENGE,
+                    challenged.getId(),
+                    challenger.getId() + " loses challenge against " + challenged.getId()
+            ));
+            Card lost = challenger.removeAnyCard();
+            game.logAction(new ActionRecord(
+                    challenger.getId(),
+                    ActionType.LOSE_CARD,
+                    null,
+                    challenger.getId() + " loses a card (" + lost.getType() + ")"
+            ));
+
             // Challenged swaps that role
             challenged.getCards().stream()
                     .filter(c -> c.getType() == claimedRole && !c.isRevealed())
@@ -144,17 +172,31 @@ public class CoupService {
                         game.discard(card);
                         challenged.addCard(game.drawCard());
                     });
+            game.logAction(new ActionRecord(
+                    challenged.getId(),
+                    ActionType.EXCHANGE,
+                    null,
+                    challenged.getId() + " proves " + claimedRole + " and draws a replacement"
+            ));
+
             // If challenge was on block, action is blocked; otherwise action proceeds
             game.setState(challengeOnBlock ? GameState.IN_PROGRESS : GameState.APPLYING_ACTION);
         } else {
             // Challenged loses
-            challenged.revealAny();
+            challenged.removeAnyCard();
             // If challenged was actor, action fails; if blocker, block fails and action proceeds
             if (challengeOnBlock) {
                 game.setState(GameState.APPLYING_ACTION);
             } else {
                 game.setState(GameState.IN_PROGRESS);
             }
+            game.logAction(new ActionRecord(
+                    challenged.getId(),
+                    ActionType.CHALLENGE,
+                    challenger.getId(),
+                    challenged.getId() + " loses challenge and reveals a card"
+            ));
+
         }
 
         repo.save(game);
@@ -225,7 +267,7 @@ public class CoupService {
 
             case ASSASSINATE -> {
                 actor.removeCoins(3);
-                if (target != null) target.revealAny();
+                if (target != null) target.removeAnyCard();
 
                 game.logAction(new ActionRecord(
                         actor.getId(), action, target.getId(),
@@ -235,7 +277,7 @@ public class CoupService {
 
             case COUP -> {
                 actor.removeCoins(7);
-                if (target != null) target.revealAny();
+                if (target != null) target.removeAnyCard();
 
                 game.logAction(new ActionRecord(
                         actor.getId(), action, target.getId(),

@@ -20,6 +20,7 @@ public class Game {
     private String blockingPlayerId;
     private CardType blockingRole;
     private String challengerId;
+    private String playerLooseCard;
 
     public Game(String id) {
         this.id = id;
@@ -48,6 +49,10 @@ public class Game {
 
     public String getChallengerId() { return challengerId; }
     public void setChallengerId(String id) { this.challengerId = id; }
+
+    public String getPlayerLooseCard() { return playerLooseCard; }
+
+
 
     public void addPlayer(Player player) {
         if (state != GameState.WAITING_FOR_PLAYERS)
