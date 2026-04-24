@@ -17,37 +17,32 @@ public class CoupService {
 
     public Game createGame() {
         Game game = new Game(UUID.randomUUID().toString());
-        repo.save(game);
-        return game;
+        return new Game(UUID.randomUUID().toString());
     }
 
     public Game getGame(String gameId) {
         return repo.find(gameId);
     }
 
-    public Game joinGame(String gameId, String playerId, String provider, String personality) {
-        Game game = repo.find(gameId);
+    public Game joinGame(Game game, String playerId, String provider, String personality) {
         game.addPlayer(new Player(playerId, provider, personality));
-        repo.save(game);
         return game;
     }
 
-    public Game startGame(String gameId) {
-        Game game = repo.find(gameId);
+    public Game startGame(Game game) {
         game.startGame();
-        repo.save(game);
         return game;
     }
 
-    private Game saveIfFinished(Game game) {
+    public Game saveIfFinished(Game game) {
         if (game.getState() == GameState.FINISHED) {
             repo.save(game);
         }
         return game;
     }
 
-    public Game declareAction(String gameId, String playerId, ActionType action, String targetId) {
-        Game game = repo.find(gameId);
+    public Game declareAction(Game game, String playerId, ActionType action, String targetId) {
+
         Player actor = game.getPlayer(playerId);
 
         // --- STRICT RULES ---
@@ -79,8 +74,7 @@ public class CoupService {
         return saveIfFinished(game);
     }
 
-    public Game declareBlock(String gameId, String blockingPlayerId, CardType claimedRole) {
-        Game game = repo.find(gameId);
+    public Game declareBlock(Game game, String blockingPlayerId, CardType claimedRole) {
 
         // Cannot block INCOME
         if (game.getDeclaredAction() == ActionType.INCOME)
@@ -105,8 +99,8 @@ public class CoupService {
     }
 
 
-    public Game declareChallenge(String gameId, String challengerId) {
-        Game game = repo.find(gameId);
+    public Game declareChallenge(Game game, String challengerId) {
+
 
         // Cannot challenge INCOME
         if (game.getDeclaredAction() == ActionType.INCOME)
@@ -126,8 +120,7 @@ public class CoupService {
     }
 
 
-    public Game resolveChallenge(String gameId) {
-        Game game = repo.find(gameId);
+    public Game resolveChallenge(Game game) {
 
         boolean challengeOnBlock = game.getState() == GameState.BLOCK_DECLARED
                 || (game.getState() == GameState.CHALLENGE_PENDING && game.getBlockingPlayerId() != null);
@@ -203,8 +196,7 @@ public class CoupService {
         return game;
     }
 
-    public Game applyAction(String gameId) {
-        Game game = repo.find(gameId);
+    public Game applyAction(Game game) {
 
         if (game.getState() != GameState.APPLYING_ACTION &&
                 game.getState() != GameState.ACTION_DECLARED)

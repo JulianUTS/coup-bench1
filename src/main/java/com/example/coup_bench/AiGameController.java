@@ -22,10 +22,10 @@ public class AiGameController {
 
         Game game = coup.createGame();
 
-        coup.joinGame(game.getId(), "p1" , "openai", "aggressive");
-        coup.joinGame(game.getId(), "p2", "claude", "defensive");
+        game = coup.joinGame(game, "p1" , "openai", "aggressive");
+        game = coup.joinGame(game, "p2", "claude", "defensive");
 
-        coup.startGame(game.getId());
+        game = coup.startGame(game);
 
         return runner.runGame(game.getId());
     }
