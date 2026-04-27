@@ -3,9 +3,6 @@ package com.example.coup_bench;
 import com.example.coup_bench.model.*;
 import org.springframework.stereotype.Service;
 
-import java.util.Iterator;
-import java.util.List;
-
 
 @Service
 public class AiGameRunner {
@@ -24,8 +21,11 @@ public class AiGameRunner {
 
         while (game.getState() != GameState.FINISHED) {
 
-            Player current = game.getCurrentPlayer();
-            AiDecision action = ai.decide(game, current, 0);
+            Player player = game.getCurrentPlayer();
+            AiDecision action = ai.decide(game, player, 0);
+            int playerCount = game.getPlayers().size();
+            String playerId= player.getId();
+            int playerIndex = game.getPlayers().indexOf(player);
 
             if (action.action == null) {
                 action.action = ActionType.INCOME;
@@ -33,7 +33,7 @@ public class AiGameRunner {
             // 1. Declare action
             game = coup.declareAction(
                     game,
-                    current.getId(),
+                    player.getId(),
                     action.action,
                     action.targetId
             );
@@ -45,7 +45,7 @@ public class AiGameRunner {
             //-5 Steal from captain
             //-3 Blocked Foreign aid by duke
             //-5 Blocked Steal
-            //-7 Blocked assassination
+            //-
             //-8 Assasination
 
 
@@ -60,94 +60,106 @@ public class AiGameRunner {
             //Scenario 1- Tax from duke & Exchange Cards from ambassador can be challenged by anyone
             if(game.getDeclaredAction().equals(ActionType.TAX) || game.getDeclaredAction().equals(ActionType.EXCHANGE)) {
 
-                boolean challenge_declared = false;
-                int current_player_ind= game.getPlayers().indexOf(current);
-                for (int i = 1; i < game.getPlayers().size(); i++) {
 
-                    Player reacting_player= game.getPlayers().get((current_player_ind + i) % game.getPlayers().size());
-                    if (!reacting_player.isAlive() || reacting_player.getId().equals(current.getId())) continue;
+                for (int i = 1; i < playerCount; i++) {
 
-                    reaction = ai.decide(game, reacting_player, 1);
+                    Player challenger= game.getPlayers().get((playerIndex + i) % playerCount);
+                    if (!challenger.isAlive() || challenger.getId().equals(playerId)) continue;
+
+                    reaction = ai.decide(game, challenger, 1);
 
 
                     if (reaction.action == ActionType.CHALLENGE) {
-                        game = coup.declareChallenge(game, reacting_player.getId());
+                        game = coup.declareChallenge(game, challenger.getId());
                         game = coup.resolveChallenge(game);
-                        challenge_declared = true;
+                        break;
                     }
-                    if (challenge_declared){break;}
+
                 }
 
-                //Scenario 2- Foreign aid can be blocked anyone
+                //Scenario 2- Foreign aid can be blocked anyone, except the original actor
             } else if (game.getDeclaredAction().equals(ActionType.FOREIGN_AID)) {
 
-                boolean challenge_declared = false;
-                int current_player_ind= game.getPlayers().indexOf(current);
-                for (int i = 1; i < game.getPlayers().size(); i++) {
-                    Player reacting_player= game.getPlayers().get((current_player_ind + i) % game.getPlayers().size());
 
-                    if (!reacting_player.isAlive() || reacting_player.getId().equals(current.getId())) continue;
-                    reaction = ai.decide(game, reacting_player, 2);
+                for (int i = 1; i < playerCount; i++) {
+                    Player blocker= game.getPlayers().get((playerIndex + i) % playerCount);
+
+                    if (!blocker.isAlive() || blocker.getId().equals(playerId)) continue;
+                    reaction = ai.decide(game, blocker, 2);
 
                     if (reaction.action == ActionType.BLOCK) {
-                        challenge_declared = true;
-                        game = coup.declareBlock(game, reacting_player.getId(), CardType.DUKE);
+                        game = coup.declareBlock(game, blocker.getId(), CardType.DUKE);
 
-                        //Scenario 3- Blocked Foreign Aid can be challenged
-                        reaction = ai.decide(game, current, 3);
-                        if (reaction.action == ActionType.CHALLENGE) {
-                            game = coup.declareChallenge(game, current.getId());
-                            game = coup.resolveChallenge(game);
+                        //Scenario 3- Blocked Foreign Aid can be challenged by anyone, except the original actor and blocker
+                        int blocker_index = game.getPlayers().indexOf(blocker);
+                        for (int j = 1; j < playerCount; j++) {
+                            Player challenger = game.getPlayers().get((blocker_index + j) % playerCount);
+                            if (!challenger.isAlive() ||
+                                    challenger.getId().equals(blocker.getId()) ||
+                                    challenger.getId().equals(player.getId())
+                            ) continue;
+
+                            reaction = ai.decide(game, challenger, 3);
+
+                            if (reaction.action == ActionType.CHALLENGE) {
+                                game = coup.declareChallenge(game,challenger.getId());
+                                game = coup.resolveChallenge(game);
+                                break;
+                            }
                         }
-
+                        break;
                     }
-
-                    if (challenge_declared){break;}
                 }
 
-                //Scenario 4- Steal can be challenged by any player
+                //Scenario 4- Steal can be challenged by any player, except for the target and original actor
             } else if (game.getDeclaredAction().equals(ActionType.STEAL)){
 
                 boolean challenge_declared = false;
 
-                int current_player_ind= game.getPlayers().indexOf(current);
-                for (int i = 1; i < game.getPlayers().size(); i++) {
-                    Player reacting_player = game.getPlayers().get((current_player_ind + i) % game.getPlayers().size());
+                for (int i = 1; i < playerCount; i++) {
+                    Player challenger = game.getPlayers().get((playerIndex + i) % playerCount);
 
-                    if (!reacting_player.isAlive() || reacting_player.getId().equals(current.getId())) continue;
-                    reaction = ai.decide(game, reacting_player, 4);
+                    if (!challenger.isAlive() ||
+                            challenger.getId().equals(playerId) ||
+                            challenger.getId().equals(action.targetId) ) continue;
+
+                    reaction = ai.decide(game, challenger, 4);
                     if (reaction.action == ActionType.CHALLENGE) {
-                        game = coup.declareChallenge(game, reacting_player.getId());
+                        game = coup.declareChallenge(game, challenger.getId());
                         game = coup.resolveChallenge(game);
                         challenge_declared = true;
+                        break;
                     }
-                    if (challenge_declared){break;}
+
                 }
-                if (challenge_declared){break;}
+                if (!challenge_declared){continue;}
 
                 //Scenario 5- Steal can be blocked by targeted player if no one wants to challenge original steal
                 reaction = ai.decide(game, game.getPlayer(action.targetId), 5);
 
                 if(reaction.action == ActionType.BLOCK_USING_AMBASSADOR || reaction.action == ActionType.BLOCK_USING_CAPTAIN) {
-                    game = coup.declareBlock(game, action.targetId, roleForAction(reaction.action));
+                    Player blocker = game.getPlayer(action.targetId);
+                    game = coup.declareBlock(game, blocker.getId(), roleForAction(reaction.action));
 
-                    //Scenario 6- Block steal counteraction can be challenged by any player
-                    int reacting_player_ind= game.getPlayers().indexOf(game.getPlayer(action.targetId));
-                    for (int i = 1; i < game.getPlayers().size(); i++) {
-                        Player reacting_player= game.getPlayers().get((reacting_player_ind + i) % game.getPlayers().size());
-                        if (!reacting_player.isAlive() || reacting_player.getId().equals(current.getId())) continue;
+                    //Scenario 6- Block steal counteraction can be challenged by any player, except the orginal
+                    int blocker_index = game.getPlayers().indexOf(blocker);
+                    for (int i = 1; i < playerCount; i++) {
+                        Player challenger= game.getPlayers().get((blocker_index + i) % playerCount);
+                        if (!challenger.isAlive() ||
+                                challenger.getId().equals(playerId) ||
+                                challenger.getId().equals(blocker.getId())) continue;
 
-                        reaction = ai.decide(game, reacting_player, 6);
+                        reaction = ai.decide(game, challenger, 6);
 
                         if (reaction.action == ActionType.CHALLENGE) {
-                            game = coup.declareChallenge(game,reacting_player.getId());
+                            game = coup.declareChallenge(game,challenger.getId());
                             game = coup.resolveChallenge(game);
-                            challenge_declared = true;
+                            break;
                         }
-                        if (challenge_declared){break;}
+
                     }
                 }
-            } 
+            }
 
 
             // 3. Apply action if still valid
