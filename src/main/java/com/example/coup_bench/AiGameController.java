@@ -27,7 +27,7 @@ public class AiGameController {
 
         game = coup.startGame(game);
 
-        return runner.runGame(game.getId());
+        return runner.runGame(game);
     }
 }
 

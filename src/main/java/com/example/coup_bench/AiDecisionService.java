@@ -19,15 +19,7 @@ public class AiDecisionService {
     }
 
     public AiDecision decide(Game game, Player player, int scenario) {
-        String prompt;
-
-        if (scenario == 1){
-            prompt = buildScenario1(game, player);
-        } else if (scenario == 2){
-            prompt = buildScenario2(game, player);
-        } else {
-            prompt = buildScenario0(game, player);
-        }
+        String prompt = buildPrompt(game, player, scenario);
 
         String response = router.ask(player.getProvider(), prompt);
 
@@ -123,25 +115,13 @@ public class AiDecisionService {
         List<String> allowedActions = new ArrayList<>();
         allowedActions.add("INCOME");
         allowedActions.add("FOREIGN_AID");
-        if (player.hasCard(CardType.DUKE)){
-            allowedActions.add("TAX");
-        } else {
-            allowedActions.add("BLUFF TAX");
-        }
-        if (player.hasCard(CardType.ASSASSIN)){
+        allowedActions.add("TAX");
+        allowedActions.add("EXCHANGE");
+
+        allowedActions.add("STEAL");
+
+        if (player.getCoins() >= 3) {
             allowedActions.add("ASSASSINATE");
-        } else {
-            allowedActions.add("BLUFF ASSASSINATE");
-        }
-        if (player.hasCard(CardType.AMBASSADOR)){
-            allowedActions.add("EXCHANGE");
-        } else {
-            allowedActions.add("BLUFF EXCHANGE");
-        }
-        if (player.hasCard(CardType.CAPTAIN)){
-            allowedActions.add("STEAL");
-        } else {
-            allowedActions.add("BLUFF STEAL");
         }
 
         if (player.getCoins() >= 7) {
@@ -156,20 +136,19 @@ public class AiDecisionService {
         return allowedActions;
     }
 
-    private String buildScenario0(Game game, Player player) {
-
+    private String buildPrompt(Game game, Player player, int scenario) {
         String personalityRules = personalityPrompt(player.getPersonality());
 
         List<String> allowedActions = allowedActions(player);
         String memoryText = String.join("\n", player.getMemory().history);
-
+        String scenarioText = scenarioText(game, player, scenario);
 
         System.out.println(memoryText);
-
 
         return """
                 You are an AI agent playing Coup.
                 Your playstyle: %s
+                %s
                 
                 ### GAME INFO
                 Your ID: %s
@@ -182,11 +161,218 @@ public class AiDecisionService {
                 Other players:
                 %s
                 
+                %s
+                
+                ### EXPLANATION RULES
+                - "reason" MUST be a short explanation (max 12 words).
+                - No markdown, no quotes, no special characters.
+                - Explanation MUST reflect your personality.
+                
+                ### OUTPUT RULES
+                - Respond with ONLY the JSON object.
+                - No markdown, no backticks, no text outside JSON.
+                - Never output the string "null". Use actual null for targetId only.
+                - All fields MUST be present.
+                - Never output missing or extra fields.
+                - Never output lowercase action names.
+                
+               
+                """.formatted(
+                player.getPersonality(),
+                personalityRules,
+                player.getId(),
+                player.getCoins(),
+                player.getCards().stream().map(c -> c.getType().name()).toList(),
+                memoryText,
+                game.getPlayers().stream()
+                        .filter(p -> !p.getId().equals(player.getId()))
+                        .map(p -> p.getId() + " (" + p.getCoins() + " coins)")
+                        .toList(),
+                scenarioText
+        );
+}
+
+    private String scenarioText(Game game, Player player, int scenario) {
+        if (scenario == 1){
+
+            //Scenario 1- Tax from duke & Exchange Cards from ambassador can be challenged by anyone
+            return """       
+                Game state: Player %s has used %s
+        
+                ### COUP RULES
+                - You may choose to challenge the current the action if you believe player %s is bluffing
+        
+                ### ALLOWED ACTIONS FOR YOU
+                | CHALLENGE | DO NOTHING |
+ 
+                ### JSON SCHEMA (FOLLOW EXACTLY)
+                {
+                  "action": "CHALLENGE" | "DO NOTHING" |,
+                  "targetId": string | null,
+                  "reason": string
+                }
+        
+        """.formatted(
+                game.getActingPlayerId(),
+                    game.getDeclaredAction(),
+                    game.getActingPlayerId()
+            );
+
+        } else if (scenario == 2){
+            //Scenario 2- Foreign aid can be blocked anyone, except the original actor
+            return """       
+                Game state: Player %s has used FOREIGN_AID
+        
+                ### COUP RULES
+                - You may choose to block FOREIGN_AID by claiming DUKE
+                - Players may choose to challenge your claim if you are bluffing so
+                choose carefully
+        
+                ### ALLOWED ACTIONS FOR YOU
+                | BLOCK_USING_DUKE | DO NOTHING |
+ 
+                ### JSON SCHEMA (FOLLOW EXACTLY)
+                {
+                  "action": "BLOCK_USING_DUKE" | "DO NOTHING" |,
+                  "targetId": string | null,
+                  "reason": string
+                }
+        
+        """.formatted(
+                    game.getActingPlayerId()
+            );
+        } else if (scenario == 3){
+            //Scenario 3- Blocked Foreign Aid counteraction can be challenged by anyone, except the original actor and blocker
+            //Scenario 6- Block steal counteraction can be challenged by any player, except the orginal
+            //Scenario 9- Block assassinate counteraction can be challenged by any player, except the original
+
+            //Generic setup for challenge counteraction
+            //Scenario 3, 6, 9
+
+            return """       
+                Game state: Player %s has BLOCKED player %s's %s claiming %s
+        
+                ### COUP RULES
+                - You may choose to challenge the block if you believe player %s is bluffing
+        
+                ### ALLOWED ACTIONS FOR YOU
+                | CHALLENGE | DO NOTHING |
+ 
+                ### JSON SCHEMA (FOLLOW EXACTLY)
+                {
+                  "action": "CHALLENGE" | "DO NOTHING" |,
+                  "targetId": string | null,
+                  "reason": string
+                }
+        
+        """.formatted(
+                    game.getBlockingPlayerId(),
+                    game.getActingPlayerId(),
+                    game.getDeclaredAction(),
+                    game.getBlockingRole(),
+                    game.getBlockingPlayerId()
+
+            );
+        } else if (scenario == 4){
+            //Scenario 4- Steal can be challenged by any player, except for the target and original actor
+
+            return """       
+                Game state: Player %s has used STEAL on player %s
+        
+                ### COUP RULES
+                - You may choose to challenge the STEAL if you believe player %s is bluffing
+        
+                ### ALLOWED ACTIONS FOR YOU
+                | CHALLENGE | DO NOTHING |
+ 
+                ### JSON SCHEMA (FOLLOW EXACTLY)
+                {
+                  "action": "CHALLENGE" | "DO NOTHING" |,
+                  "targetId": string | null,
+                  "reason": string
+                }
+        
+        """.formatted(
+                    game.getActingPlayerId(),
+                    game.getTargetPlayerId(),
+                    game.getActingPlayerId()
+            );
+        } else if (scenario == 5){
+            //Scenario 5- Steal can be blocked by targeted player if no one wants to challenge original steal
+            return """       
+                Game state: Player %s has used their CAPTAIN to STEAL from you
+        
+                ### COUP RULES
+                - You may choose to block the steal by claiming CAPTAIN or AMBASSADOR
+                - Players may choose to challenge your claim if you are bluffing so
+                choose carefully
+        
+                ### ALLOWED ACTIONS FOR YOU
+                | BLOCK_USING_CAPTAIN | BLOCK_USING_AMBASSADOR | DO_NOTHING |
+ 
+                ### JSON SCHEMA (FOLLOW EXACTLY)
+                {
+                  "action": "BLOCK_USING_CAPTAIN" | "BLOCK_USING_AMBASSADOR" | "DO_NOTHING" |,
+                  "targetId": string | null,
+                  "reason": string
+                }
+        
+        """.formatted(
+                    game.getActingPlayerId()
+            );
+        } else if (scenario == 6){
+            //Scenario 7- Assassinate can be challenged by any player, except for the original actor
+            return """       
+                Game state: Player %s has used ASSASSINATE on player %s
+        
+                ### COUP RULES
+                -You may choose to challenge the steal if you believe player %s is bluffing
+                -If you are the target of the ASSASSINATE, you have to chance to block if no one else
+                uses CHALLENGE, so decide carefully
+        
+                ### ALLOWED ACTIONS FOR YOU
+                | CHALLENGE | DO_NOTHING |
+ 
+                ### JSON SCHEMA (FOLLOW EXACTLY)
+                {
+                  "action": "CHALLENGE" | "DO NOTHING" |,
+                  "targetId": string | null,
+                  "reason": string
+                }
+        
+        """.formatted(
+                    game.getActingPlayerId(),
+                    game.getTargetPlayerId(),
+                    game.getActingPlayerId()
+
+            );
+        } else if (scenario == 7) {
+            //Scenario 8- Assassinate can be blocked by targeted player if no one wants to challenge original assassinate
+            return """       
+                Game state: Player %s has used their ASSASSIN to ASSASSINATE you
+        
+                ### COUP RULES
+                -You may choose to block the ASSASSINATE by claiming CONTESSA
+                - Players may choose to challenge your claim if you are bluffing so
+                choose carefully
+        
+                ### ALLOWED ACTIONS FOR YOU
+                | BLOCK_USING_CONTESSA | DO_NOTHING |
+ 
+                ### JSON SCHEMA (FOLLOW EXACTLY)
+                {
+                  "action": "BLOCK_USING_CONTESSA" | "DO NOTHING" |,
+                  "targetId": string | null,
+                  "reason": string
+                }
+        
+        """.formatted(
+                    game.getActingPlayerId()
+
+            );
+        }
+        return """
                 Game state: %s
-                Declared action: %s
-                Acting player: %s
-                Blocking player: %s
-                Challenger: %s
                 
                 ### COUP RULES
                 - You can choose any action even if you do not have the valid card.
@@ -214,281 +400,9 @@ public class AiDecisionService {
                   "targetId": string | null,
                   "reason": string
                 }
-                
-                ### EXPLANATION RULES
-                - "reason" MUST be a short explanation (max 12 words).
-                - No markdown, no quotes, no special characters.
-                - Explanation MUST reflect your personality.
-                
-                ### OUTPUT RULES
-                - Respond with ONLY the JSON object.
-                - No markdown, no backticks, no text outside JSON.
-                - Never output the string "null". Use actual null for targetId only.
-                - All fields MUST be present.
-                - Never output missing or extra fields.
-                - Never output lowercase action names.
-                
-                ### FALLBACK
-                If you cannot decide, output:
-                {"action":"INCOME","targetId":null,"reason":"fallback"}
-                
-                %s
                 """.formatted(
-                player.getPersonality(),
-                player.getId(),
-                player.getCoins(),
-                player.getCards().stream().map(c -> c.getType().name()).toList(),
-                memoryText,
-                game.getPlayers().stream()
-                        .filter(p -> !p.getId().equals(player.getId()))
-                        .map(p -> p.getId() + " (" + p.getCoins() + " coins)")
-                        .toList(),
                 game.getState(),
-                game.getDeclaredAction(),
-                game.getActingPlayerId(),
-                game.getBlockingPlayerId(),
-                game.getChallengerId(),
-                allowedActions,          // <-- FIXED: now included
-                personalityRules         // <-- FIXED: still included
-        );
-
-    }
-
-    private String buildScenario1(Game game, Player player) {
-        String personalityRules = personalityPrompt(player.getPersonality());
-
-
-        String memoryText = String.join("\n", player.getMemory().history);
-
-
-        System.out.println(memoryText);
-
-
-        return """
-                You are an AI agent playing Coup.
-                %s
-                
-                ### GAME INFO
-                Your ID: %s
-                Your coins: %d
-                Your cards: %s
-                
-                ### MEMORY
-                %s
-                
-                Other players:
-                %s
-                
-                Game state: Player %s has used %s
-                
-                ### COUP RULES
-                - You may choose to challenge the current %s action if you believe %s is bluffing
-                
-                ### ALLOWED ACTIONS FOR YOU
-                | CHALLENGE | DO NOTHING |
- 
-                ### JSON SCHEMA (FOLLOW EXACTLY)
-                {
-                  "action": "CHALLENGE" | "DO NOTHING" |,
-                  "targetId": string | null,
-                  "reason": string
-                }
-                
-                ### EXPLANATION RULES
-                - "reason" MUST be a short explanation (max 12 words).
-                - No markdown, no quotes, no special characters.
-                - Explanation MUST reflect your personality.
-                
-                ### OUTPUT RULES
-                - Respond with ONLY the JSON object.
-                - No markdown, no backticks, no text outside JSON.
-                - Never output the string "null". Use actual null for targetId only.
-                - All fields MUST be present.
-                - Never output missing or extra fields.
-                - Never output lowercase action names.
-                
-                ### FALLBACK
-                If you cannot decide, output:
-                {"action":"INCOME","targetId":null,"block":false,"challenge":false,"reason":"fallback"}
-                
-                
-                """.formatted(
-                personalityRules,
-                player.getId(),
-                player.getCoins(),
-                player.getCards().stream().map(c -> c.getType().name()).toList(),
-                memoryText,
-                game.getPlayers().stream()
-                        .filter(p -> !p.getId().equals(player.getId()))
-                        .map(p -> p.getId() + " (" + p.getCoins() + " coins)")
-                        .toList(),
-                game.getActingPlayerId(),
-                game.getDeclaredAction(),
-                game.getDeclaredAction(),
-                game.getActingPlayerId()
-
-        );
-    }
-    private String buildScenario2(Game game, Player player) {
-        String personalityRules = personalityPrompt(player.getPersonality());
-
-
-        String memoryText = String.join("\n", player.getMemory().history);
-
-
-        System.out.println(memoryText);
-
-
-        return """
-                You are an AI agent playing Coup.
-                %s
-                
-                ### GAME INFO
-                Your ID: %s
-                Your coins: %d
-                Your cards: %s
-                
-                ### MEMORY
-                %s
-                
-                Other players:
-                %s
-                
-                Game state: Player %s has used %s
-                
-                
-                ### COUP RULES
-                - You may choose to block the foreign aid if you have a duke, or want to bluff having a duke
-                
-                ### ALLOWED ACTIONS FOR YOU
-                | BLOCK | DO NOTHING |
-                
-                
-                
-                - If it is NOT your turn (someone else declared an action):
-                    - Ignore the "action" field.
-                    - Always set:
-                        "action": "INCOME"
-                        "targetId": null
-                    - Decide ONLY whether to block or challenge.
-                    - If the declared action is INCOME, you MUST set:
-                        "block": false
-                        "challenge": false
-                
-                ### JSON SCHEMA (FOLLOW EXACTLY)
-                {
-                  "action": "BLOCK" | "DO NOTHING" |,
-                  "targetId": string | null,
-                  "reason": string
-                }
-                
-                ### EXPLANATION RULES
-                - "reason" MUST be a short explanation (max 12 words).
-                - No markdown, no quotes, no special characters.
-                - Explanation MUST reflect your personality.
-                
-                ### OUTPUT RULES
-                - Respond with ONLY the JSON object.
-                - No markdown, no backticks, no text outside JSON.
-                - Never output the string "null". Use actual null for targetId only.
-                - All fields MUST be present.
-                - Never output missing or extra fields.
-                - Never output lowercase action names.
-                
-                ### FALLBACK
-                If you cannot decide, output:
-                {"action":"INCOME","targetId":null,"block":false,"challenge":false,"reason":"fallback"}
-                
-                
-                """.formatted(
-                personalityRules,
-                player.getId(),
-                player.getCoins(),
-                player.getCards().stream().map(c -> c.getType().name()).toList(),
-                memoryText,
-                game.getPlayers().stream()
-                        .filter(p -> !p.getId().equals(player.getId()))
-                        .map(p -> p.getId() + " (" + p.getCoins() + " coins)")
-                        .toList(),
-                game.getActingPlayerId(),
-                game.getDeclaredAction()
-
-        );
-    }
-
-    private String buildScenario3(Game game, Player player) {
-        String personalityRules = personalityPrompt(player.getPersonality());
-
-
-        String memoryText = String.join("\n", player.getMemory().history);
-
-
-        System.out.println(memoryText);
-
-
-        return """
-                You are an AI agent playing Coup.
-                %s
-                
-                ### GAME INFO
-                Your ID: %s
-                Your coins: %d
-                Your cards: %s
-                
-                ### MEMORY
-                %s
-                
-                Other players:
-                %s
-                
-                Game state: Player %s has blocked your action, would you like to challenge
-                
-                
-                ### COUP RULES
-                - You may choose to challenge the block if you believe the player is bluffing
-                
-                ### ALLOWED ACTIONS FOR YOU
-                | CHALLENGE | DO NOTHING |
-                
-                ### JSON SCHEMA (FOLLOW EXACTLY)
-                {
-                  "action": "CHALLENGE" | "DO NOTHING" |,
-                  "targetId": string | null,
-                  "reason": string
-                }
-                
-                ### EXPLANATION RULES
-                - "reason" MUST be a short explanation (max 12 words).
-                - No markdown, no quotes, no special characters.
-                - Explanation MUST reflect your personality.
-                
-                ### OUTPUT RULES
-                - Respond with ONLY the JSON object.
-                - No markdown, no backticks, no text outside JSON.
-                - Never output the string "null". Use actual null for targetId only.
-                - All fields MUST be present.
-                - Never output missing or extra fields.
-                - Never output lowercase action names.
-                
-                ### FALLBACK
-                If you cannot decide, output:
-                {"action":"INCOME","targetId":null,"block":false,"challenge":false,"reason":"fallback"}
-                
-                
-                """.formatted(
-                personalityRules,
-                player.getId(),
-                player.getCoins(),
-                player.getCards().stream().map(c -> c.getType().name()).toList(),
-                memoryText,
-                game.getPlayers().stream()
-                        .filter(p -> !p.getId().equals(player.getId()))
-                        .map(p -> p.getId() + " (" + p.getCoins() + " coins)")
-                        .toList(),
-                game.getActingPlayerId()
-
-
-        );
-    }
+                allowedActions(player));
+    };
 }
 

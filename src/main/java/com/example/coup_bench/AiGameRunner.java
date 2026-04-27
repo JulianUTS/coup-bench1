@@ -40,21 +40,20 @@ public class AiGameRunner {
 
             // 2. Other players may block or challenge
             //Scenarios
-            //Challengable Action
+            //Challengeable
             //-1 Tax from duke & Exchange Cards from ambassador
-            //-5 Steal from captain
-            //-3 Blocked Foreign aid by duke
-            //-5 Blocked Steal
-            //-
-            //-8 Assasination
+            //-3 Block foreign aid counteraction
+            //-4 Steal
+            //-6 Block Steal counteraction
+            //-7 Assassinate
+            //-9 Block Assassinate counteraction
+
+            //Blocks
+            //-2 Foreign aid
+            // 5 Steal
+            //-8 Assassinate
 
 
-            //Counteractions
-            //-2 Foreign aid by duke
-            //-6 Assassination by Contessa, only from specific player
-            //-4 Steal from captain if you have captain or Ambassador
-
-            //Challengable counter Actions
             AiDecision reaction;
 
             //Scenario 1- Tax from duke & Exchange Cards from ambassador can be challenged by anyone
@@ -149,7 +148,55 @@ public class AiGameRunner {
                                 challenger.getId().equals(playerId) ||
                                 challenger.getId().equals(blocker.getId())) continue;
 
-                        reaction = ai.decide(game, challenger, 6);
+                        reaction = ai.decide(game, challenger, 3);
+
+                        if (reaction.action == ActionType.CHALLENGE) {
+                            game = coup.declareChallenge(game,challenger.getId());
+                            game = coup.resolveChallenge(game);
+                            break;
+                        }
+
+                    }
+                }
+                //Scenario 7- Assassinate can be challenged by any player, except for the original actor
+            } else if (game.getDeclaredAction().equals(ActionType.ASSASSINATE)){
+
+                boolean challenge_declared = false;
+
+                for (int i = 1; i < playerCount; i++) {
+                    Player challenger = game.getPlayers().get((playerIndex + i) % playerCount);
+
+                    if (!challenger.isAlive() ||
+                            challenger.getId().equals(playerId) ||
+                            challenger.getId().equals(action.targetId) ) continue;
+
+                    reaction = ai.decide(game, challenger, 6);
+                    if (reaction.action == ActionType.CHALLENGE) {
+                        game = coup.declareChallenge(game, challenger.getId());
+                        game = coup.resolveChallenge(game);
+                        challenge_declared = true;
+                        break;
+                    }
+
+                }
+                if (!challenge_declared){continue;}
+
+                //Scenario 8- Assassinate can be blocked by targeted player if no one wants to challenge original assassinate
+                reaction = ai.decide(game, game.getPlayer(action.targetId), 7);
+
+                if(reaction.action == ActionType.BLOCK_USING_CONTESSA) {
+                    Player blocker = game.getPlayer(action.targetId);
+                    game = coup.declareBlock(game, blocker.getId(), roleForAction(reaction.action));
+
+                    //Scenario 9- Block assassinate counteraction can be challenged by any player, except the original
+                    int blocker_index = game.getPlayers().indexOf(blocker);
+                    for (int i = 1; i < playerCount; i++) {
+                        Player challenger= game.getPlayers().get((blocker_index + i) % playerCount);
+                        if (!challenger.isAlive() ||
+                                challenger.getId().equals(playerId) ||
+                                challenger.getId().equals(blocker.getId())) continue;
+
+                        reaction = ai.decide(game, challenger, 3);
 
                         if (reaction.action == ActionType.CHALLENGE) {
                             game = coup.declareChallenge(game,challenger.getId());
@@ -180,6 +227,7 @@ public class AiGameRunner {
             case EXCHANGE -> CardType.AMBASSADOR;
             case BLOCK_USING_AMBASSADOR -> CardType.AMBASSADOR;
             case BLOCK_USING_CAPTAIN -> CardType.CAPTAIN;
+            case BLOCK_USING_CONTESSA -> CardType.CONTESSA;
 
             default -> null;
         };
