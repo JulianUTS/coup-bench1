@@ -41,33 +41,71 @@ public class CoupService {
         return game;
     }
 
-    public Game declareAction(Game game, String playerId, ActionType action, String targetId) {
+    public Game invalidGame(Game game) {
+        game.logGameMemory("3 Valid Actions used in a row, game is invalid");
+        repo.save(game);
+        return game;
+    }
+
+    public Game declareAction(Game game, ActionRecord actionRecord) {
+        String playerId = actionRecord.getPlayerId();
+        ActionType action = actionRecord.getAction();
+        String targetId = actionRecord.getTargetId();
 
         Player actor = game.getPlayer(playerId);
+        boolean valid = false;
 
         // --- STRICT RULES ---
-
-        // 1. Forced COUP at 10+ coins
-        if (actor.getCoins() >= 10) {
-            action = ActionType.COUP;
+        // 1. Validate action legality
+        if (actor.getCoins() >= 10 && action != ActionType.COUP) {
+            throw new IllegalStateException("Must choose COUP if 10 coins or more");
         }
 
-        // 2. Validate action legality
+        // Actions that must NOT have a target
+        if (targetId != null && switch (action) {
+            case INCOME, FOREIGN_AID, TAX, EXCHANGE -> true;
+            default -> false;
+        }) {
+            throw new IllegalStateException(action + " must not have a target");
+        }
+
         switch (action) {
             case ASSASSINATE -> {
                 if (actor.getCoins() < 3)
                     throw new IllegalStateException("Not enough coins to ASSASSINATE");
+                if (targetId == null)
+                    throw new IllegalStateException("ASSASSINATE requires a target");
+                if (targetId.equals(actor.getId()))
+                    throw new IllegalStateException("Cannot ASSASSINATE yourself");
+                if (!game.getPlayer(targetId).isAlive())
+                    throw new IllegalStateException("ASSASSINATE requires an alive target");
             }
             case COUP -> {
                 if (actor.getCoins() < 7)
                     throw new IllegalStateException("Not enough coins to COUP");
                 if (targetId == null)
                     throw new IllegalStateException("COUP requires a target");
+                if (targetId.equals(actor.getId()))
+                    throw new IllegalStateException("Cannot COUP yourself");
+                if (!game.getPlayer(targetId).isAlive())
+                    throw new IllegalStateException("COUP requires an alive target");
             }
             case STEAL -> {
                 if (targetId == null)
                     throw new IllegalStateException("STEAL requires a target");
+                if (targetId.equals(actor.getId()))
+                    throw new IllegalStateException("Cannot STEAL from yourself");
+                if (game.getPlayer(targetId).getCoins() == 0)
+                    throw new IllegalStateException("STEAL requires a target with more than 0 coins");
+                if (!game.getPlayer(targetId).isAlive())
+                    throw new IllegalStateException("STEAL requires an alive target");
             }
+        }
+
+        if(targetId == null){
+            game.logGameMemory(playerId + " used " + action);
+        } else{
+            game.logGameMemory(playerId + " used " + action + " on " + targetId);
         }
 
         game.declareAction(playerId, action, targetId);

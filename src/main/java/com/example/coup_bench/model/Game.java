@@ -9,9 +9,11 @@ public class Game {
     private final Deque<Card> deck = new ArrayDeque<>();
     private final List<Card> discardPile = new ArrayList<>();
     private final List<ActionRecord> actionLog = new ArrayList<>();
+    private final List<String> gameMemory = new ArrayList<>();
 
     private int currentPlayerIndex = 0;
     private GameState state = GameState.WAITING_FOR_PLAYERS;
+    private int invalidAction = 0;
 
     private ActionType declaredAction;
     private String actingPlayerId;
@@ -20,7 +22,6 @@ public class Game {
     private String blockingPlayerId;
     private CardType blockingRole;
     private String challengerId;
-    private String playerLooseCard;
 
     public Game(String id) {
         this.id = id;
@@ -29,6 +30,25 @@ public class Game {
     public List<ActionRecord> getActionLog() {
         return actionLog;
     }
+
+    public List<String> getGameMemory() {
+        return gameMemory;
+    }
+
+    public int getInvalidAction() {
+        return invalidAction;
+    }
+    public void incrementInvalidAction() {
+        invalidAction++;
+    }
+    public void resetInvalidAction() {
+        invalidAction = 0;
+    }
+
+    public void logGameMemory(String memory) {
+        gameMemory.add(memory);
+    }
+
     public void logAction(ActionRecord record) {
         actionLog.add(record);
     }
@@ -50,7 +70,6 @@ public class Game {
     public String getChallengerId() { return challengerId; }
     public void setChallengerId(String id) { this.challengerId = id; }
 
-    public String getPlayerLooseCard() { return playerLooseCard; }
 
 
 

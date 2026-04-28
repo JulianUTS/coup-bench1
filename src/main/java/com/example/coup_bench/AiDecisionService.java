@@ -22,7 +22,6 @@ public class AiDecisionService {
         String prompt = buildPrompt(game, player, scenario);
 
         String response = router.ask(player.getProvider(), prompt);
-
         System.out.println("[" + player.getId() + "] " + response);
 
         String cleaned = response
@@ -95,29 +94,7 @@ public class AiDecisionService {
         allowedActions.add("INCOME");
         allowedActions.add("FOREIGN_AID");
         allowedActions.add("TAX");
-        allowedActions.add("ASSASSINATE");
         allowedActions.add("EXCHANGE");
-        allowedActions.add("STEAL");
-
-        if (player.getCoins() >= 7) {
-            allowedActions.add("COUP");
-        }
-
-        if (player.getCoins() >= 10) {
-            allowedActions.clear();
-            allowedActions.add("COUP");
-        }
-        System.out.println(allowedActions);
-        return allowedActions;
-    }
-
-    private List<String> allowedReactions( Player player, Action reaction){
-        List<String> allowedActions = new ArrayList<>();
-        allowedActions.add("INCOME");
-        allowedActions.add("FOREIGN_AID");
-        allowedActions.add("TAX");
-        allowedActions.add("EXCHANGE");
-
         allowedActions.add("STEAL");
 
         if (player.getCoins() >= 3) {
@@ -136,10 +113,11 @@ public class AiDecisionService {
         return allowedActions;
     }
 
+
+
     private String buildPrompt(Game game, Player player, int scenario) {
         String personalityRules = personalityPrompt(player.getPersonality());
 
-        List<String> allowedActions = allowedActions(player);
         String memoryText = String.join("\n", player.getMemory().history);
         String scenarioText = scenarioText(game, player, scenario);
 
@@ -203,11 +181,11 @@ public class AiDecisionService {
                 - You may choose to challenge the current the action if you believe player %s is bluffing
         
                 ### ALLOWED ACTIONS FOR YOU
-                | CHALLENGE | DO NOTHING |
+                | CHALLENGE | DO_NOTHING |
  
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
-                  "action": "CHALLENGE" | "DO NOTHING" |,
+                  "action": "CHALLENGE" | "DO_NOTHING" |,
                   "targetId": string | null,
                   "reason": string
                 }
@@ -229,11 +207,11 @@ public class AiDecisionService {
                 choose carefully
         
                 ### ALLOWED ACTIONS FOR YOU
-                | BLOCK_USING_DUKE | DO NOTHING |
+                | BLOCK_USING_DUKE | DO_NOTHING |
  
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
-                  "action": "BLOCK_USING_DUKE" | "DO NOTHING" |,
+                  "action": "BLOCK_USING_DUKE" | "DO_NOTHING" |,
                   "targetId": string | null,
                   "reason": string
                 }
@@ -256,11 +234,11 @@ public class AiDecisionService {
                 - You may choose to challenge the block if you believe player %s is bluffing
         
                 ### ALLOWED ACTIONS FOR YOU
-                | CHALLENGE | DO NOTHING |
+                | CHALLENGE | DO_NOTHING |
  
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
-                  "action": "CHALLENGE" | "DO NOTHING" |,
+                  "action": "CHALLENGE" | "DO_NOTHING" |,
                   "targetId": string | null,
                   "reason": string
                 }
@@ -287,7 +265,7 @@ public class AiDecisionService {
  
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
-                  "action": "CHALLENGE" | "DO NOTHING" |,
+                  "action": "CHALLENGE" | "DO_NOTHING" |,
                   "targetId": string | null,
                   "reason": string
                 }
@@ -375,28 +353,20 @@ public class AiDecisionService {
                 Game state: %s
                 
                 ### COUP RULES
-                - You can choose any action even if you do not have the valid card.
                 - You may ONLY choose COUP if you have 7 or more coins.
                 - If you have 10 or more coins, COUP is the ONLY valid action.
                 - When choosing COUP, you MUST select a valid targetId (any other alive player).
                 - Never choose COUP with fewer than 7 coins.
+                - You can only choose ASSASSINATE if you have 3 or more coins.
+                - When choosing ASSASSINATE, you can only choose a player with more than 0 coins.
                 
                 ### ALLOWED ACTIONS FOR YOU
                 %s
                 
-                ### ACTION RULES
-                - If it is YOUR turn:
-                    - If you have 10 or more coins, you MUST choose:
-                        "action": "COUP"
-                        "targetId": the ID of any other alive player
-                        "block": false
-                        "challenge": false
-                    - Otherwise choose exactly ONE allowed action.
-                    - Set block = false and challenge = false.
                 
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
-                  "action": "INCOME" | "FOREIGN_AID" | "TAX" | "STEAL" | "ASSASSINATE" | "COUP" | "EXCHANGE",
+                  "action": string | null,
                   "targetId": string | null,
                   "reason": string
                 }
