@@ -15,6 +15,7 @@ public class Player {
     private final String provider;
     private final String personality;
 
+    private boolean alive = true;
     private int coins = 2;
     private final List<CardType> cards = new ArrayList<>();
 
@@ -36,7 +37,7 @@ public class Player {
     public void removeCoins(int amount) { coins = Math.max(0, coins - amount); }
 
     public boolean isAlive() {
-        return (!cards.isEmpty());
+        return (alive);
     }
 
     public void addCard(CardType card) {
@@ -55,6 +56,9 @@ public class Player {
             if (c.equals(cardToRemove)) {
                 cards.remove(c);
                 //return card to deck
+                if(cards.isEmpty()) alive = false;{
+
+                }
                 return cardToRemove;
             }
         }

@@ -5,6 +5,7 @@ import com.example.coup_bench.model.AiResponses.AiReaction;
 import com.example.coup_bench.repo.GameRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 @Service
@@ -31,8 +32,41 @@ public class CoupService {
     }
 
     public Game saveIfFinished(Game game) {
+
+
         if (game.getState() == GameState.FINISHED) {
-            repo.save(game);
+            GameSummary gameSummary = new GameSummary();
+            GameSummary summary = new GameSummary();
+
+// Basic identifiers
+            summary.setId(null); // MongoDB will generate this
+            summary.setGameId(game.getId());
+
+// Timestamps
+            summary.setTimestampStart(game.getTimestampStart());
+            summary.setTimestampEnd(System.currentTimeMillis());
+
+// Game stats
+            summary.setNumberOfPlayers(game.getPlayers().size());
+            summary.setWinnerId(game.getWinnerId(game));
+            summary.setTotalTurns(game.getTurn());
+            summary.setTotalActions(game.getActionLog().size());
+            summary.setTotalChallenges(game.getTotalBlocks());
+            summary.setTotalBlocks(game.getTotalChallenges());
+            summary.setTotalInvalidActions(game.getInvalidActionLog().size());
+
+// Game memory (if you store AI thoughts or logs)
+            summary.setGameMemory(new ArrayList<>(game.getGameMemory()));
+
+// Invalid actions
+            summary.setInvalidActions(new ArrayList<>(game.getInvalidActionLog()));
+
+// Full action log
+            summary.setActions(new ArrayList<>(game.getActionLog()));
+
+// Final player states
+            summary.setPlayers(game.getPlayers());
+            repo.save(summary);
         }
         return game;
     }
@@ -119,6 +153,7 @@ public class CoupService {
         game.setBlockerId(blockerId);
         game.setBlockingRole(roleForAction(aiReaction.action));
         game.logGameMemory(blockerId + " declares " + aiReaction.action + " on " + game.getActingPlayerId());
+        game.incrementTotalBlocks();
 
         game.logAction(new ActionRecord(
                 blockerId,
@@ -137,6 +172,8 @@ public class CoupService {
         game.setChallengerId(challengerId);
         String targetId = game.getBlockerId() != null ? game.getBlockerId() : game.getActingPlayerId();
         game.logGameMemory(challengerId + " declares " + aiReaction.action + " on " + targetId);
+        game.incrementTotalChallenges();
+
         game.logAction(new ActionRecord(
                 challengerId,
                 ActionType.CHALLENGE,

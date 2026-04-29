@@ -17,6 +17,8 @@ public class Game {
     private GameState state = GameState.WAITING_FOR_PLAYERS;
     private int invalidAction = 0;
     private int turn = 1;
+    private int TotalBlocks = 0;
+    private int TotalChallenges = 0;
 
     private ActionType declaredAction;
     private String actingPlayerId;
@@ -30,6 +32,22 @@ public class Game {
         this.id = id;
     }
 
+    public int getTurn() {
+        return turn;
+    }
+    public int getTotalBlocks() {
+        return TotalBlocks;
+    }
+    public int getTotalChallenges() {
+        return TotalChallenges;
+    }
+
+    public void incrementTotalBlocks() {
+        TotalBlocks++;
+    }
+    public void incrementTotalChallenges() {
+        TotalChallenges++;
+    }
     public List<ActionRecord> getActionLog() {
         return actionLog;
     }
@@ -78,6 +96,14 @@ public class Game {
     public String getChallengerId() { return challengerId; }
     public void setChallengerId(String id) { this.challengerId = id; }
 
+    public String getWinnerId(Game game) {
+        return game.getPlayers()
+                .stream()
+                .filter(Player::isAlive)
+                .map(Player::getId)
+                .findFirst()
+                .orElse(null);
+    }
 
     public void addPlayer(Player player) {
         if (state != GameState.WAITING_FOR_PLAYERS)
@@ -147,6 +173,9 @@ public class Game {
     public void removeCard(String playerID, CardType cardToRemove) {
         this.gameMemory.add(playerID + " looses a card" );
         this.deck.add(getPlayer(playerID).removeCard(cardToRemove));
+        if(!getPlayer(playerID).isAlive()) {
+            this.gameMemory.add(playerID + " is dead");
+        }
 
     }
 
