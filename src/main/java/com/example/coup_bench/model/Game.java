@@ -73,6 +73,7 @@ public class Game {
         invalidAction = 0;
     }
     public void logGameMemory(String memory) {
+        System.out.println(memory);
         gameMemory.add(memory);
     }
 
@@ -118,7 +119,7 @@ public class Game {
     public void startGame() {
         initializeDeck();
         dealCards();
-        this.gameMemory.add("Turn " + turn);
+        logGameMemory("Turn " + turn);
         state = GameState.IN_PROGRESS;
     }
 
@@ -154,7 +155,7 @@ public class Game {
         }
         do {
             this.turn++;
-            this.gameMemory.add("Turn " + turn + ":");
+            logGameMemory("Turn " + turn + ":");
             currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
         } while (!players.get(currentPlayerIndex).isAlive());
     }
@@ -169,16 +170,16 @@ public class Game {
     }
 
     public void switchCard(String playerID, CardType cardToRemove) {
-        this.gameMemory.add(playerID + "switches a card" );
+        logGameMemory(playerID + "switches a card" );
         this.deck.add(getPlayer(playerID).switchCard(deck.pop(),cardToRemove));
 
     }
 
     public void removeCard(String playerID, CardType cardToRemove) {
-        this.gameMemory.add(playerID + " looses a card" );
+        logGameMemory(playerID + " looses a card" );
         this.deck.add(getPlayer(playerID).removeCard(cardToRemove));
         if(!getPlayer(playerID).isAlive()) {
-            this.gameMemory.add(playerID + " is dead");
+            logGameMemory(playerID + " is dead");
         }
 
     }
@@ -192,14 +193,21 @@ public class Game {
     public void declareAction(ActionRecord actionRecord) {
         this.actingPlayerId = actionRecord.getPlayerId();
         this.declaredAction = actionRecord.getAction();
+
+        switch(actionRecord.getAction()) {
+            case STEAL -> this.getPlayer(actingPlayerId).incrementStealAttempts();
+            case ASSASSINATE -> this.getPlayer(actingPlayerId).incrementAssassinationAttempts();
+        }
+
+
         this.targetId = actionRecord.getTargetId();
         clearChallengeData();
         this.state = GameState.ACTION_DECLARED;
         this.actionLog.add(actionRecord);
         if(actionRecord.getTargetId() == null){
-            this.gameMemory.add(actionRecord.getPlayerId() + " calls " + actionRecord.getAction());
+           logGameMemory(actionRecord.getPlayerId() + " calls " + actionRecord.getAction());
         } else{
-            this.gameMemory.add(actionRecord.getPlayerId() + " calls " + actionRecord.getAction() + " on " + actionRecord.getTargetId());
+            logGameMemory(actionRecord.getPlayerId() + " calls " + actionRecord.getAction() + " on " + actionRecord.getTargetId());
         }
 
     }

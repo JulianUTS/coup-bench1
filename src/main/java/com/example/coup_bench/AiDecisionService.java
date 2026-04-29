@@ -29,7 +29,7 @@ public class AiDecisionService {
 
         String response = router.ask(player.getProvider(), prompt);
 
-       // System.out.println("[" + player.getId() + " Prompt] " + prompt);
+       System.out.println(response);
 
         String cleaned = response
                 .trim()
@@ -57,7 +57,7 @@ public class AiDecisionService {
       //  System.out.println("[" + player.getId() + "] " + prompt);
 
         String response = router.ask(player.getProvider(), prompt);
-       // System.out.println("[" + player.getId() + " Prompt] " + prompt);
+        System.out.println(response);
 
         String cleaned = response
                 .trim()
@@ -90,7 +90,7 @@ public class AiDecisionService {
 
         String response = router.ask(player.getProvider(), prompt);
 
-   //     System.out.println("[" + player.getId() + "] " + prompt);
+        System.out.println(response);
 
         String cleaned = response
                 .trim()

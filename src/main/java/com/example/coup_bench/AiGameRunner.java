@@ -35,7 +35,7 @@ public class AiGameRunner {
             while(game.getState() == GameState.IN_PROGRESS && game.getInvalidAction() < 3) {
                 AiAction action = ai.getAction(game, player);
                 ActionRecord actionRecord = new ActionRecord(player.getId(), action.action, action.targetId, action.reason);
-                System.out.println(actionRecord.getDescription());
+               // System.out.println(actionRecord.getDescription());
                 game = coup.declareAction(
                         game,
                         actionRecord
@@ -231,6 +231,8 @@ public class AiGameRunner {
             // 3. Apply action if still valid
             if (game.getState() == GameState.APPLYING_ACTION || game.getState() == GameState.ACTION_DECLARED) {
                 game = coup.applyAction(game, ai);
+            } else if(game.getState() == GameState.BLOCK_DECLARED){
+                game = coup.applyBlock(game);
             }
 
             game = coup.nextTurn(game);

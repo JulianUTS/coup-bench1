@@ -35,42 +35,46 @@ public class CoupService {
         return game;
     }
 
+    public GameSummary getGameSummary(Game game) {
+        GameSummary summary = new GameSummary();
+
+// Basic identifiers
+        summary.setId(null); // MongoDB will generate this
+        summary.setGameId(game.getId());
+
+// Timestamps
+        summary.setTimestampStart(game.getTimestampStart());
+        summary.setTimestampEnd(System.currentTimeMillis());
+
+// Game stats
+        summary.setNumberOfPlayers(game.getPlayers().size());
+        summary.setWinnerId(game.getWinnerId(game));
+        summary.setTotalTurns(game.getTurn());
+        summary.setTotalActions(game.getActionLog().size());
+        summary.setTotalChallenges(game.getTotalBlocks());
+        summary.setTotalBlocks(game.getTotalChallenges());
+        summary.setTotalInvalidActions(game.getInvalidActionLog().size());
+
+// Game memory (if you store AI thoughts or logs)
+        summary.setGameMemory(new ArrayList<>(game.getGameMemory()));
+
+// Invalid actions
+        summary.setInvalidActions(new ArrayList<>(game.getInvalidActionLog()));
+
+// Full action log
+        summary.setActions(new ArrayList<>(game.getActionLog()));
+
+// Final player states
+        summary.setPlayers(game.getPlayers());
+
+        return summary;
+    }
+
     public Game saveIfFinished(Game game) {
 
 
         if (game.getState() == GameState.FINISHED) {
-            GameSummary gameSummary = new GameSummary();
-            GameSummary summary = new GameSummary();
-
-// Basic identifiers
-            summary.setId(null); // MongoDB will generate this
-            summary.setGameId(game.getId());
-
-// Timestamps
-            summary.setTimestampStart(game.getTimestampStart());
-            summary.setTimestampEnd(System.currentTimeMillis());
-
-// Game stats
-            summary.setNumberOfPlayers(game.getPlayers().size());
-            summary.setWinnerId(game.getWinnerId(game));
-            summary.setTotalTurns(game.getTurn());
-            summary.setTotalActions(game.getActionLog().size());
-            summary.setTotalChallenges(game.getTotalBlocks());
-            summary.setTotalBlocks(game.getTotalChallenges());
-            summary.setTotalInvalidActions(game.getInvalidActionLog().size());
-
-// Game memory (if you store AI thoughts or logs)
-            summary.setGameMemory(new ArrayList<>(game.getGameMemory()));
-
-// Invalid actions
-            summary.setInvalidActions(new ArrayList<>(game.getInvalidActionLog()));
-
-// Full action log
-            summary.setActions(new ArrayList<>(game.getActionLog()));
-
-// Final player states
-            summary.setPlayers(game.getPlayers());
-            repo.save(summary);
+            repo.save(getGameSummary(game));
         }
         return game;
     }
@@ -100,32 +104,33 @@ public class CoupService {
         String playerId = actionRecord.getPlayerId();
         ActionType action = actionRecord.getAction();
         String targetId = actionRecord.getTargetId();
-        Player actor = game.getPlayer(playerId);
+        Player player = game.getPlayer(playerId);
+
 
         // --- STRICT RULES ---
         // 1. Validate action legality
-        if (actor.getCoins() >= 10 && action != ActionType.COUP) {
+        if (player.getCoins() >= 10 && action != ActionType.COUP) {
             return (invalidateAction(game, actionRecord, "Must choose COUP if 10 coins or more"));
         }
 
         switch (action) {
 
             case ASSASSINATE -> {
-                if (actor.getCoins() < 3)
+                if (player.getCoins() < 3)
                     return invalidateAction(game, actionRecord, "Not enough coins to ASSASSINATE");
                 if (targetId == null)
                     return invalidateAction(game, actionRecord, "ASSASSINATE requires a target");
-                if (targetId.equals(actor.getId()))
+                if (targetId.equals(player.getId()))
                     return invalidateAction(game, actionRecord, "Cannot ASSASSINATE yourself");
                 if (!game.getPlayer(targetId).isAlive())
                     return invalidateAction(game, actionRecord, "ASSASSINATE requires an alive target");
             }
             case COUP -> {
-                if (actor.getCoins() < 7)
+                if (player.getCoins() < 7)
                     return invalidateAction(game, actionRecord, "Not enough coins to COUP");
                 if (targetId == null)
                     return invalidateAction(game, actionRecord, "COUP requires a target");
-                if (targetId.equals(actor.getId()))
+                if (targetId.equals(player.getId()))
                     return invalidateAction(game, actionRecord, "Cannot COUP yourself");
                 if (!game.getPlayer(targetId).isAlive())
                     return invalidateAction(game, actionRecord, "COUP requires an alive target");
@@ -134,7 +139,7 @@ public class CoupService {
             case STEAL -> {
                 if (targetId == null)
                     return invalidateAction(game, actionRecord, "STEAL requires a target");
-                if (targetId.equals(actor.getId()))
+                if (targetId.equals(player.getId()))
                     return invalidateAction(game, actionRecord, "Cannot STEAL from yourself");
                 if (!game.getPlayer(targetId).isAlive())
                     return invalidateAction(game, actionRecord, "STEAL requires an alive target");
@@ -145,6 +150,10 @@ public class CoupService {
                 if (targetId != null)
                     return invalidateAction(game, actionRecord, action + " must not have a target");
             }
+        }
+
+        if(!player.hasCard(roleForAction(action))) {
+            player.incrementBluffsAttempted();
         }
         game.resetInvalidAction();
         game.declareAction(actionRecord);
@@ -158,6 +167,11 @@ public class CoupService {
         game.setBlockingRole(roleForAction(aiReaction.action));
         game.logGameMemory(blockerId + " declares " + aiReaction.action + " on " + game.getActingPlayerId());
         game.incrementTotalBlocks();
+
+        game.getPlayer(blockerId).incrementBlocksIssued();
+        if (!game.getPlayer(blockerId).hasCard(game.getBlockingRole())){
+            game.getPlayer(blockerId).incrementBluffsAttempted();
+        }
 
         game.logAction(new ActionRecord(
                 blockerId,
@@ -177,6 +191,8 @@ public class CoupService {
         String targetId = game.getBlockerId() != null ? game.getBlockerId() : game.getActingPlayerId();
         game.logGameMemory(challengerId + " declares " + aiReaction.action + " on " + targetId);
         game.incrementTotalChallenges();
+
+        game.getPlayer(challengerId).incrementChallengesIssued();
 
         game.logAction(new ActionRecord(
                 challengerId,
@@ -205,6 +221,9 @@ public class CoupService {
             if(blocker.hasCard(game.getBlockingRole())){
                 //Challenge is unsuccessful, Blocker switches card, Challenger Loses Card
                 game.logGameMemory(blocker.getId() + " wins challenge");
+
+                challenger.incrementChallengesLost();
+
                 CardType cardToLoose = chooseCard(game, challenger, ai);
                 game.switchCard(blocker.getId(), game.getBlockingRole());
                 game.removeCard(challenger.getId(), cardToLoose);
@@ -212,6 +231,11 @@ public class CoupService {
             } else{
                 //Challenge is successful, blocker looses card, orginal action is applied
                 game.logGameMemory(challenger.getId() + " wins challenge");
+
+                blocker.incrementBluffsFailed();
+                blocker.incrementBlocksFailed();
+                challenger.incrementChallengesWon();
+
                 CardType cardToLoose = chooseCard(game, blocker, ai);
                 game.removeCard(blocker.getId(), cardToLoose);
                 game.setState(GameState.APPLYING_ACTION);
@@ -223,6 +247,9 @@ public class CoupService {
             //Challenge is unsuccessful, Player switches card, Challenger Loses Card, orginal action is applied
             if(player.hasCard(challengedCard)) {
                 game.logGameMemory(player.getId() + " wins challenge");
+
+                challenger.incrementChallengesLost();
+
                 CardType cardToLoose = chooseCard(game, challenger, ai);
                 game.switchCard(player.getId(), challengedCard);
                 game.removeCard(challenger.getId(), cardToLoose);
@@ -230,6 +257,10 @@ public class CoupService {
             } else{
                 //Challenge is successful, player looses card, orginal action is invalid
                 game.logGameMemory(challenger.getId() + " wins challenge");
+
+                player.incrementBluffsFailed();
+                challenger.incrementChallengesWon();
+
                 CardType cardToLoose = chooseCard(game, player, ai);
                 game.removeCard(player.getId(), cardToLoose);
                 game.setState(GameState.IN_PROGRESS);
@@ -251,9 +282,14 @@ public class CoupService {
                 ? game.getPlayer(game.getTargetId())
                 : null;
 
+        if(!player.hasCard(roleForAction(action))){
+            player.incrementBluffsSuccessful();
+        }
+
         switch (action) {
             case INCOME -> {
                 player.addCoins(1);
+                player.incrementIncomeCount();
                 game.logGameMemory(player.getId() + " gains 1 coin (INCOME)");
             }
 
@@ -263,11 +299,13 @@ public class CoupService {
             }
 
             case TAX -> {
+                player.incrementTaxCount();
                 player.addCoins(3);
                 game.logGameMemory(player.getId() + " gains 3 coins (DUKE TAX)");
             }
 
             case STEAL -> {
+                player.incrementStealSuccesses();
                 int stolen = Math.min(2, target.getCoins());
                 target.removeCoins(stolen);
                 player.addCoins(stolen);
@@ -283,7 +321,7 @@ public class CoupService {
             case COUP -> {
                 player.removeCoins(7);
                 game.removeCard(target.getId(), chooseCard(game, target, ai));
-                game.logGameMemory(player.getId() + " coups " + target.getId());
+                player.incrementCoupsPerformed();
             }
 
             case EXCHANGE -> {
@@ -309,6 +347,14 @@ public class CoupService {
         return saveIfFinished(game);
     };
 
+    public Game applyBlock(Game game){
+        game.getPlayer(game.getBlockerId()).incrementBlocksSuccessful();
+        if(!game.getPlayer(game.getBlockerId()).hasCard(game.getBlockingRole())){
+            game.getPlayer(game.getBlockerId()).incrementBluffsSuccessful();
+
+        }
+        return saveIfFinished(game);
+    };
 
 
     private CardType roleForAction(ActionType action) {
