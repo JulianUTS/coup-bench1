@@ -2,6 +2,8 @@ package com.example.coup_bench;
 
 import com.example.coup_bench.AiServices.MultiModelRouter;
 import com.example.coup_bench.model.*;
+import com.example.coup_bench.model.AiResponses.AiChooseCard;
+import com.example.coup_bench.model.AiResponses.AiReaction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +26,7 @@ public class AiDecisionService {
 
         String response = router.ask(player.getProvider(), prompt);
 
-        System.out.println("[" + player.getId() + " Prompt] " + prompt);
+       // System.out.println("[" + player.getId() + " Prompt] " + prompt);
 
         String cleaned = response
                 .trim()
@@ -38,7 +40,6 @@ public class AiDecisionService {
 
         } catch (Exception e) {
             System.err.println("Invalid AI JSON: " + response);
-            e.printStackTrace();
 
             AiAction fallback = new AiAction();
             fallback.action = ActionType.INVALID;
@@ -48,12 +49,12 @@ public class AiDecisionService {
 
     }
 
-    public CardType getCardtoLoose(Game game, Player player) {
+    public CardType getCardToLoose(Game game, Player player) {
         String prompt = buildChooseCardPrompt(game, player);
-        System.out.println("[" + player.getId() + "] " + prompt);
+      //  System.out.println("[" + player.getId() + "] " + prompt);
 
         String response = router.ask(player.getProvider(), prompt);
-        System.out.println("[" + player.getId() + " Prompt] " + prompt);
+       // System.out.println("[" + player.getId() + " Prompt] " + prompt);
 
         String cleaned = response
                 .trim()
@@ -86,7 +87,7 @@ public class AiDecisionService {
 
         String response = router.ask(player.getProvider(), prompt);
 
-        System.out.println("[" + player.getId() + "] " + prompt);
+   //     System.out.println("[" + player.getId() + "] " + prompt);
 
         String cleaned = response
                 .trim()
@@ -100,10 +101,9 @@ public class AiDecisionService {
 
         } catch (Exception e) {
             System.err.println("Invalid AI JSON: " + response);
-            e.printStackTrace();
 
             AiReaction fallback = new AiReaction();
-            fallback.action = ActionType.INVALID;
+            fallback.action = ActionType.DO_NOTHING;
             return fallback;
         }
 

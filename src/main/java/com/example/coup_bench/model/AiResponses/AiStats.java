@@ -1,4 +1,4 @@
-package com.example.coup_bench.model;
+package com.example.coup_bench.model.AiResponses;
 
 public class AiStats {
     public int wins;

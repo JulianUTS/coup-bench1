@@ -1,6 +1,7 @@
 package com.example.coup_bench;
 
 import com.example.coup_bench.model.*;
+import com.example.coup_bench.model.AiResponses.AiReaction;
 import org.springframework.stereotype.Service;
 
 
@@ -31,6 +32,7 @@ public class AiGameRunner {
             while(game.getState() == GameState.IN_PROGRESS && game.getInvalidAction() < 3) {
                 AiAction action = ai.getAction(game, player);
                 ActionRecord actionRecord = new ActionRecord(player.getId(), action.action, action.targetId, action.reason);
+                System.out.println(actionRecord.getDescription());
                 game = coup.declareAction(
                         game,
                         actionRecord

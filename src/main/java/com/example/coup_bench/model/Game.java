@@ -7,10 +7,10 @@ public class Game {
     private final String id;
     private final List<Player> players = new ArrayList<>();
     private final Deque<CardType> deck = new ArrayDeque<>();
-    private final List<Card> discardPile = new ArrayList<>();
     private final List<ActionRecord> actionLog = new ArrayList<>();
     private final List<String> gameMemory = new ArrayList<>();
-
+    private final List<InvalidActionRecord> invalidActionLog = new ArrayList<>();
+    
     private int currentPlayerIndex = 0;
     private GameState state = GameState.WAITING_FOR_PLAYERS;
     private int invalidAction = 0;
@@ -31,6 +31,9 @@ public class Game {
     public List<ActionRecord> getActionLog() {
         return actionLog;
     }
+    public List<InvalidActionRecord> getInvalidActionLog() {
+        return invalidActionLog;
+    }
 
     public List<String> getGameMemory() {
         return gameMemory;
@@ -45,13 +48,15 @@ public class Game {
     public void resetInvalidAction() {
         invalidAction = 0;
     }
-    public int getTurn() {return turn;}
     public void logGameMemory(String memory) {
         gameMemory.add(memory);
     }
 
     public void logAction(ActionRecord record) {
         actionLog.add(record);
+    }
+    public void logInvalidAction(InvalidActionRecord record) {
+        invalidActionLog.add(record);
     }
     public String getId() { return id; }
     public List<Player> getPlayers() { return players; }
@@ -117,13 +122,12 @@ public class Game {
         }
         do {
             this.turn++;
-            this.gameMemory.add("Turn " + turn);
+            this.gameMemory.add("Turn " + turn + ":");
             currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
         } while (!players.get(currentPlayerIndex).isAlive());
     }
 
     public CardType drawCard() { return deck.pop(); }
-    public void discard(Card card) { discardPile.add(card); }
 
     public Player getPlayer(String id) {
         return players.stream()

@@ -1,20 +1,19 @@
 package com.example.coup_bench.model;
 
-
-import com.example.coup_bench.model.ActionType;
-
-public class ActionRecord {
-
+public class InvalidActionRecord {
     private final String playerId;
     private final ActionType action;
     private final String targetId;
     private final String description;
+    private final String errorMessage;
 
-    public ActionRecord(String playerId, ActionType action, String targetId, String description) {
+    public InvalidActionRecord(String playerId, ActionType action, String targetId, String description, String errorMessage) {
         this.playerId = playerId;
         this.action = action;
         this.targetId = targetId;
         this.description = description;
+        this.errorMessage = errorMessage;
+
     }
 
     public String getPlayerId() {
@@ -32,5 +31,8 @@ public class ActionRecord {
     public String getDescription() {
         return description;
     }
-}
 
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+}

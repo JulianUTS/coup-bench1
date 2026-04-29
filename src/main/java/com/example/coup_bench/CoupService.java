@@ -1,6 +1,7 @@
 package com.example.coup_bench;
 
 import com.example.coup_bench.model.*;
+import com.example.coup_bench.model.AiResponses.AiReaction;
 import com.example.coup_bench.repo.GameRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,12 +17,7 @@ public class CoupService {
     }
 
     public Game createGame() {
-        Game game = new Game(UUID.randomUUID().toString());
         return new Game(UUID.randomUUID().toString());
-    }
-
-    public Game getGame(String gameId) {
-        return repo.find(gameId);
     }
 
     public Game joinGame(Game game, String playerId, String provider, String personality) {
@@ -47,8 +43,16 @@ public class CoupService {
         return saveIfFinished(game);
     }
 
-    private Game invalidateAction(Game game, String playerId, ActionType action, String message) {
-        game.logGameMemory(playerId + " calls invalid " + action + ": " + message);
+    private Game invalidateAction(Game game, ActionRecord actionRecord, String message) {
+        game.logGameMemory(actionRecord.getPlayerId() + " calls invalid " +  actionRecord.getAction() + ": " + message);
+        InvalidActionRecord invalidActionRecord = new InvalidActionRecord(
+                actionRecord.getPlayerId(),
+                actionRecord.getAction(),
+                actionRecord.getTargetId(),
+                actionRecord.getDescription(),
+                message
+                );
+        game.logInvalidAction(invalidActionRecord);
         game.incrementInvalidAction();
         return saveIfFinished(game);
     }
@@ -63,45 +67,45 @@ public class CoupService {
         // --- STRICT RULES ---
         // 1. Validate action legality
         if (actor.getCoins() >= 10 && action != ActionType.COUP) {
-            return (invalidateAction(game, playerId, action, "Must choose COUP if 10 coins or more"));
+            return (invalidateAction(game, actionRecord, "Must choose COUP if 10 coins or more"));
         }
 
         switch (action) {
 
             case ASSASSINATE -> {
                 if (actor.getCoins() < 3)
-                    return invalidateAction(game, playerId, action, "Not enough coins to ASSASSINATE");
+                    return invalidateAction(game, actionRecord, "Not enough coins to ASSASSINATE");
                 if (targetId == null)
-                    return invalidateAction(game, playerId, action, "ASSASSINATE requires a target");
+                    return invalidateAction(game, actionRecord, "ASSASSINATE requires a target");
                 if (targetId.equals(actor.getId()))
-                    return invalidateAction(game, playerId, action, "Cannot ASSASSINATE yourself");
+                    return invalidateAction(game, actionRecord, "Cannot ASSASSINATE yourself");
                 if (!game.getPlayer(targetId).isAlive())
-                    return invalidateAction(game, playerId, action, "ASSASSINATE requires an alive target");
+                    return invalidateAction(game, actionRecord, "ASSASSINATE requires an alive target");
             }
             case COUP -> {
                 if (actor.getCoins() < 7)
-                    return invalidateAction(game, playerId, action, "Not enough coins to COUP");
+                    return invalidateAction(game, actionRecord, "Not enough coins to COUP");
                 if (targetId == null)
-                    return invalidateAction(game, playerId, action, "COUP requires a target");
+                    return invalidateAction(game, actionRecord, "COUP requires a target");
                 if (targetId.equals(actor.getId()))
-                    return invalidateAction(game, playerId, action, "Cannot COUP yourself");
+                    return invalidateAction(game, actionRecord, "Cannot COUP yourself");
                 if (!game.getPlayer(targetId).isAlive())
-                    return invalidateAction(game, playerId, action, "COUP requires an alive target");
+                    return invalidateAction(game, actionRecord, "COUP requires an alive target");
             }
 
             case STEAL -> {
                 if (targetId == null)
-                    return invalidateAction(game, playerId, action, "STEAL requires a target");
+                    return invalidateAction(game, actionRecord, "STEAL requires a target");
                 if (targetId.equals(actor.getId()))
-                    return invalidateAction(game, playerId, action, "Cannot STEAL from yourself");
+                    return invalidateAction(game, actionRecord, "Cannot STEAL from yourself");
                 if (!game.getPlayer(targetId).isAlive())
-                    return invalidateAction(game, playerId, action, "STEAL requires an alive target");
+                    return invalidateAction(game, actionRecord, "STEAL requires an alive target");
                 if (game.getPlayer(targetId).getCoins() == 0)
-                    return invalidateAction(game, playerId, action, "STEAL requires a target with more than 0 coins");
+                    return invalidateAction(game, actionRecord, "STEAL requires a target with more than 0 coins");
             }
             case TAX, FOREIGN_AID, INCOME, EXCHANGE -> {
                 if (targetId != null)
-                    return invalidateAction(game, playerId, action, action + " must not have a target");
+                    return invalidateAction(game, actionRecord, action + " must not have a target");
             }
         }
         game.resetInvalidAction();
@@ -147,7 +151,7 @@ public class CoupService {
         if(player.getCards().size() == 1){
             return player.getCards().getFirst();
         }
-        return ai.getCardtoLoose(game, player);
+        return ai.getCardToLoose(game, player);
 
     }
 
@@ -206,12 +210,6 @@ public class CoupService {
                 ? game.getPlayer(game.getTargetId())
                 : null;
 
-//System Comment
-
-
-
-
-        // --- APPLY ACTION EFFECTS ---
         switch (action) {
             case INCOME -> {
                 player.addCoins(1);
