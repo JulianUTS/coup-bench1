@@ -10,7 +10,9 @@ public class Game {
     private final List<ActionRecord> actionLog = new ArrayList<>();
     private final List<String> gameMemory = new ArrayList<>();
     private final List<InvalidActionRecord> invalidActionLog = new ArrayList<>();
-    
+    private final long timestampStart = System.currentTimeMillis();
+
+
     private int currentPlayerIndex = 0;
     private GameState state = GameState.WAITING_FOR_PLAYERS;
     private int invalidAction = 0;
@@ -34,7 +36,7 @@ public class Game {
     public List<InvalidActionRecord> getInvalidActionLog() {
         return invalidActionLog;
     }
-
+    public long getTimestampStart() {return timestampStart;}
     public List<String> getGameMemory() {
         return gameMemory;
     }
