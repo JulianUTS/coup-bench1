@@ -6,7 +6,7 @@ public class Game {
 
     private final String id;
     private final List<Player> players = new ArrayList<>();
-    private final Deque<Card> deck = new ArrayDeque<>();
+    private final Deque<CardType> deck = new ArrayDeque<>();
     private final List<Card> discardPile = new ArrayList<>();
     private final List<ActionRecord> actionLog = new ArrayList<>();
     private final List<String> gameMemory = new ArrayList<>();
@@ -14,12 +14,13 @@ public class Game {
     private int currentPlayerIndex = 0;
     private GameState state = GameState.WAITING_FOR_PLAYERS;
     private int invalidAction = 0;
+    private int turn = 1;
 
     private ActionType declaredAction;
     private String actingPlayerId;
-    private String targetPlayerId;
+    private String targetId;
 
-    private String blockingPlayerId;
+    private String blockerId;
     private CardType blockingRole;
     private String challengerId;
 
@@ -44,7 +45,7 @@ public class Game {
     public void resetInvalidAction() {
         invalidAction = 0;
     }
-
+    public int getTurn() {return turn;}
     public void logGameMemory(String memory) {
         gameMemory.add(memory);
     }
@@ -59,18 +60,16 @@ public class Game {
 
     public ActionType getDeclaredAction() { return declaredAction; }
     public String getActingPlayerId() { return actingPlayerId; }
-    public String getTargetPlayerId() { return targetPlayerId; }
+    public String getTargetId() { return targetId; }
 
-    public String getBlockingPlayerId() { return blockingPlayerId; }
-    public void setBlockingPlayerId(String id) { this.blockingPlayerId = id; }
+    public String getBlockerId() { return blockerId; }
+    public void setBlockerId(String id) { this.blockerId = id; }
 
     public CardType getBlockingRole() { return blockingRole; }
     public void setBlockingRole(CardType role) { this.blockingRole = role; }
 
     public String getChallengerId() { return challengerId; }
     public void setChallengerId(String id) { this.challengerId = id; }
-
-
 
 
     public void addPlayer(Player player) {
@@ -82,17 +81,18 @@ public class Game {
     public void startGame() {
         initializeDeck();
         dealCards();
+        this.gameMemory.add("Turn " + turn);
         state = GameState.IN_PROGRESS;
     }
 
     private void initializeDeck() {
-        List<Card> cards = new ArrayList<>();
+        List<CardType> cards = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            cards.add(new Card(CardType.DUKE));
-            cards.add(new Card(CardType.ASSASSIN));
-            cards.add(new Card(CardType.CAPTAIN));
-            cards.add(new Card(CardType.AMBASSADOR));
-            cards.add(new Card(CardType.CONTESSA));
+            cards.add(CardType.DUKE);
+            cards.add(CardType.ASSASSIN);
+            cards.add(CardType.CAPTAIN);
+            cards.add(CardType.AMBASSADOR);
+            cards.add(CardType.CONTESSA);
         }
         Collections.shuffle(cards);
         deck.addAll(cards);
@@ -110,16 +110,19 @@ public class Game {
     }
 
     public void nextTurn() {
+
         if (players.stream().filter(Player::isAlive).count() <= 1) {
             state = GameState.FINISHED;
             return;
         }
         do {
+            this.turn++;
+            this.gameMemory.add("Turn " + turn);
             currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
         } while (!players.get(currentPlayerIndex).isAlive());
     }
 
-    public Card drawCard() { return deck.pop(); }
+    public CardType drawCard() { return deck.pop(); }
     public void discard(Card card) { discardPile.add(card); }
 
     public Player getPlayer(String id) {
@@ -129,15 +132,38 @@ public class Game {
                 .orElseThrow();
     }
 
-    public void declareAction(String playerId, ActionType action, String targetId) {
-        if (!getCurrentPlayer().getId().equals(playerId))
-            throw new IllegalStateException("Not your turn");
-        this.actingPlayerId = playerId;
-        this.declaredAction = action;
-        this.targetPlayerId = targetId;
-        this.blockingPlayerId = null;
-        this.blockingRole = null;
-        this.challengerId = null;
-        this.state = GameState.ACTION_DECLARED;
+    public void switchCard(String playerID, CardType cardToRemove) {
+        this.gameMemory.add(playerID + "switches a card" );
+        this.deck.add(getPlayer(playerID).switchCard(deck.pop(),cardToRemove));
+
     }
+
+    public void removeCard(String playerID, CardType cardToRemove) {
+        this.gameMemory.add(playerID + " looses a card" );
+        this.deck.add(getPlayer(playerID).removeCard(cardToRemove));
+
+    }
+
+    public void clearChallengeData(){
+        this.challengerId = null;
+        this.blockerId = null;
+        this.blockingRole = null;
+    }
+
+    public void declareAction(ActionRecord actionRecord) {
+        this.actingPlayerId = actionRecord.getPlayerId();
+        this.declaredAction = actionRecord.getAction();
+        this.targetId = actionRecord.getTargetId();
+        clearChallengeData();
+        this.state = GameState.ACTION_DECLARED;
+        this.actionLog.add(actionRecord);
+        if(actionRecord.getTargetId() == null){
+            this.gameMemory.add(actionRecord.getPlayerId() + " calls " + actionRecord.getAction());
+        } else{
+            this.gameMemory.add(actionRecord.getPlayerId() + " calls " + actionRecord.getAction() + " on " + actionRecord.getTargetId());
+        }
+
+    }
+
+
 }

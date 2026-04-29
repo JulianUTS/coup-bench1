@@ -42,305 +42,233 @@ public class CoupService {
     }
 
     public Game invalidGame(Game game) {
-        game.logGameMemory("3 Valid Actions used in a row, game is invalid");
+        game.logGameMemory("3 Invalid Actions used in a row, game is invalid");
         game.setState(GameState.FINISHED);
-        return game;
+        return saveIfFinished(game);
     }
 
-    private Game invalidateAction(Game game, String playerId, String message) {
-        game.logGameMemory(playerId + " calls invalid action: " + message);
+    private Game invalidateAction(Game game, String playerId, ActionType action, String message) {
+        game.logGameMemory(playerId + " calls invalid " + action + ": " + message);
         game.incrementInvalidAction();
         return saveIfFinished(game);
     }
 
     public Game declareAction(Game game, ActionRecord actionRecord) {
+
         String playerId = actionRecord.getPlayerId();
         ActionType action = actionRecord.getAction();
         String targetId = actionRecord.getTargetId();
-
         Player actor = game.getPlayer(playerId);
-
-        if(targetId == null){
-            game.logGameMemory(playerId + " calls " + action);
-        } else{
-            game.logGameMemory(playerId + " calls " + action + " on " + targetId);
-        }
 
         // --- STRICT RULES ---
         // 1. Validate action legality
         if (actor.getCoins() >= 10 && action != ActionType.COUP) {
-            return (invalidateAction(game, playerId, "Must choose COUP if 10 coins or more"));
+            return (invalidateAction(game, playerId, action, "Must choose COUP if 10 coins or more"));
         }
 
         switch (action) {
 
             case ASSASSINATE -> {
                 if (actor.getCoins() < 3)
-                    return invalidateAction(game, playerId, "Not enough coins to ASSASSINATE");
+                    return invalidateAction(game, playerId, action, "Not enough coins to ASSASSINATE");
                 if (targetId == null)
-                    return invalidateAction(game, playerId, "ASSASSINATE requires a target");
+                    return invalidateAction(game, playerId, action, "ASSASSINATE requires a target");
                 if (targetId.equals(actor.getId()))
-                    return invalidateAction(game, playerId, "Cannot ASSASSINATE yourself");
+                    return invalidateAction(game, playerId, action, "Cannot ASSASSINATE yourself");
                 if (!game.getPlayer(targetId).isAlive())
-                    return invalidateAction(game, playerId, "ASSASSINATE requires an alive target");
+                    return invalidateAction(game, playerId, action, "ASSASSINATE requires an alive target");
             }
             case COUP -> {
                 if (actor.getCoins() < 7)
-                    return invalidateAction(game, playerId, "Not enough coins to COUP");
+                    return invalidateAction(game, playerId, action, "Not enough coins to COUP");
                 if (targetId == null)
-                    return invalidateAction(game, playerId, "COUP requires a target");
+                    return invalidateAction(game, playerId, action, "COUP requires a target");
                 if (targetId.equals(actor.getId()))
-                    return invalidateAction(game, playerId, "Cannot COUP yourself");
+                    return invalidateAction(game, playerId, action, "Cannot COUP yourself");
                 if (!game.getPlayer(targetId).isAlive())
-                    return invalidateAction(game, playerId, "COUP requires an alive target");
+                    return invalidateAction(game, playerId, action, "COUP requires an alive target");
             }
 
             case STEAL -> {
                 if (targetId == null)
-                    return invalidateAction(game, playerId, "STEAL requires a target");
+                    return invalidateAction(game, playerId, action, "STEAL requires a target");
                 if (targetId.equals(actor.getId()))
-                    return invalidateAction(game, playerId, "Cannot STEAL from yourself");
+                    return invalidateAction(game, playerId, action, "Cannot STEAL from yourself");
                 if (!game.getPlayer(targetId).isAlive())
-                    return invalidateAction(game, playerId, "STEAL requires an alive target");
+                    return invalidateAction(game, playerId, action, "STEAL requires an alive target");
                 if (game.getPlayer(targetId).getCoins() == 0)
-                    return invalidateAction(game, playerId, "STEAL requires a target with more than 0 coins");
+                    return invalidateAction(game, playerId, action, "STEAL requires a target with more than 0 coins");
             }
             case TAX, FOREIGN_AID, INCOME, EXCHANGE -> {
                 if (targetId != null)
-                    return invalidateAction(game, playerId, action + " must not have a target");
+                    return invalidateAction(game, playerId, action, action + " must not have a target");
             }
         }
-
-        game.declareAction(playerId, action, targetId);
+        game.resetInvalidAction();
+        game.declareAction(actionRecord);
         return saveIfFinished(game);
     }
 
-    public Game declareBlock(Game game, String blockingPlayerId, CardType claimedRole) {
-
-        // Cannot block INCOME
-        if (game.getDeclaredAction() == ActionType.INCOME)
-            throw new IllegalStateException("Cannot block INCOME");
-
-        // Cannot block COUP
-        if (game.getDeclaredAction() == ActionType.COUP)
-            throw new IllegalStateException("Cannot block COUP");
+    public Game declareBlock(Game game, String blockerId, AiReaction aiReaction) {
 
         game.setState(GameState.BLOCK_DECLARED);
-        game.setBlockingPlayerId(blockingPlayerId);
-        game.setBlockingRole(claimedRole);
+        game.setBlockerId(blockerId);
+        game.setBlockingRole(roleForAction(aiReaction.action));
+        game.logGameMemory(blockerId + " declares " + aiReaction.action + " on " + game.getActingPlayerId());
 
         game.logAction(new ActionRecord(
-                blockingPlayerId,
-                ActionType.BLOCK,
+                blockerId,
+                aiReaction.action,
                 game.getActingPlayerId(),
-                blockingPlayerId + " blocks " + game.getDeclaredAction() + " claiming " + claimedRole
+                aiReaction.reason
         ));
 
         return saveIfFinished(game);
     }
 
 
-    public Game declareChallenge(Game game, String challengerId) {
+    public Game declareChallenge(Game game, String challengerId, AiReaction aiReaction) {
 
-
-        // Cannot challenge INCOME
-        if (game.getDeclaredAction() == ActionType.INCOME)
-            throw new IllegalStateException("Cannot challenge INCOME");
-
-        game.setState(GameState.CHALLENGE_PENDING);
+        game.setState(GameState.CHALLENGE_DECLARED);
         game.setChallengerId(challengerId);
-
+        String targetId = game.getBlockerId() != null ? game.getBlockerId() : game.getActingPlayerId();
+        game.logGameMemory(challengerId + " declares " + aiReaction.action + " on " + targetId);
         game.logAction(new ActionRecord(
                 challengerId,
                 ActionType.CHALLENGE,
-                game.getBlockingPlayerId() != null ? game.getBlockingPlayerId() : game.getActingPlayerId(),
-                challengerId + " challenges the claim"
+                targetId,
+                aiReaction.reason
         ));
 
         return saveIfFinished(game);
     }
 
-
-    public Game resolveChallenge(Game game) {
-
-        boolean challengeOnBlock = game.getState() == GameState.BLOCK_DECLARED
-                || (game.getState() == GameState.CHALLENGE_PENDING && game.getBlockingPlayerId() != null);
-
-        String challengedPlayerId = challengeOnBlock
-                ? game.getBlockingPlayerId()
-                : game.getActingPlayerId();
-
-        Player challenged = game.getPlayer(challengedPlayerId);
-        Player challenger = game.getPlayer(game.getChallengerId());
-
-        CardType claimedRole = challengeOnBlock
-                ? game.getBlockingRole()
-                : roleForAction(game.getDeclaredAction());
-
-        boolean challengedHasRole = challenged.getCards().stream()
-                .anyMatch(c -> c.getType() == claimedRole && !c.isRevealed());
-
-        if (challengedHasRole) {
-            // Challenger loses
-
-            game.logAction(new ActionRecord(
-                    challenger.getId(),
-                    ActionType.CHALLENGE,
-                    challenged.getId(),
-                    challenger.getId() + " loses challenge against " + challenged.getId()
-            ));
-            Card lost = challenger.removeAnyCard();
-            game.logAction(new ActionRecord(
-                    challenger.getId(),
-                    ActionType.LOSE_CARD,
-                    null,
-                    challenger.getId() + " loses a card (" + lost.getType() + ")"
-            ));
-
-            // Challenged swaps that role
-            challenged.getCards().stream()
-                    .filter(c -> c.getType() == claimedRole && !c.isRevealed())
-                    .findFirst()
-                    .ifPresent(card -> {
-                        card.reveal();
-                        game.discard(card);
-                        challenged.addCard(game.drawCard());
-                    });
-            game.logAction(new ActionRecord(
-                    challenged.getId(),
-                    ActionType.EXCHANGE,
-                    null,
-                    challenged.getId() + " proves " + claimedRole + " and draws a replacement"
-            ));
-
-            // If challenge was on block, action is blocked; otherwise action proceeds
-            game.setState(challengeOnBlock ? GameState.IN_PROGRESS : GameState.APPLYING_ACTION);
-        } else {
-            // Challenged loses
-            challenged.removeAnyCard();
-            // If challenged was actor, action fails; if blocker, block fails and action proceeds
-            if (challengeOnBlock) {
-                game.setState(GameState.APPLYING_ACTION);
-            } else {
-                game.setState(GameState.IN_PROGRESS);
-            }
-            game.logAction(new ActionRecord(
-                    challenged.getId(),
-                    ActionType.CHALLENGE,
-                    challenger.getId(),
-                    challenged.getId() + " loses challenge and reveals a card"
-            ));
-
+    public CardType chooseCard(Game game, Player player, AiDecisionService ai) {
+        if(player.getCards().size() == 1){
+            return player.getCards().getFirst();
         }
+        return ai.getCardtoLoose(game, player);
 
-        repo.save(game);
-        return game;
     }
 
-    public Game applyAction(Game game) {
+
+    public Game resolveChallenge(Game game, AiDecisionService ai) {
+        //Challenge the block
+        Player challenger = game.getPlayer(game.getChallengerId());
+        if (game.getBlockerId() != null) {
+            Player blocker = game.getPlayer(game.getBlockerId());
+            if(blocker.hasCard(game.getBlockingRole())){
+                //Challenge is unsuccessful, Blocker switches card, Challenger Loses Card
+                game.logGameMemory(blocker.getId() + " wins challenge");
+                CardType cardToLoose = chooseCard(game, challenger, ai);
+                game.switchCard(blocker.getId(), game.getBlockingRole());
+                game.removeCard(challenger.getId(), cardToLoose);
+                game.setState(GameState.IN_PROGRESS);
+            } else{
+                //Challenge is successful, blocker looses card, orginal action is applied
+                game.logGameMemory(challenger.getId() + " wins challenge");
+                CardType cardToLoose = chooseCard(game, blocker, ai);
+                game.removeCard(blocker.getId(), cardToLoose);
+                game.setState(GameState.APPLYING_ACTION);
+            }
+            //Challenge the action
+        } else{
+            Player player = game.getPlayer(game.getActingPlayerId());
+            CardType challengedCard = roleForAction(game.getDeclaredAction());
+            //Challenge is unsuccessful, Player switches card, Challenger Loses Card, orginal action is applied
+            if(player.hasCard(challengedCard)) {
+                game.logGameMemory(player.getId() + " wins challenge");
+                CardType cardToLoose = chooseCard(game, challenger, ai);
+                game.switchCard(player.getId(), challengedCard);
+                game.removeCard(challenger.getId(), cardToLoose);
+                game.setState(GameState.APPLYING_ACTION);
+            } else{
+                //Challenge is successful, player looses card, orginal action is invalid
+                game.logGameMemory(challenger.getId() + " wins challenge");
+                CardType cardToLoose = chooseCard(game, player, ai);
+                game.removeCard(player.getId(), cardToLoose);
+                game.setState(GameState.IN_PROGRESS);
+            }
+        }
+        game.clearChallengeData();
+        return saveIfFinished(game);
+    }
+
+    public Game applyAction(Game game, AiDecisionService ai) {
 
         if (game.getState() != GameState.APPLYING_ACTION &&
                 game.getState() != GameState.ACTION_DECLARED)
             throw new IllegalStateException("No action to apply");
 
         ActionType action = game.getDeclaredAction();
-        Player actor = game.getPlayer(game.getActingPlayerId());
-        Player target = game.getTargetPlayerId() != null
-                ? game.getPlayer(game.getTargetPlayerId())
+        Player player = game.getPlayer(game.getActingPlayerId());
+        Player target = game.getTargetId() != null
+                ? game.getPlayer(game.getTargetId())
                 : null;
 
 //System Comment
-        System.out.println("[ACTION TAKEN] " + actor.getId() + " performs " + action +
-                (target != null ? " on " + target.getId() : ""));
 
-        String log = actor.getId() + " performed " + action +
-                (target != null ? " on " + target.getId() : "");
 
-        for (Player p : game.getPlayers()) {
-            p.getMemory().history.add(log);
-        }
 
 
         // --- APPLY ACTION EFFECTS ---
         switch (action) {
             case INCOME -> {
-                actor.addCoins(1);
-                game.logAction(new ActionRecord(
-                        actor.getId(), action, null,
-                        actor.getId() + " gains 1 coin (INCOME)"
-                ));
+                player.addCoins(1);
+                game.logGameMemory(player.getId() + " gains 1 coin (INCOME)");
             }
 
             case FOREIGN_AID -> {
-                actor.addCoins(2);
-                game.logAction(new ActionRecord(
-                        actor.getId(), action, null,
-                        actor.getId() + " gains 2 coins (FOREIGN AID)"
-                ));
+                player.addCoins(2);
+                game.logGameMemory(player.getId() + " gains 2 coins (FOREIGN AID)");
             }
 
             case TAX -> {
-                actor.addCoins(3);
-                game.logAction(new ActionRecord(
-                        actor.getId(), action, null,
-                        actor.getId() + " gains 3 coins (DUKE TAX)"
-                ));
+                player.addCoins(3);
+                game.logGameMemory(player.getId() + " gains 3 coins (DUKE TAX)");
             }
 
             case STEAL -> {
                 int stolen = Math.min(2, target.getCoins());
                 target.removeCoins(stolen);
-                actor.addCoins(stolen);
-
-                game.logAction(new ActionRecord(
-                        actor.getId(), action, target.getId(),
-                        actor.getId() + " steals " + stolen + " coins from " + target.getId()
-                ));
+                player.addCoins(stolen);
+                game.logGameMemory(player.getId() + " steals " + stolen + " coins from " + target.getId());
             }
 
             case ASSASSINATE -> {
-                actor.removeCoins(3);
-                if (target != null) target.removeAnyCard();
-
-                game.logAction(new ActionRecord(
-                        actor.getId(), action, target.getId(),
-                        actor.getId() + " assassinates " + target.getId()
-                ));
+                player.removeCoins(3);
+                game.removeCard(player.getId(), chooseCard(game, player, ai));
+                game.logGameMemory(player.getId() + " assassinates " + target.getId());
             }
 
             case COUP -> {
-                actor.removeCoins(7);
-                if (target != null) target.removeAnyCard();
-
-                game.logAction(new ActionRecord(
-                        actor.getId(), action, target.getId(),
-                        actor.getId() + " coups " + target.getId()
-                ));
+                player.removeCoins(7);
+                game.removeCard(target.getId(), chooseCard(game, target, ai));
+                game.logGameMemory(player.getId() + " coups " + target.getId());
             }
 
             case EXCHANGE -> {
                 // Minimal version: draw 2 cards and keep both
-                Card c1 = game.drawCard();
-                Card c2 = game.drawCard();
-                actor.addCard(c1);
-                actor.addCard(c2);
+                CardType c1 = game.drawCard();
+                CardType c2 = game.drawCard();
+                player.addCard(c1);
+                player.addCard(c2);
 
-                game.logAction(new ActionRecord(
-                        actor.getId(), action, null,
-                        actor.getId() + " exchanges cards"
-                ));
+                game.logGameMemory(player.getId() + " exchanges cards");
             }
         }
 
-        // --- NEXT TURN ---
-        game.nextTurn();
-
-        if (game.getState() != GameState.FINISHED) {
-            game.setState(GameState.IN_PROGRESS);
-        }
 
         return saveIfFinished(game);
     }
+
+    public Game nextTurn(Game game){
+        game.nextTurn();
+        if (game.getState() != GameState.FINISHED) {
+            game.setState(GameState.IN_PROGRESS);
+        }
+        return saveIfFinished(game);
+    };
 
 
 
@@ -350,6 +278,10 @@ public class CoupService {
             case STEAL -> CardType.CAPTAIN;
             case ASSASSINATE -> CardType.ASSASSIN;
             case EXCHANGE -> CardType.AMBASSADOR;
+            case BLOCK_USING_AMBASSADOR -> CardType.AMBASSADOR;
+            case BLOCK_USING_CAPTAIN -> CardType.CAPTAIN;
+            case BLOCK_USING_CONTESSA -> CardType.CONTESSA;
+
             default -> null;
         };
     }

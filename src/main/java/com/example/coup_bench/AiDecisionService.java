@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class AiDecisionService {
@@ -18,11 +19,12 @@ public class AiDecisionService {
         this.router = router;
     }
 
-    public AiDecision decide(Game game, Player player, int scenario) {
-        String prompt = buildPrompt(game, player, scenario);
+    public AiAction getAction(Game game, Player player) {
+        String prompt = buildActionPrompt(game, player);
 
         String response = router.ask(player.getProvider(), prompt);
-        System.out.println("[" + player.getId() + "] " + response);
+
+        System.out.println("[" + player.getId() + " Prompt] " + prompt);
 
         String cleaned = response
                 .trim()
@@ -32,23 +34,76 @@ public class AiDecisionService {
                 .replace("\"null\"", "null");
 
         try {
-            AiDecision decision = mapper.readValue(cleaned, AiDecision.class);
-
-            // 🔥 CRITICAL: Guarantee action is never null
-            if (decision.action == null) {
-                decision.action = ActionType.INCOME;
-            }
-
-
-            return decision;
+                return mapper.readValue(cleaned, AiAction.class);
 
         } catch (Exception e) {
             System.err.println("Invalid AI JSON: " + response);
             e.printStackTrace();
 
-            AiDecision fallback = new AiDecision();
-            fallback.action = ActionType.INCOME;
+            AiAction fallback = new AiAction();
+            fallback.action = ActionType.INVALID;
             fallback.targetId = null;
+            return fallback;
+        }
+
+    }
+
+    public CardType getCardtoLoose(Game game, Player player) {
+        String prompt = buildChooseCardPrompt(game, player);
+        System.out.println("[" + player.getId() + "] " + prompt);
+
+        String response = router.ask(player.getProvider(), prompt);
+        System.out.println("[" + player.getId() + " Prompt] " + prompt);
+
+        String cleaned = response
+                .trim()
+                .replace("```json", "")
+                .replace("```", "")
+                .replace("`", "")
+                .replace("\"null\"", "null");
+
+        try {
+            AiChooseCard chosenCard = mapper.readValue(cleaned, AiChooseCard.class);
+            if(player.hasCard(chosenCard.card)) {
+                return chosenCard.card;
+            } else{
+                System.err.println("Invalid card " + response);
+                CardType fallback = player.getCards().get(new Random().nextInt(player.getCards().size()));;
+                return fallback;
+            }
+
+        } catch (Exception e) {
+            System.err.println("Invalid AI JSON: " + response);
+
+            CardType fallback = player.getCards().get(new Random().nextInt(player.getCards().size()));;
+            return fallback;
+        }
+
+    }
+
+    public AiReaction getReaction(Game game, Player player, int scenario){
+        String prompt = buildReactionPrompt(game, player, scenario);
+
+        String response = router.ask(player.getProvider(), prompt);
+
+        System.out.println("[" + player.getId() + "] " + prompt);
+
+        String cleaned = response
+                .trim()
+                .replace("```json", "")
+                .replace("```", "")
+                .replace("`", "")
+                .replace("\"null\"", "null");
+
+        try {
+            return mapper.readValue(cleaned, AiReaction.class);
+
+        } catch (Exception e) {
+            System.err.println("Invalid AI JSON: " + response);
+            e.printStackTrace();
+
+            AiReaction fallback = new AiReaction();
+            fallback.action = ActionType.INVALID;
             return fallback;
         }
 
@@ -109,19 +164,12 @@ public class AiDecisionService {
             allowedActions.clear();
             allowedActions.add("COUP");
         }
-        System.out.println(allowedActions);
         return allowedActions;
     }
 
-
-
-    private String buildPrompt(Game game, Player player, int scenario) {
+    private String buildActionPrompt(Game game, Player player) {
         String personalityRules = personalityPrompt(player.getPersonality());
-
-        String memoryText = String.join("\n", player.getMemory().history);
-        String scenarioText = scenarioText(game, player, scenario);
-
-        System.out.println(memoryText);
+        String memoryText = String.join("\n", game.getGameMemory());
 
         return """
                 You are an AI agent playing Coup.
@@ -139,7 +187,26 @@ public class AiDecisionService {
                 Other players:
                 %s
                 
+                Game state: %s
+                
+                ### COUP RULES
+                - You may ONLY choose COUP if you have 7 or more coins.
+                - If you have 10 or more coins, COUP is the ONLY valid action.
+                - When choosing COUP, you MUST select a valid targetId (any other alive player).
+                - Never choose COUP with fewer than 7 coins.
+                - You can only choose ASSASSINATE if you have 3 or more coins.
+                - When choosing ASSASSINATE, you can only choose a player with more than 0 coins.
+                
+                ### ALLOWED ACTIONS FOR YOU
                 %s
+                
+                
+                ### JSON SCHEMA (FOLLOW EXACTLY)
+                {
+                  "action": string | null,
+                  "targetId": string | null,
+                  "reason": string
+                }
                 
                 ### EXPLANATION RULES
                 - "reason" MUST be a short explanation (max 12 words).
@@ -160,14 +227,123 @@ public class AiDecisionService {
                 personalityRules,
                 player.getId(),
                 player.getCoins(),
-                player.getCards().stream().map(c -> c.getType().name()).toList(),
+                player.getCards().stream().toList(),
                 memoryText,
                 game.getPlayers().stream()
                         .filter(p -> !p.getId().equals(player.getId()))
-                        .map(p -> p.getId() + " (" + p.getCoins() + " coins)")
+                        .map(p -> p.getId() + " (" + p.getCoins() + " coins, " + p.getCards().size() + " cards)")
                         .toList(),
-                scenarioText
+                game.getState(),
+                allowedActions(player)
         );
+    }
+
+    private String buildChooseCardPrompt(Game game, Player player) {
+        String personalityRules = personalityPrompt(player.getPersonality());
+        String memoryText = String.join("\n", game.getGameMemory());
+
+        return """
+                You are an AI agent playing Coup.
+                Your playstyle: %s
+                %s
+                
+                ### GAME INFO
+                Your ID: %s
+                Your coins: %d
+                Your cards: %s
+                
+                ### MEMORY
+                %s
+                
+                Other players:
+                %s
+                
+                Game state: You have failed a challenge and must choose a card to loose
+                
+                ### COUP RULES
+                - This card will not be revealed to the other players, take this into
+                account when choosing.
+                - If you choose null or an invalid card, a random card will be chosen instead.
+                
+                ### JSON SCHEMA (FOLLOW EXACTLY)
+                {
+                  "card": string | null,
+                }
+                
+                ### OUTPUT RULES
+                - Respond with ONLY the JSON object.
+                - No markdown, no backticks, no text outside JSON.
+                - Never output the string "null". Use actual null for targetId only.
+                - All fields MUST be present.
+                - Never output missing or extra fields.
+                - Never output lowercase action names.
+                
+               
+                """.formatted(
+                player.getPersonality(),
+                personalityRules,
+                player.getId(),
+                player.getCoins(),
+                player.getCards().stream().toList(),
+                memoryText,
+                game.getPlayers().stream()
+                        .filter(p -> !p.getId().equals(player.getId()))
+                        .map(p -> p.getId() + " (" + p.getCoins() + " coins, " + p.getCards().size() + " cards)")
+                        .toList()
+        );
+    }
+
+    private String buildReactionPrompt(Game game, Player player, int scenario) {
+        String personalityRules = personalityPrompt(player.getPersonality());
+
+        String memoryText = String.join("\n", game.getGameMemory());
+        String scenarioText = scenarioText(game, player, scenario);
+
+        return """
+                You are an AI agent playing Coup.
+                Your playstyle: %s
+                %s
+                
+                ### GAME INFO
+                Your ID: %s
+                Your coins: %d
+                Your cards: %s
+                
+                ### MEMORY
+                %s
+                
+                Other players:
+                %s
+                
+                %s
+                
+                
+                ### EXPLANATION RULES
+                - "reason" MUST be a short explanation (max 12 words).
+                - No markdown, no quotes, no special characters.
+                - Explanation MUST reflect your personality.
+                
+                ### OUTPUT RULES
+                - Respond with ONLY the JSON object.
+                - No markdown, no backticks, no text outside JSON.
+                - Never output the string "null". Use actual null for targetId only.
+                - All fields MUST be present.
+                - Never output missing or extra fields.
+                - Never output lowercase action names.
+                
+               
+                """.formatted(
+                player.getPersonality(),
+                personalityRules,
+                player.getId(),
+                player.getCoins(),
+                player.getCards().stream().toList(),
+                memoryText,
+                game.getPlayers().stream()
+                        .filter(p -> !p.getId().equals(player.getId()))
+                        .map(p -> p.getId() + " (" + p.getCoins() + " coins, " + p.getCards().size() + " cards)")
+                        .toList(),
+                scenarioText);
 }
 
     private String scenarioText(Game game, Player player, int scenario) {
@@ -186,7 +362,6 @@ public class AiDecisionService {
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
                   "action": "CHALLENGE" | "DO_NOTHING" |,
-                  "targetId": string | null,
                   "reason": string
                 }
         
@@ -212,7 +387,6 @@ public class AiDecisionService {
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
                   "action": "BLOCK_USING_DUKE" | "DO_NOTHING" |,
-                  "targetId": string | null,
                   "reason": string
                 }
         
@@ -239,16 +413,15 @@ public class AiDecisionService {
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
                   "action": "CHALLENGE" | "DO_NOTHING" |,
-                  "targetId": string | null,
                   "reason": string
                 }
         
         """.formatted(
-                    game.getBlockingPlayerId(),
+                    game.getBlockerId(),
                     game.getActingPlayerId(),
                     game.getDeclaredAction(),
                     game.getBlockingRole(),
-                    game.getBlockingPlayerId()
+                    game.getBlockerId()
 
             );
         } else if (scenario == 4){
@@ -261,18 +434,17 @@ public class AiDecisionService {
                 - You may choose to challenge the STEAL if you believe player %s is bluffing
         
                 ### ALLOWED ACTIONS FOR YOU
-                | CHALLENGE | DO NOTHING |
+                | CHALLENGE | DO_NOTHING |
  
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
                   "action": "CHALLENGE" | "DO_NOTHING" |,
-                  "targetId": string | null,
                   "reason": string
                 }
         
         """.formatted(
                     game.getActingPlayerId(),
-                    game.getTargetPlayerId(),
+                    game.getTargetId(),
                     game.getActingPlayerId()
             );
         } else if (scenario == 5){
@@ -291,7 +463,6 @@ public class AiDecisionService {
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
                   "action": "BLOCK_USING_CAPTAIN" | "BLOCK_USING_AMBASSADOR" | "DO_NOTHING" |,
-                  "targetId": string | null,
                   "reason": string
                 }
         
@@ -313,14 +484,13 @@ public class AiDecisionService {
  
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
-                  "action": "CHALLENGE" | "DO NOTHING" |,
-                  "targetId": string | null,
+                  "action": "CHALLENGE" | "DO_NOTHING" |,
                   "reason": string
                 }
         
         """.formatted(
                     game.getActingPlayerId(),
-                    game.getTargetPlayerId(),
+                    game.getTargetId(),
                     game.getActingPlayerId()
 
             );
@@ -339,8 +509,7 @@ public class AiDecisionService {
  
                 ### JSON SCHEMA (FOLLOW EXACTLY)
                 {
-                  "action": "BLOCK_USING_CONTESSA" | "DO NOTHING" |,
-                  "targetId": string | null,
+                  "action": "BLOCK_USING_CONTESSA" | "DO_NOTHING" |,
                   "reason": string
                 }
         
