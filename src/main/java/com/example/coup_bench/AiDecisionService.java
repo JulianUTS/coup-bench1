@@ -2,8 +2,11 @@ package com.example.coup_bench;
 
 import com.example.coup_bench.AiServices.MultiModelRouter;
 import com.example.coup_bench.model.*;
+import com.example.coup_bench.model.AiResponses.AiAction;
 import com.example.coup_bench.model.AiResponses.AiChooseCard;
 import com.example.coup_bench.model.AiResponses.AiReaction;
+import com.example.coup_bench.model.Enums.ActionType;
+import com.example.coup_bench.model.Enums.CardType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 

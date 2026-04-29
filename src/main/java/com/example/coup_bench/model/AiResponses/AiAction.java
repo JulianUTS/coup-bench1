@@ -1,4 +1,6 @@
-package com.example.coup_bench.model;
+package com.example.coup_bench.model.AiResponses;
+
+import com.example.coup_bench.model.Enums.ActionType;
 
 public class AiAction {
     public ActionType action;

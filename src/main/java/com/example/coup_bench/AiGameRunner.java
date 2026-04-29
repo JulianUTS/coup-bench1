@@ -1,7 +1,10 @@
 package com.example.coup_bench;
 
 import com.example.coup_bench.model.*;
+import com.example.coup_bench.model.AiResponses.AiAction;
 import com.example.coup_bench.model.AiResponses.AiReaction;
+import com.example.coup_bench.model.Enums.ActionType;
+import com.example.coup_bench.model.Enums.GameState;
 import org.springframework.stereotype.Service;
 
 

@@ -1,15 +1,11 @@
 package com.example.coup_bench.model;
 
-import com.example.coup_bench.AiDecisionService;
-import com.example.coup_bench.AiServices.MultiModelRouter;
-import com.example.coup_bench.CoupService;
+import com.example.coup_bench.model.Enums.CardType;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
-
-
 
     private final String id;
     private final String provider;

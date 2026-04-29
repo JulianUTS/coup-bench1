@@ -1,8 +1,10 @@
-package com.example.coup_bench.model;
+package com.example.coup_bench.model.repoModels;
+import com.example.coup_bench.model.ActionRecord;
+import com.example.coup_bench.model.InvalidActionRecord;
+import com.example.coup_bench.model.Player;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "game_summaries")

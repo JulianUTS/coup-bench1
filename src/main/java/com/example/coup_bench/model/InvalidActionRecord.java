@@ -1,5 +1,7 @@
 package com.example.coup_bench.model;
 
+import com.example.coup_bench.model.Enums.ActionType;
+
 public class InvalidActionRecord {
     private final String playerId;
     private final ActionType action;

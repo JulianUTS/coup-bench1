@@ -1,4 +1,4 @@
-package com.example.coup_bench.model;
+package com.example.coup_bench.model.Enums;
 
 public enum GameState {
     WAITING_FOR_PLAYERS,

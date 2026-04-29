@@ -1,7 +1,7 @@
 package com.example.coup_bench.model;
 
 
-import com.example.coup_bench.model.ActionType;
+import com.example.coup_bench.model.Enums.ActionType;
 
 public class ActionRecord {
 

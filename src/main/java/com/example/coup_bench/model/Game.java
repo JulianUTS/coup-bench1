@@ -1,5 +1,9 @@
 package com.example.coup_bench.model;
 
+import com.example.coup_bench.model.Enums.ActionType;
+import com.example.coup_bench.model.Enums.CardType;
+import com.example.coup_bench.model.Enums.GameState;
+
 import java.util.*;
 
 public class Game {
