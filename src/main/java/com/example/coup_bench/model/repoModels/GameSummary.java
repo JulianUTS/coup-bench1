@@ -13,8 +13,8 @@ public class GameSummary {
     @Id
     private String id;
     private String gameId;
-    private long timestampStart;
-    private long timestampEnd;
+    private String timestampStart;
+    private String timestampEnd;
 
     private int numberOfPlayers;
     private String winnerId;
@@ -48,19 +48,19 @@ public class GameSummary {
         this.gameId = gameId;
     }
 
-    public long getTimestampStart() {
+    public String getTimestampStart() {
         return timestampStart;
     }
 
-    public void setTimestampStart(long timestampStart) {
+    public void setTimestampStart(String timestampStart) {
         this.timestampStart = timestampStart;
     }
 
-    public long getTimestampEnd() {
+    public String getTimestampEnd() {
         return timestampEnd;
     }
 
-    public void setTimestampEnd(long timestampEnd) {
+    public void setTimestampEnd(String timestampEnd) {
         this.timestampEnd = timestampEnd;
     }
 

@@ -100,8 +100,6 @@ public class AiGameRunner {
 
             game = coup.nextTurn(game);
         }
-
-        coup.saveIfFinished(game);
         return game;
     }
 

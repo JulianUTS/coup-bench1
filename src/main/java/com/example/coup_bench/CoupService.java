@@ -9,6 +9,8 @@ import com.example.coup_bench.model.repoModels.GameSummary;
 import com.example.coup_bench.repo.GameRepository;
 import org.springframework.stereotype.Service;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -43,8 +45,9 @@ public class CoupService {
         summary.setGameId(game.getId());
 
 // Timestamps
-        summary.setTimestampStart(game.getTimestampStart());
-        summary.setTimestampEnd(System.currentTimeMillis());
+        DateFormat formatter = new SimpleDateFormat("HH:mm:ss.SSS");
+        summary.setTimestampStart(formatter.format(game.getTimestampStart()));
+        summary.setTimestampEnd(formatter.format(System.currentTimeMillis()));
 
 // Game stats
         summary.setNumberOfPlayers(game.getPlayers().size());
@@ -76,6 +79,7 @@ public class CoupService {
         }
         return game;
     }
+
 
     public Game invalidGame(Game game) {
         game.logGameMemory("3 Invalid Actions used in a row, game is invalid");
@@ -243,6 +247,10 @@ public class CoupService {
             handleTrueClaim(game, challenger, claimedPlayer, claimedRole, isBlockChallenge, ai);
         } else {
             handleFalseClaim(game, challenger, claimedPlayer, isBlockChallenge, ai);
+        }
+
+        if (game.getPlayers().stream().filter(Player::isAlive).count() <= 1) {
+            game.setState(GameState.FINISHED);
         }
 
         return saveIfFinished(game);
