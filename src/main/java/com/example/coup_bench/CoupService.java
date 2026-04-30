@@ -245,7 +245,6 @@ public class CoupService {
             handleFalseClaim(game, challenger, claimedPlayer, isBlockChallenge, ai);
         }
 
-        game.clearChallengeData();
         return saveIfFinished(game);
     }
 
@@ -354,6 +353,7 @@ public class CoupService {
     }
 
     public Game nextTurn(Game game){
+        game.clearChallengeData();
         game.nextTurn();
         if (game.getState() != GameState.FINISHED) {
             game.setState(GameState.IN_PROGRESS);

@@ -169,7 +169,7 @@ public class Game {
     }
 
     public void switchCard(String playerID, CardType cardToRemove) {
-        logGameMemory(playerID + "switches a card" );
+        logGameMemory(playerID + " switches a card" );
         this.deck.add(getPlayer(playerID).switchCard(deck.pop(),cardToRemove));
 
     }
@@ -200,7 +200,6 @@ public class Game {
 
 
         this.targetId = actionRecord.getTargetId();
-        clearChallengeData();
         this.state = GameState.ACTION_DECLARED;
         this.actionLog.add(actionRecord);
         if(actionRecord.getTargetId() == null){

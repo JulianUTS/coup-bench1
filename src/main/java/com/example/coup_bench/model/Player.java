@@ -157,4 +157,8 @@ public class Player {
     public boolean hasCard(CardType type) {
         return cards.contains(type);
     }
+
+    public int getBluffsAttempted() {
+        return bluffsAttempted;
+    }
 }
