@@ -71,9 +71,7 @@ public class CoupService {
     }
 
     public Game saveIfFinished(Game game) {
-
-
-        if (game.getState() == GameState.FINISHED) {
+        if (game.getState() == GameState.FINISHED || game.getState() == GameState.INVALID) {
             repo.save(getGameSummary(game));
         }
         return game;
@@ -81,7 +79,7 @@ public class CoupService {
 
     public Game invalidGame(Game game) {
         game.logGameMemory("3 Invalid Actions used in a row, game is invalid");
-        game.setState(GameState.FINISHED);
+        game.setState(GameState.INVALID);
         return saveIfFinished(game);
     }
 
@@ -366,6 +364,7 @@ public class CoupService {
             case BLOCK_USING_AMBASSADOR -> CardType.AMBASSADOR;
             case BLOCK_USING_CAPTAIN -> CardType.CAPTAIN;
             case BLOCK_USING_CONTESSA -> CardType.CONTESSA;
+            case BLOCK_USING_DUKE ->  CardType.DUKE;
 
             default -> null;
         };

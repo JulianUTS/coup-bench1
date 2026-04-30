@@ -8,10 +8,8 @@ public enum ActionType {
     ASSASSINATE,  // Assassin
     EXCHANGE,     // Ambassador
     COUP,
-    BLOCK,
     CHALLENGE,
     DO_NOTHING,
-    LOSE_CARD,
     BLOCK_USING_CAPTAIN,
     BLOCK_USING_AMBASSADOR,
     BLOCK_USING_DUKE,

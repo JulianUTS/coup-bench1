@@ -21,10 +21,9 @@ public class AiGameController {
     public Game simulate() {
 
         Game game = coup.createGame();
-
-        game = coup.joinGame(game, "p1" , "gemini", "aggressive");
+        game = coup.joinGame(game, "p1" , "openai", "aggressive");
         game = coup.joinGame(game, "p2", "claude", "defensive");
-        game = coup.joinGame(game, "p3", "openai", "defensive");
+       // game = coup.joinGame(game, "p3", "openai", "defensive");
 
         game = coup.startGame(game);
 
