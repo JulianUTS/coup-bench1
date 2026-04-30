@@ -37,6 +37,7 @@ public class AiGameRunner {
             // 1. Declare action
             while(game.getState() == GameState.IN_PROGRESS && game.getInvalidAction() < 3) {
                 AiAction action = ai.getAction(game, player);
+
                 ActionRecord actionRecord = new ActionRecord(player.getId(), action.action, action.targetId, action.reason);
                // System.out.println(actionRecord.getDescription());
                 game = coup.declareAction(
@@ -110,6 +111,7 @@ public class AiGameRunner {
             if (!filter.test(p)) continue;
 
             AiReaction reaction = ai.getReaction(game, p, reactionCode);
+
             if (reaction.action == ActionType.CHALLENGE) {
                 game = coup.declareChallenge(game, p.getId(), reaction);
                 game = coup.resolveChallenge(game, ai);
@@ -126,6 +128,7 @@ public class AiGameRunner {
 
     private Game attemptBlock(Game game, Player blocker, int reactionCode, int playerCount, String playerId) {
         AiReaction r = ai.getReaction(game, blocker, reactionCode);
+
         if (r.action == ActionType.DO_NOTHING) return game;
 
         game = coup.declareBlock(game, blocker.getId(), r);

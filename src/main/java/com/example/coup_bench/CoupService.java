@@ -25,8 +25,8 @@ public class CoupService {
         this.playerRepo = playerRepo;
     }
 
-    public Game createGame() {
-        return new Game(UUID.randomUUID().toString());
+    public Game createGame(long seed) {
+        return new Game(UUID.randomUUID().toString(), seed);
     }
 
     public Game joinGame(Game game, String playerId, String personality) {

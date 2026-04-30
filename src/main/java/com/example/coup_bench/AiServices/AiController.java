@@ -22,6 +22,6 @@ public class AiController {
 
     @GetMapping("/test")
     public String test() {
-        return ("OpenAi - " + router.ask("openai", "hello") + "\nClaude -" +  router.ask("claude", "hello") + "\nGrok -" +   router.ask("gemini", "hello"));
+        return ("OpenAi - " + router.ask("openai", "hello") + "\nClaude -" +  router.ask("claude", "hello") + "\nGrok -" +   router.ask("grok", "hello"));
     }
 }

@@ -433,8 +433,9 @@ public class AiDecisionService {
     }
 
     private String getResponse(String provider, String prompt) {
+        System.out.println(prompt);
         String response = router.ask(provider, prompt);
-      //  System.out.println(response);
+        System.out.println(response);
         return cleanResponse(response);
     }
 

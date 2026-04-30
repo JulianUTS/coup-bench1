@@ -20,6 +20,7 @@ public class Game {
     private final List<ActionRecord> bluffLog= new ArrayList<>();
     private final List<InteractionRecord> interactionLog= new ArrayList<>();
     private final List<TurnSnapshot> turnSnapshotLog= new ArrayList<>();
+    private final long seed;
 
     private int currentPlayerIndex = 0;
     private GameState state = GameState.WAITING_FOR_PLAYERS;
@@ -36,8 +37,10 @@ public class Game {
     private CardType blockingRole;
     private String challengerId;
 
-    public Game(String id) {
+
+    public Game(String id, long seed) {
         this.id = id;
+        this.seed = seed;
     }
 
     public int getTurn() {
@@ -66,7 +69,7 @@ public class Game {
     public List<String> getGameMemory() {
         return gameMemory;
     }
-    public long seed;
+   ;
 
     public Map<String, Integer> seatOrder;
 
@@ -130,11 +133,6 @@ public class Game {
     }
 
     public void startGame() {
-        // 1. Generate a seed (or you can pass one in)
-        long seed = System.currentTimeMillis();
-        this.seed = seed;
-
-        // 2. Shuffle players using the seed
         Random rng = new Random(seed);
         Collections.shuffle(players, rng);
 
@@ -143,36 +141,12 @@ public class Game {
             seatOrder.put(players.get(i).getId(), i);
         }
 
-
-        initializeDeck();
-        dealCards();
-
         initializeDeck();
         dealCards();
         logGameMemory("Turn " + turn);
         state = GameState.IN_PROGRESS;
     }
-    public void startGame(long seed) {
-        this.seed = seed;
 
-        // 2. Shuffle players using the seed
-        Random rng = new Random(seed);
-        Collections.shuffle(players, rng);
-
-        this.seatOrder = new HashMap<>();
-        for (int i = 0; i < players.size(); i++) {
-            seatOrder.put(players.get(i).getId(), i);
-        }
-
-        // 4. Continue normal setup
-        initializeDeck();
-        dealCards();
-
-        initializeDeck();
-        dealCards();
-        logGameMemory("Turn " + turn);
-        state = GameState.IN_PROGRESS;
-    }
 
     private void initializeDeck() {
         List<CardType> cards = new ArrayList<>();
