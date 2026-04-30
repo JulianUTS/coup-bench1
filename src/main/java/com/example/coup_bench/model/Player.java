@@ -32,11 +32,34 @@ public class Player {
     private int assassinationAttempts = 0;
     private int assassinationSuccesses = 0;
     private int coupsPerformed = 0;
+    private int turnsSurvived = 0;
+    private String lastTargetProvider;
+    private String lastChallengedProvider;
+
+    public String getLastChallengedProvider() {
+        return lastChallengedProvider;
+    }
+
+    public void setLastChallengedProvider(String provider) {
+        this.lastChallengedProvider = provider;
+    }
+
+
+
+    public String getLastTargetProvider() {
+        return lastTargetProvider;
+    }
+
+    public void setLastTargetProvider(String provider) {
+        this.lastTargetProvider = provider;
+    }
+
 
     public Player(String id, String personality) {
         this.id = id;
         this.personality = personality;
     }
+
 
     public void incrementBluffsAttempted() {
         this.bluffsAttempted++;
@@ -169,5 +192,13 @@ public class Player {
 
     public void incrementAssassinationSuccesses() {
         this.assassinationSuccesses++;
+    }
+
+    public int getTurnsSurvived() {
+        return turnsSurvived;
+    }
+
+    public void incrementTurnsSurvived() {
+        this.turnsSurvived++;
     }
 }

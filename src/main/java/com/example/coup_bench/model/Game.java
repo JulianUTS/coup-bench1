@@ -158,6 +158,11 @@ public class Game {
     }
 
     public void nextTurn() {
+        for (Player player:  players){
+            if(player.isAlive()){
+                player.incrementTurnsSurvived();
+            }
+        }
         if (players.stream().filter(Player::isAlive).count() <= 1) {
             state = GameState.FINISHED;
             return;

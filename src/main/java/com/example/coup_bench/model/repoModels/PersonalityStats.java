@@ -26,6 +26,24 @@ public class PersonalityStats {
     private int assassinationSuccesses;
     private int coupsPerformed;
 
+    private int aggressionScore;          // steal + assassinate + coup
+    private int riskScore;                // bluffs + challenges
+
+    private double bluffSuccessRate;
+    private double challengeSuccessRate;
+    private double blockSuccessRate;
+    private double stealSuccessRate;
+    private double assassinationSuccessRate;
+
+    private int totalTurnsSurvived;
+    private double averageTurnsSurvived;
+
+    private double actionEntropy;
+
+
+
+
+
     public PersonalityStats() {}
 
     // -------- Getters & Setters --------
@@ -181,6 +199,36 @@ public class PersonalityStats {
     public void setCoupsPerformed(int coupsPerformed) {
         this.coupsPerformed = coupsPerformed;
     }
+
+    public int getAggressionScore() { return aggressionScore; }
+    public void setAggressionScore(int aggressionScore) { this.aggressionScore = aggressionScore; }
+
+    public int getRiskScore() { return riskScore; }
+    public void setRiskScore(int riskScore) { this.riskScore = riskScore; }
+
+    public double getBluffSuccessRate() { return bluffSuccessRate; }
+    public void setBluffSuccessRate(double bluffSuccessRate) { this.bluffSuccessRate = bluffSuccessRate; }
+
+    public double getChallengeSuccessRate() { return challengeSuccessRate; }
+    public void setChallengeSuccessRate(double challengeSuccessRate) { this.challengeSuccessRate = challengeSuccessRate; }
+
+    public double getBlockSuccessRate() { return blockSuccessRate; }
+    public void setBlockSuccessRate(double blockSuccessRate) { this.blockSuccessRate = blockSuccessRate; }
+
+    public double getStealSuccessRate() { return stealSuccessRate; }
+    public void setStealSuccessRate(double stealSuccessRate) { this.stealSuccessRate = stealSuccessRate; }
+
+    public double getAssassinationSuccessRate() { return assassinationSuccessRate; }
+    public void setAssassinationSuccessRate(double assassinationSuccessRate) { this.assassinationSuccessRate = assassinationSuccessRate; }
+
+    public int getTotalTurnsSurvived() { return totalTurnsSurvived; }
+    public void setTotalTurnsSurvived(int totalTurnsSurvived) { this.totalTurnsSurvived = totalTurnsSurvived; }
+
+    public double getAverageTurnsSurvived() { return averageTurnsSurvived; }
+    public void setAverageTurnsSurvived(double averageTurnsSurvived) { this.averageTurnsSurvived = averageTurnsSurvived; }
+
+    public double getActionEntropy() { return actionEntropy; }
+    public void setActionEntropy(double actionEntropy) { this.actionEntropy = actionEntropy; }
 }
 
 

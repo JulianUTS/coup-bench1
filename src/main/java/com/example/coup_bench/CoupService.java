@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -79,7 +82,7 @@ public class CoupService {
 
         return summary;
     }
-    public AgentLifetimeStats getAgentLifetimeStats(Player player, PlayerRepository playerRepo) {
+    public AgentLifetimeStats getAgentLifetimeStats(Player player, PlayerRepository playerRepo, GameSummary gameSummary) {
         String provider = player.getId();
         String personality = player.getPersonality();
 
@@ -87,22 +90,65 @@ public class CoupService {
         AgentLifetimeStats stats =
                 playerRepo.findById(provider).orElse(new AgentLifetimeStats(provider));
 
-        // Update provider-level stats
+        // -------------------------
+        // 1. Provider-level updates
+        // -------------------------
+
         stats.setTotalGames(stats.getTotalGames() + 1);
 
         if (player.isAlive()) stats.setWins(stats.getWins() + 1);
         else stats.setLosses(stats.getLosses() + 1);
 
-        // Get or create personality stats
+        // Aggression
+        stats.setTotalStealAttempts(stats.getTotalStealAttempts() + player.getStealAttempts());
+        stats.setTotalAssassinationAttempts(stats.getTotalAssassinationAttempts() + player.getAssassinationAttempts());
+        stats.setTotalCoupsPerformed(stats.getTotalCoupsPerformed() + player.getCoupsPerformed());
+
+        // Risk
+        stats.setTotalBluffsAttempted(stats.getTotalBluffsAttempted() + player.getBluffsAttempted());
+        stats.setTotalChallengesIssued(stats.getTotalChallengesIssued() + player.getChallengesIssued());
+
+        // Defense
+        stats.setTotalBlocksIssued(stats.getTotalBlocksIssued() + player.getBlocksIssued());
+
+        // Survival
+        stats.setTotalTurnsSurvived(stats.getTotalTurnsSurvived() + player.getTurnsSurvived());
+        stats.setTotalTurnsPlayed(stats.getTotalTurnsPlayed() + gameSummary.getTotalTurns());
+
+        // Game duration
+        stats.setTotalGameDurationMs(stats.getTotalGameDurationSec() + diffSeconds(gameSummary.getTimestampStart(), gameSummary.getTimestampEnd()));
+
+        // Interaction heatmaps
+        if (player.getLastTargetProvider() != null) {
+            stats.getTargetedProviders().merge(player.getLastTargetProvider(), 1, Integer::sum);
+        }
+
+        if (player.getLastChallengedProvider() != null) {
+            stats.getChallengedProviders().merge(player.getLastChallengedProvider(), 1, Integer::sum);
+        }
+
+        // Recompute provider averages
+        stats.setAverageSurvivalRate(
+                safeRate(stats.getTotalTurnsSurvived(), stats.getTotalTurnsPlayed())
+        );
+
+        stats.setAverageGameDurationMs(
+                (double) stats.getTotalGameDurationSec() / stats.getTotalGames()
+        );
+
+        // -------------------------
+        // 2. Personality-level updates
+        // -------------------------
+
         PersonalityStats ps = stats.getPersonalities()
                 .computeIfAbsent(personality, k -> new PersonalityStats());
 
-        // Update personality-level stats
         ps.setTotalGames(ps.getTotalGames() + 1);
 
         if (player.isAlive()) ps.setWins(ps.getWins() + 1);
         else ps.setLosses(ps.getLosses() + 1);
 
+        // Raw stats
         ps.setBluffsAttempted(ps.getBluffsAttempted() + player.getBluffsAttempted());
         ps.setBluffsSuccessful(ps.getBluffsSuccessful() + player.getBluffsSuccessful());
         ps.setBluffsFailed(ps.getBluffsFailed() + player.getBluffsFailed());
@@ -117,21 +163,93 @@ public class CoupService {
 
         ps.setIncomeCount(ps.getIncomeCount() + player.getIncomeCount());
         ps.setTaxCount(ps.getTaxCount() + player.getTaxCount());
+
         ps.setStealAttempts(ps.getStealAttempts() + player.getStealAttempts());
         ps.setStealSuccesses(ps.getStealSuccesses() + player.getStealSuccesses());
+
         ps.setAssassinationAttempts(ps.getAssassinationAttempts() + player.getAssassinationAttempts());
-        ps.setCoupsPerformed(ps.getCoupsPerformed() + player.getCoupsPerformed());
         ps.setAssassinationSuccesses(ps.getAssassinationSuccesses() + player.getAssassinationSuccesses());
+
+        ps.setCoupsPerformed(ps.getCoupsPerformed() + player.getCoupsPerformed());
+
+        // Survival
+        ps.setTotalTurnsSurvived(ps.getTotalTurnsSurvived() + player.getTurnsSurvived());
+        ps.setAverageTurnsSurvived(
+                (double) ps.getTotalTurnsSurvived() / ps.getTotalGames()
+        );
+
+        // Derived analytics
+        ps.setAggressionScore(
+                ps.getStealAttempts()
+                        + ps.getAssassinationAttempts()
+                        + ps.getCoupsPerformed()
+        );
+
+        ps.setRiskScore(
+                ps.getBluffsAttempted()
+                        + ps.getChallengesIssued()
+        );
+
+        ps.setBluffSuccessRate(safeRate(ps.getBluffsSuccessful(), ps.getBluffsAttempted()));
+        ps.setChallengeSuccessRate(safeRate(ps.getChallengesWon(), ps.getChallengesIssued()));
+        ps.setBlockSuccessRate(safeRate(ps.getBlocksSuccessful(), ps.getBlocksIssued()));
+        ps.setStealSuccessRate(safeRate(ps.getStealSuccesses(), ps.getStealAttempts()));
+        ps.setAssassinationSuccessRate(safeRate(ps.getAssassinationSuccesses(), ps.getAssassinationAttempts()));
+
+        // Optional: compute entropy (unpredictability)
+        ps.setActionEntropy(calculateEntropy(ps));
 
         return stats;
     }
+    private double safeRate(int success, int attempts) {
+        return attempts == 0 ? 0.0 : (double) success / attempts;
+    }
+
+    private double calculateEntropy(PersonalityStats ps) {
+
+        // Collect all action counts
+        int[] counts = {
+                ps.getIncomeCount(),
+                ps.getTaxCount(),
+                ps.getStealAttempts(),
+                ps.getAssassinationAttempts(),
+                ps.getCoupsPerformed(),
+                ps.getBluffsAttempted(),
+                ps.getChallengesIssued(),
+                ps.getBlocksIssued()
+        };
+
+        int total = 0;
+        for (int c : counts) total += c;
+
+        if (total == 0) return 0.0; // no actions = no entropy
+
+        double entropy = 0.0;
+
+        for (int c : counts) {
+            if (c == 0) continue; // skip zero-probability actions
+
+            double p = (double) c / total;
+            entropy += -p * (Math.log(p) / Math.log(2)); // log base 2
+        }
+
+        return entropy;
+    }
+
+    public static long diffSeconds(String a, String b) {
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+        LocalTime t1 = LocalTime.parse(a, fmt);
+        LocalTime t2 = LocalTime.parse(b, fmt);
+        return Duration.between(t1, t2).getSeconds();
+    }
+
     public Game saveIfFinished(Game game) {
         if (game.getState() == GameState.FINISHED || game.getState() == GameState.INVALID) {
+            GameSummary gamesummary = getGameSummary(game);
             gameRepo.save(getGameSummary(game));
             for(Player p : game.getPlayers()){
-                playerRepo.save(getAgentLifetimeStats(p, playerRepo));
+                playerRepo.save(getAgentLifetimeStats(p, playerRepo, gamesummary));
             }
-
         }
         return game;
     }
@@ -220,6 +338,10 @@ public class CoupService {
             game.logBluff(actionRecord);
         }
 
+        if(actionRecord.getTargetId() != null){
+            player.setLastTargetProvider(actionRecord.getTargetId());
+        }
+
         game.resetInvalidAction();
         game.declareAction(actionRecord);
         return game;
@@ -264,6 +386,7 @@ public class CoupService {
         game.incrementTotalChallenges();
 
         game.getPlayer(challengerId).incrementChallengesIssued();
+        game.getPlayer(challengerId).setLastChallengedProvider(targetId);
 
         game.logAction(new ActionRecord(
                 challengerId,
