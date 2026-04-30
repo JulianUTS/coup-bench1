@@ -8,7 +8,6 @@ import java.util.List;
 public class Player {
 
     private final String id;
-    private final String provider;
     private final String personality;
 
     private boolean alive = true;
@@ -33,9 +32,8 @@ public class Player {
     private int assassinationAttempts = 0;
     private int coupsPerformed = 0;
 
-    public Player(String id, String provider, String personality) {
+    public Player(String id, String personality) {
         this.id = id;
-        this.provider = provider;
         this.personality = personality;
     }
 
@@ -159,7 +157,6 @@ public class Player {
 
 
     public String getId() { return id; }
-    public String getProvider() { return provider; }
     public String getPersonality() { return personality; }
 
     public int getCoins() { return coins; }

@@ -26,7 +26,7 @@ public class CoupService {
     }
 
     public Game joinGame(Game game, String playerId, String provider, String personality) {
-        game.addPlayer(new Player(playerId, provider, personality));
+        game.addPlayer(new Player(playerId, personality));
         return game;
     }
 
