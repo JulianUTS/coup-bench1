@@ -16,13 +16,13 @@ public class MultiModelRouter {
 
     private final ChatClient openai;
     private final ChatClient claude;
-    private final ChatClient gemini;
+    private final GeminiClient gemini;
     private final GrokClient grok;
 
     public MultiModelRouter(
             ChatClient openAiChatClient,
             ChatClient claudeChatClient,
-            ChatClient geminiChatClient,
+            GeminiClient geminiChatClient,
             GrokClient grokClient
     ) {
         this.openai = openAiChatClient;
@@ -64,7 +64,7 @@ public class MultiModelRouter {
         return switch (provider) {
             case OPENAI -> openai.prompt().user(prompt).call().content();
             case CLAUDE -> claude.prompt().user(prompt).call().content();
-            case GEMINI -> gemini.prompt().user(prompt).call().content();
+            case GEMINI -> gemini.chat(prompt);
             case GROK -> grok.chat(prompt);
         };
     }

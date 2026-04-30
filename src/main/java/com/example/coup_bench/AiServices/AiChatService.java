@@ -26,10 +26,6 @@ public class AiChatService {
         return ChatClient.create(model);
     }
 
-    @Bean
-    public ChatClient geminiChatClient(VertexAiGeminiChatModel model) {
-        return ChatClient.create(model);
-    }
 }
 
 
