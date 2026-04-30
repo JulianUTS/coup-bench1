@@ -161,9 +161,10 @@ public class AiGameRunner {
                 2
         );
 
-        Player blocker = game.getPlayer(game.getBlockerId());
 
-        if (blocker != null) {
+
+        if (game.getBlockerId() != null) {
+            Player blocker = game.getPlayer(game.getBlockerId());
             game = findChallenger(
                     game, game.getPlayers().indexOf(blocker), playerCount,
                     p -> p.isAlive() &&

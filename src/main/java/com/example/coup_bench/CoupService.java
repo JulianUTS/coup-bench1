@@ -534,10 +534,13 @@ public class CoupService {
                 game.logGameMemory(player.getId() + " steals " + stolen + " coins from " + target.getId());
             }
             case ASSASSINATE -> {
-                player.removeCoins(3);
-                player.incrementAssassinationSuccesses();
-                game.logGameMemory(player.getId() + " assassinates " + target.getId());
-                game.removeCard(target.getId(), chooseCard(game, target, ai));
+                if(game.getPlayer(target.getId()).isAlive()) {
+                    player.removeCoins(3);
+                    player.incrementAssassinationSuccesses();
+                    game.logGameMemory(player.getId() + " assassinates " + target.getId());
+                    game.removeCard(target.getId(), chooseCard(game, target, ai));
+                }
+
 
             }
 
@@ -548,11 +551,7 @@ public class CoupService {
             }
 
             case EXCHANGE -> {
-                // Minimal version: draw 2 cards and keep both
-                CardType c1 = game.drawCard();
-                CardType c2 = game.drawCard();
-                player.addCard(c1);
-                player.addCard(c2);
+                game.exchangeCards(player.getId());
                 game.logGameMemory(player.getId() + " exchanges cards");
             }
         }

@@ -89,7 +89,7 @@ public class Game {
         invalidAction = 0;
     }
     public void logGameMemory(String memory) {
-       // System.out.println(memory);
+        System.out.println(memory);
         gameMemory.add(memory);
     }
 
@@ -201,6 +201,15 @@ public class Game {
     public void switchCard(String playerID, CardType cardToRemove) {
         logGameMemory(playerID + " switches a card" );
         this.deck.add(getPlayer(playerID).switchCard(deck.pop(),cardToRemove));
+
+    }
+
+    public void exchangeCards(String playerID) {
+        for(int i = 0; i < getPlayer(playerID).getCards().size(); i++){
+            deck.add(getPlayer(playerID).getCards().removeFirst());
+            getPlayer(playerID).addCard(deck.pop());
+
+        }
 
     }
 

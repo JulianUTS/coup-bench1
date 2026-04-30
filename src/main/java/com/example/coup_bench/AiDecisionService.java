@@ -96,7 +96,7 @@ public class AiDecisionService {
                 Other players:
                 %s
                 
-                Game state: %s
+                Game state: Choose an action
                 
                 ### COUP RULES
                 - You may ONLY choose COUP if you have 7 or more coins.
@@ -105,6 +105,8 @@ public class AiDecisionService {
                 - Never choose COUP with fewer than 7 coins.
                 - You can only choose ASSASSINATE if you have 3 or more coins.
                 - When choosing ASSASSINATE, you can only choose a player with more than 0 coins.
+                - When choosing EXCHANGE, all your remaining cards will be automatically switched out
+                with random cards, you cannot choose which cards to EXCHANGE
                 
                 ### ALLOWED ACTIONS FOR YOU
                 %s
@@ -141,7 +143,6 @@ public class AiDecisionService {
                         .filter(p -> !p.getId().equals(player.getId()))
                         .map(p -> p.getId() + " (" + p.getCoins() + " coins, " + p.getCards().size() + " cards)")
                         .toList(),
-                game.getState(),
                 allowedActions(player)
         );
     }
@@ -433,7 +434,7 @@ public class AiDecisionService {
     }
 
     private String getResponse(String provider, String prompt) {
-        System.out.println(prompt);
+       // System.out.println(prompt);
         String response = router.ask(provider, prompt);
         System.out.println(response);
         return cleanResponse(response);

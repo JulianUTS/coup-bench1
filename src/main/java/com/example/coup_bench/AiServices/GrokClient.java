@@ -19,7 +19,7 @@ import java.util.Map;
 public class GrokClient {
 
     private final RestClient client;
-    private final String model = "grok-3-mini";
+    private final String model = "grok-4-1-fast-reasoning";
 
     public GrokClient() {
         HttpClient jdkHttpClient = HttpClient.newBuilder()
