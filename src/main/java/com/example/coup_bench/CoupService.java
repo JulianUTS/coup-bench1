@@ -5,8 +5,11 @@ import com.example.coup_bench.model.AiResponses.AiReaction;
 import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.CardType;
 import com.example.coup_bench.model.Enums.GameState;
+import com.example.coup_bench.model.repoModels.AgentLifetimeStats;
 import com.example.coup_bench.model.repoModels.GameSummary;
+import com.example.coup_bench.model.repoModels.PersonalityStats;
 import com.example.coup_bench.repo.GameRepository;
+import com.example.coup_bench.repo.PlayerRepository;
 import org.springframework.stereotype.Service;
 
 import java.text.DateFormat;
@@ -17,10 +20,12 @@ import java.util.UUID;
 @Service
 public class CoupService {
 
-    private final GameRepository repo;
+    private final GameRepository gameRepo;
+    private final PlayerRepository playerRepo;
 
-    public CoupService(GameRepository repo) {
-        this.repo = repo;
+    public CoupService(GameRepository repo, PlayerRepository playerRepo) {
+        this.gameRepo = repo;
+        this.playerRepo = playerRepo;
     }
 
     public Game createGame() {
@@ -72,10 +77,59 @@ public class CoupService {
 
         return summary;
     }
+    public AgentLifetimeStats getAgentLifetimeStats(Player player, PlayerRepository playerRepo) {
+        String provider = player.getId();
+        String personality = player.getPersonality();
 
+        // Load or create provider-level stats
+        AgentLifetimeStats stats =
+                playerRepo.findById(provider).orElse(new AgentLifetimeStats(provider));
+
+        // Update provider-level stats
+        stats.setTotalGames(stats.getTotalGames() + 1);
+
+        if (player.isAlive()) stats.setWins(stats.getWins() + 1);
+        else stats.setLosses(stats.getLosses() + 1);
+
+        // Get or create personality stats
+        PersonalityStats ps = stats.getPersonalities()
+                .computeIfAbsent(personality, k -> new PersonalityStats());
+
+        // Update personality-level stats
+        ps.setTotalGames(ps.getTotalGames() + 1);
+
+        if (player.isAlive()) ps.setWins(ps.getWins() + 1);
+        else ps.setLosses(ps.getLosses() + 1);
+
+        ps.setBluffsAttempted(ps.getBluffsAttempted() + player.getBluffsAttempted());
+        ps.setBluffsSuccessful(ps.getBluffsSuccessful() + player.getBluffsSuccessful());
+        ps.setBluffsFailed(ps.getBluffsFailed() + player.getBluffsFailed());
+
+        ps.setChallengesIssued(ps.getChallengesIssued() + player.getChallengesIssued());
+        ps.setChallengesWon(ps.getChallengesWon() + player.getChallengesWon());
+        ps.setChallengesLost(ps.getChallengesLost() + player.getChallengesLost());
+
+        ps.setBlocksIssued(ps.getBlocksIssued() + player.getBlocksIssued());
+        ps.setBlocksSuccessful(ps.getBlocksSuccessful() + player.getBlocksSuccessful());
+        ps.setBlocksFailed(ps.getBlocksFailed() + player.getBlocksFailed());
+
+        ps.setIncomeCount(ps.getIncomeCount() + player.getIncomeCount());
+        ps.setTaxCount(ps.getTaxCount() + player.getTaxCount());
+        ps.setStealAttempts(ps.getStealAttempts() + player.getStealAttempts());
+        ps.setStealSuccesses(ps.getStealSuccesses() + player.getStealSuccesses());
+        ps.setAssassinationAttempts(ps.getAssassinationAttempts() + player.getAssassinationAttempts());
+        ps.setCoupsPerformed(ps.getCoupsPerformed() + player.getCoupsPerformed());
+
+        // Save the updated provider stats (including personality map)
+        return stats;
+    }
     public Game saveIfFinished(Game game) {
         if (game.getState() == GameState.FINISHED || game.getState() == GameState.INVALID) {
-            repo.save(getGameSummary(game));
+            gameRepo.save(getGameSummary(game));
+            for(Player p : game.getPlayers()){
+                playerRepo.save(getAgentLifetimeStats(p, playerRepo));
+            }
+
         }
         return game;
     }
@@ -98,7 +152,7 @@ public class CoupService {
         );
         game.logInvalidAction(invalidActionRecord);
         game.incrementInvalidAction();
-        return saveIfFinished(game);
+        return game;
     }
 
     private String validateAction(Game game, ActionRecord actionRecord) {
@@ -164,7 +218,7 @@ public class CoupService {
         }
         game.resetInvalidAction();
         game.declareAction(actionRecord);
-        return saveIfFinished(game);
+        return game;
     }
 
     public Game logAction(Game game, ActionRecord actionRecord) {
@@ -192,7 +246,7 @@ public class CoupService {
                 aiReaction.reason
         ));
 
-        return saveIfFinished(game);
+        return game;
     }
 
     public Game declareChallenge(Game game, String challengerId, AiReaction aiReaction) {
@@ -212,7 +266,7 @@ public class CoupService {
                 aiReaction.reason
         ));
 
-        return saveIfFinished(game);
+        return game;
     }
 
     public CardType chooseCard(Game game, Player player, AiDecisionService ai) {
@@ -252,8 +306,7 @@ public class CoupService {
         if (game.getPlayers().stream().filter(Player::isAlive).count() <= 1) {
             game.setState(GameState.FINISHED);
         }
-
-        return saveIfFinished(game);
+        return game;
     }
 
     private void handleTrueClaim(Game game, Player challenger, Player claimedPlayer,
@@ -270,6 +323,9 @@ public class CoupService {
         game.removeCard(challenger.getId(), lostCard);
 
         if (isBlockChallenge) {
+            if(!game.getPlayer(game.getActingPlayerId()).hasCard(roleForAction(game.getDeclaredAction()))){
+                game.getPlayer(game.getActingPlayerId()).incrementBluffsFailed();
+            }
             game.setState(GameState.IN_PROGRESS);
         } else {
             game.setState(GameState.APPLYING_ACTION);
@@ -337,8 +393,9 @@ public class CoupService {
             }
             case ASSASSINATE -> {
                 player.removeCoins(3);
-                game.removeCard(player.getId(), chooseCard(game, player, ai));
                 game.logGameMemory(player.getId() + " assassinates " + target.getId());
+                game.removeCard(target.getId(), chooseCard(game, target, ai));
+
             }
 
             case COUP -> {
@@ -357,7 +414,7 @@ public class CoupService {
             }
         }
 
-        return saveIfFinished(game);
+        return game;
     }
 
     public Game nextTurn(Game game){
@@ -375,7 +432,7 @@ public class CoupService {
             game.getPlayer(game.getBlockerId()).incrementBluffsSuccessful();
 
         }
-        return saveIfFinished(game);
+        return game;
     };
 
 
