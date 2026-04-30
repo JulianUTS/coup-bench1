@@ -30,6 +30,7 @@ public class Player {
     private int stealAttempts = 0;
     private int stealSuccesses = 0;
     private int assassinationAttempts = 0;
+    private int assassinationSuccesses = 0;
     private int coupsPerformed = 0;
 
     public Player(String id, String personality) {
@@ -160,5 +161,13 @@ public class Player {
 
     public int getBluffsAttempted() {
         return bluffsAttempted;
+    }
+
+    public int getAssassinationSuccesses() {
+        return assassinationSuccesses;
+    }
+
+    public void incrementAssassinationSuccesses() {
+        this.assassinationSuccesses++;
     }
 }

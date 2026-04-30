@@ -23,6 +23,7 @@ public class PersonalityStats {
     private int stealAttempts;
     private int stealSuccesses;
     private int assassinationAttempts;
+    private int assassinationSuccesses;
     private int coupsPerformed;
 
     public PersonalityStats() {}
@@ -163,6 +164,14 @@ public class PersonalityStats {
 
     public void setAssassinationAttempts(int assassinationAttempts) {
         this.assassinationAttempts = assassinationAttempts;
+    }
+
+    public int getAssassinationSuccesses() {
+        return assassinationSuccesses;
+    }
+
+    public void setAssassinationSuccesses(int assassinationSuccesses) {
+        this.assassinationSuccesses = assassinationSuccesses;
     }
 
     public int getCoupsPerformed() {

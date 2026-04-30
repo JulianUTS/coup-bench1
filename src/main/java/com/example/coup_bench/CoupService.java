@@ -120,8 +120,8 @@ public class CoupService {
         ps.setStealSuccesses(ps.getStealSuccesses() + player.getStealSuccesses());
         ps.setAssassinationAttempts(ps.getAssassinationAttempts() + player.getAssassinationAttempts());
         ps.setCoupsPerformed(ps.getCoupsPerformed() + player.getCoupsPerformed());
+        ps.setAssassinationSuccesses(ps.getAssassinationSuccesses() + player.getAssassinationSuccesses());
 
-        // Save the updated provider stats (including personality map)
         return stats;
     }
     public Game saveIfFinished(Game game) {
@@ -398,6 +398,7 @@ public class CoupService {
             }
             case ASSASSINATE -> {
                 player.removeCoins(3);
+                player.incrementAssassinationSuccesses();
                 game.logGameMemory(player.getId() + " assassinates " + target.getId());
                 game.removeCard(target.getId(), chooseCard(game, target, ai));
 
