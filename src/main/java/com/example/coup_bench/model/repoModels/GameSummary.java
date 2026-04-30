@@ -29,6 +29,7 @@ public class GameSummary {
     private List<ActionRecord> actions;
     private List<ActionRecord> bluffLog;
     private List<InteractionRecord> interactions;
+    private List<TurnSnapshot> turnSnapshots;
     private List<Player>  players;
 
 
@@ -168,6 +169,14 @@ public class GameSummary {
 
     public void setInteractions(List<InteractionRecord> interactions) {
         this.interactions = interactions;
+    }
+
+    public List<TurnSnapshot> getTurnSnapshots() {
+        return turnSnapshots;
+    }
+
+    public void setTurnSnapshots(List<TurnSnapshot> snapshots) {
+        this.turnSnapshots = snapshots;
     }
 
 }

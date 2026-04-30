@@ -5,10 +5,7 @@ import com.example.coup_bench.model.AiResponses.AiReaction;
 import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.CardType;
 import com.example.coup_bench.model.Enums.GameState;
-import com.example.coup_bench.model.repoModels.AgentLifetimeStats;
-import com.example.coup_bench.model.repoModels.GameSummary;
-import com.example.coup_bench.model.repoModels.InteractionRecord;
-import com.example.coup_bench.model.repoModels.PersonalityStats;
+import com.example.coup_bench.model.repoModels.*;
 import com.example.coup_bench.repo.GameRepository;
 import com.example.coup_bench.repo.PlayerRepository;
 import org.springframework.stereotype.Service;
@@ -17,6 +14,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CoupService {
@@ -77,6 +75,7 @@ public class CoupService {
         summary.setPlayers(game.getPlayers());
         summary.setBluffLog(game.getBluffLog());
         summary.setInteractions(game.getInteractionLog());
+        summary.setTurnSnapshots(game.getTurnSnapshotLog());
 
         return summary;
     }
@@ -448,6 +447,19 @@ public class CoupService {
 
     public Game nextTurn(Game game){
         game.clearChallengeData();
+        TurnSnapshot snap = new TurnSnapshot(
+                game.getTurn(),
+                game.getPlayers().stream()
+                        .collect(Collectors.toMap(Player::getId, Player::getCoins)),
+                game.getPlayers().stream()
+                        .collect(Collectors.toMap(Player::getId, p -> p.getCards().size())),
+                game.getDeclaredAction(),
+                game.getActingPlayerId(),
+                game.getTargetId()
+        );
+        game.logTurnSnapshot(snap);
+
+
 
         game.nextTurn();
         if (game.getState() != GameState.FINISHED) {
@@ -476,6 +488,8 @@ public class CoupService {
         }
         return game;
     };
+
+
 
 
     private CardType roleForAction(ActionType action) {
