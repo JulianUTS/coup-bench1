@@ -27,6 +27,7 @@ public class GameSummary {
     private List<String> gameMemory;
     private List<InvalidActionRecord> invalidActions;
     private List<ActionRecord> actions;
+    private List<ActionRecord> bluffLog;
     private List<Player>  players;
 
 
@@ -150,6 +151,14 @@ public class GameSummary {
 
     public void setPlayers(List<Player> players) {
         this.players = players;
+    }
+
+    public List<ActionRecord> getBluffLog() {
+        return bluffLog;
+    }
+
+    public void setBluffLog(List<ActionRecord> bluffLog) {
+        this.bluffLog = bluffLog;
     }
 
 }

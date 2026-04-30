@@ -15,6 +15,7 @@ public class Game {
     private final List<String> gameMemory = new ArrayList<>();
     private final List<InvalidActionRecord> invalidActionLog = new ArrayList<>();
     private final long timestampStart = System.currentTimeMillis();
+    private final List<ActionRecord> bluffLog= new ArrayList<>();
 
 
     private int currentPlayerIndex = 0;
@@ -63,6 +64,12 @@ public class Game {
         return gameMemory;
     }
 
+    public List<ActionRecord> getBluffLog() {
+        return bluffLog;
+    }
+    public void logBluff(ActionRecord record){
+        bluffLog.add(record);
+    }
     public int getInvalidAction() {
         return invalidAction;
     }

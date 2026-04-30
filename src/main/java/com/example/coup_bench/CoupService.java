@@ -74,6 +74,7 @@ public class CoupService {
 
 // Final player states
         summary.setPlayers(game.getPlayers());
+        summary.setBluffLog(game.getBluffLog());
 
         return summary;
     }
@@ -215,7 +216,9 @@ public class CoupService {
 
         if (!player.hasCard(roleForAction(action))) {
             player.incrementBluffsAttempted();
+            game.logBluff(actionRecord);
         }
+
         game.resetInvalidAction();
         game.declareAction(actionRecord);
         return game;
@@ -234,17 +237,19 @@ public class CoupService {
         game.logGameMemory(blockerId + " declares " + aiReaction.action + " on " + game.getActingPlayerId());
         game.incrementTotalBlocks();
 
-        game.getPlayer(blockerId).incrementBlocksIssued();
-        if (!game.getPlayer(blockerId).hasCard(game.getBlockingRole())) {
-            game.getPlayer(blockerId).incrementBluffsAttempted();
-        }
-
-        game.logAction(new ActionRecord(
+        ActionRecord record = new ActionRecord(
                 blockerId,
                 aiReaction.action,
                 game.getActingPlayerId(),
-                aiReaction.reason
-        ));
+                aiReaction.reason);
+
+        game.getPlayer(blockerId).incrementBlocksIssued();
+        if (!game.getPlayer(blockerId).hasCard(game.getBlockingRole())) {
+            game.getPlayer(blockerId).incrementBluffsAttempted();
+            game.logBluff(record);
+        }
+
+        game.logAction(record);
 
         return game;
     }
@@ -430,7 +435,9 @@ public class CoupService {
         game.getPlayer(game.getBlockerId()).incrementBlocksSuccessful();
         if(!game.getPlayer(game.getBlockerId()).hasCard(game.getBlockingRole())){
             game.getPlayer(game.getBlockerId()).incrementBluffsSuccessful();
-
+        }
+        if(!game.getPlayer(game.getActingPlayerId()).hasCard(roleForAction(game.getDeclaredAction()))){
+            game.getPlayer(game.getActingPlayerId()).incrementBluffsFailed();
         }
         return game;
     };
