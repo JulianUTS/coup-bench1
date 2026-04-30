@@ -148,16 +148,15 @@ public class Game {
     }
 
     public void nextTurn() {
-
         if (players.stream().filter(Player::isAlive).count() <= 1) {
             state = GameState.FINISHED;
             return;
         }
         do {
-            this.turn++;
-            logGameMemory("Turn " + turn + ":");
             currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
         } while (!players.get(currentPlayerIndex).isAlive());
+        this.turn++;
+        logGameMemory("Turn " + turn + ":");
     }
 
     public CardType drawCard() { return deck.pop(); }

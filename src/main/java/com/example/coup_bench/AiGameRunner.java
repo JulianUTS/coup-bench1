@@ -111,14 +111,16 @@ public class AiGameRunner {
             Player p = game.getPlayers().get((startIndex + i) % playerCount);
             if (!filter.test(p)) continue;
 
-            AiReaction r = ai.getReaction(game, p, reactionCode);
-            if (r.action == ActionType.CHALLENGE) {
-                game = coup.declareChallenge(game, p.getId(), r);
+            AiReaction reaction = ai.getReaction(game, p, reactionCode);
+            if (reaction.action == ActionType.CHALLENGE) {
+                game = coup.declareChallenge(game, p.getId(), reaction);
                 game = coup.resolveChallenge(game, ai);
                 return game;
-            } else if(r.action == ActionType.BLOCK_USING_DUKE){
-                game = coup.declareBlock(game, p.getId(), r);
+            } else if(reaction.action == ActionType.BLOCK_USING_DUKE){
+                game = coup.declareBlock(game, p.getId(), reaction);
                 return game;
+            } else{
+                game = coup.logAction(game, new ActionRecord(p.getId(), reaction.action, null, reaction.reason));
             }
         }
         return game;
