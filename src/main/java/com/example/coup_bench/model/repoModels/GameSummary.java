@@ -28,6 +28,7 @@ public class GameSummary {
     private List<InvalidActionRecord> invalidActions;
     private List<ActionRecord> actions;
     private List<ActionRecord> bluffLog;
+    private List<InteractionRecord> interactions;
     private List<Player>  players;
 
 
@@ -159,6 +160,14 @@ public class GameSummary {
 
     public void setBluffLog(List<ActionRecord> bluffLog) {
         this.bluffLog = bluffLog;
+    }
+
+    public List<InteractionRecord> getInteractions() {
+        return interactions;
+    }
+
+    public void setInteractions(List<InteractionRecord> interactions) {
+        this.interactions = interactions;
     }
 
 }

@@ -3,6 +3,8 @@ package com.example.coup_bench.model;
 import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.CardType;
 import com.example.coup_bench.model.Enums.GameState;
+import com.example.coup_bench.model.repoModels.InteractionRecord;
+import com.example.coup_bench.model.repoModels.TurnSnapshot;
 
 import java.util.*;
 
@@ -16,7 +18,8 @@ public class Game {
     private final List<InvalidActionRecord> invalidActionLog = new ArrayList<>();
     private final long timestampStart = System.currentTimeMillis();
     private final List<ActionRecord> bluffLog= new ArrayList<>();
-
+    private final List<InteractionRecord> interactionLog= new ArrayList<>();
+    private final List<TurnSnapshot> turnSnapshotLog= new ArrayList<>();
 
     private int currentPlayerIndex = 0;
     private GameState state = GameState.WAITING_FOR_PLAYERS;
@@ -217,5 +220,19 @@ public class Game {
 
     }
 
+
+    public List<TurnSnapshot> getTurnSnapshotLog() {
+        return turnSnapshotLog;
+    }
+
+    public List<InteractionRecord> getInteractionLog() {
+        return interactionLog;
+    }
+    public void logTurnSnapshot(TurnSnapshot turnSnapshot) {
+        this.turnSnapshotLog.add(turnSnapshot);
+    }
+    public void logInteraction(InteractionRecord interactionRecord) {
+        this.interactionLog.add(interactionRecord);
+    }
 
 }
