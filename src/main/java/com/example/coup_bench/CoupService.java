@@ -52,9 +52,9 @@ public class CoupService {
         summary.setGameId(game.getId());
 
 // Timestamps
-        DateFormat formatter = new SimpleDateFormat("HH:mm:ss.SSS");
-        summary.setTimestampStart(formatter.format(game.getTimestampStart()));
-        summary.setTimestampEnd(formatter.format(System.currentTimeMillis()));
+
+        summary.setTotalGameDurationSec(diffSeconds(game.getTimestampStart()));
+
 
 // Game stats
         summary.setNumberOfPlayers(game.getPlayers().size());
@@ -116,7 +116,7 @@ public class CoupService {
         stats.setTotalTurnsPlayed(stats.getTotalTurnsPlayed() + gameSummary.getTotalTurns());
 
         // Game duration
-        stats.setTotalGameDurationMs(stats.getTotalGameDurationSec() + diffSeconds(gameSummary.getTimestampStart(), gameSummary.getTimestampEnd()));
+        stats.setTotalGameDurationMs(stats.getTotalGameDurationSec() + gameSummary.getTotalGameDurationSec());
 
         // Interaction heatmaps
         if (player.getLastTargetProvider() != null) {
@@ -236,12 +236,11 @@ public class CoupService {
         return entropy;
     }
 
-    public static long diffSeconds(String a, String b) {
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-        LocalTime t1 = LocalTime.parse(a, fmt);
-        LocalTime t2 = LocalTime.parse(b, fmt);
-        return Duration.between(t1, t2).getSeconds();
+    public static long diffSeconds(long startMs) {
+        long nowMs = System.currentTimeMillis();
+        return (nowMs - startMs) / 1000;
     }
+
 
     public Game saveIfFinished(Game game) {
         if (game.getState() == GameState.FINISHED || game.getState() == GameState.INVALID) {

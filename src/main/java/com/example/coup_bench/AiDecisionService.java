@@ -465,10 +465,40 @@ public class AiDecisionService {
                 - You may choose EXCHANGE or STEAL unexpectedly.
                 """;
 
+        String analyticalRules = """
+        ### PERSONALITY — ANALYTICAL
+        - You make decisions based on logic and probability.
+        - You bluff only when the expected value is positive.
+        - You challenge selectively, only when evidence is strong.
+        - You prefer TAX, EXCHANGE, and safe coin‑efficient plays.
+        - You avoid chaotic or impulsive actions.
+        """;
+
+        String opportunisticRules = """
+        ### PERSONALITY — OPPORTUNISTIC
+        - You adapt your strategy based on opponents' behavior.
+        - You bluff when opponents appear passive or unlikely to challenge.
+        - You challenge aggressive or suspicious opponents more often.
+        - You prefer STEAL, TAX, and EXCHANGE depending on the situation.
+        - You take calculated risks when they offer high reward.
+        """;
+
+        String defaultRules = """
+        ### PERSONALITY — DEFAULT
+        - You play with balanced, neutral strategy.
+        - You bluff occasionally when it is strategically reasonable.
+        - You challenge only when moderately confident.
+        - You use TAX, INCOME, STEAL, and EXCHANGE without strong bias.
+        - You avoid extreme risk-taking or extreme caution.
+        """;
+
         return  (switch (personality) {
             case "aggressive" -> aggressiveRules;
             case "defensive" -> defensiveRules;
             case "chaotic" -> chaoticRules;
+            case "analytical" -> analyticalRules;
+            case "opportunistic" -> opportunisticRules;
+            case "default" -> defaultRules;
             default -> "";
         });
     }

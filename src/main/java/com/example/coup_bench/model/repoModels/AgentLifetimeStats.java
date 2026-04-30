@@ -16,8 +16,6 @@ public class AgentLifetimeStats {
     private int wins;
     private int losses;
 
-    private Map<String, PersonalityStats> personalities = new HashMap<>();
-
     // Aggression
     private int totalStealAttempts;
     private int totalAssassinationAttempts;
@@ -42,6 +40,8 @@ public class AgentLifetimeStats {
     // Interaction heatmaps
     private Map<String, Integer> targetedProviders = new HashMap<>();
     private Map<String, Integer> challengedProviders = new HashMap<>();
+
+    private Map<String, PersonalityStats> personalities = new HashMap<>();
 
     public AgentLifetimeStats() {}
 
