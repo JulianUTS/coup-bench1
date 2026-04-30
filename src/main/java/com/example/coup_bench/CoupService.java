@@ -10,11 +10,6 @@ import com.example.coup_bench.repo.GameRepository;
 import com.example.coup_bench.repo.PlayerRepository;
 import org.springframework.stereotype.Service;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -79,6 +74,8 @@ public class CoupService {
         summary.setBluffLog(game.getBluffLog());
         summary.setInteractions(game.getInteractionLog());
         summary.setTurnSnapshots(game.getTurnSnapshotLog());
+        summary.setSeed(game.getSeed());
+        summary.setSeatOrder(game.getSeatOrder());
 
         return summary;
     }

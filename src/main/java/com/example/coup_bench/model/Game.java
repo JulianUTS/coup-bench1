@@ -66,6 +66,9 @@ public class Game {
     public List<String> getGameMemory() {
         return gameMemory;
     }
+    public long seed;
+
+    public Map<String, Integer> seatOrder;
 
     public List<ActionRecord> getBluffLog() {
         return bluffLog;
@@ -83,7 +86,7 @@ public class Game {
         invalidAction = 0;
     }
     public void logGameMemory(String memory) {
-        System.out.println(memory);
+       // System.out.println(memory);
         gameMemory.add(memory);
     }
 
@@ -127,6 +130,44 @@ public class Game {
     }
 
     public void startGame() {
+        // 1. Generate a seed (or you can pass one in)
+        long seed = System.currentTimeMillis();
+        this.seed = seed;
+
+        // 2. Shuffle players using the seed
+        Random rng = new Random(seed);
+        Collections.shuffle(players, rng);
+
+        this.seatOrder = new HashMap<>();
+        for (int i = 0; i < players.size(); i++) {
+            seatOrder.put(players.get(i).getId(), i);
+        }
+
+
+        initializeDeck();
+        dealCards();
+
+        initializeDeck();
+        dealCards();
+        logGameMemory("Turn " + turn);
+        state = GameState.IN_PROGRESS;
+    }
+    public void startGame(long seed) {
+        this.seed = seed;
+
+        // 2. Shuffle players using the seed
+        Random rng = new Random(seed);
+        Collections.shuffle(players, rng);
+
+        this.seatOrder = new HashMap<>();
+        for (int i = 0; i < players.size(); i++) {
+            seatOrder.put(players.get(i).getId(), i);
+        }
+
+        // 4. Continue normal setup
+        initializeDeck();
+        dealCards();
+
         initializeDeck();
         dealCards();
         logGameMemory("Turn " + turn);
@@ -239,5 +280,9 @@ public class Game {
     public void logInteraction(InteractionRecord interactionRecord) {
         this.interactionLog.add(interactionRecord);
     }
+
+    public long getSeed() { return seed; }
+
+    public Map<String, Integer> getSeatOrder() { return seatOrder; }
 
 }

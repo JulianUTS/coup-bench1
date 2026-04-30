@@ -6,6 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
+import java.util.Map;
 
 @Document(collection = "game_summaries")
 public class GameSummary {
@@ -17,6 +18,8 @@ public class GameSummary {
 
     private int numberOfPlayers;
     private String winnerId;
+    private Map<String, Integer> seatOrder;
+    private long seed;
     private int totalTurns;
     private int totalActions;
     private int totalChallenges;
@@ -169,5 +172,20 @@ public class GameSummary {
     public void setTurnSnapshots(List<TurnSnapshot> snapshots) {
         this.turnSnapshots = snapshots;
     }
+    public Map<String, Integer> getSeatOrder() {
+        return seatOrder;
+    }
+
+    public void setSeatOrder(Map<String, Integer> seatOrder) {
+        this.seatOrder = seatOrder;
+    }
+    public long getSeed() {
+        return seed;
+    }
+
+    public void setSeed(long seed) {
+        this.seed = seed;
+    }
+
 
 }
