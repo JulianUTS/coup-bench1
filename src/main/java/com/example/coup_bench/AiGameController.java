@@ -29,7 +29,7 @@ public class AiGameController {
     private static final List<String> PERSONALITIES = List.of(
             "aggressive",
             "defensive",
-            "balanced",
+            "analytical",
             "chaotic",
             "default",
             "opportunistic"

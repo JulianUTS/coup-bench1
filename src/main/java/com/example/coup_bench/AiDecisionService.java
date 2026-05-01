@@ -25,6 +25,8 @@ public class AiDecisionService {
     }
 
     public AiAction getAction(Game game, Player player) {
+
+        
         String prompt = buildActionPrompt(game, player);
         String response = getResponse(player.getId(),  prompt);
 
@@ -442,30 +444,30 @@ public class AiDecisionService {
 
     private String personalityPrompt( String personality ) {
         String aggressiveRules = """
-                ### PERSONALITY — AGGRESSIVE
-                - You prefer high‑impact actions.
-                - You prioritize COUP, ASSASSINATE, STEAL, and TAX.
-                - You rarely choose INCOME unless forced.
-                - You frequently challenge opponents.
-                - You block aggressively whenever possible.
-                """;
+        ### PERSONALITY — AGGRESSIVE
+        - You prefer high‑impact actions.
+        - You prioritize COUP, ASSASSINATE, STEAL, and TAX.
+        - You rarely choose INCOME unless forced.
+        - You frequently challenge opponents.
+        - You block aggressively whenever possible.
+        """;
 
         String defensiveRules = """
-                ### PERSONALITY — DEFENSIVE
-                - You avoid unnecessary risks.
-                - You rarely challenge unless confident.
-                - You block only when safe.
-                - You prefer TAX, INCOME, and EXCHANGE.
-                - You avoid STEAL unless advantageous.
-                """;
+        ### PERSONALITY — DEFENSIVE
+        - You avoid unnecessary risks.
+        - You rarely challenge unless confident.
+        - You block only when safe.
+        - You prefer TAX, INCOME, and EXCHANGE.
+        - You avoid STEAL unless advantageous.
+        """;
 
         String chaoticRules = """
-                ### PERSONALITY — CHAOTIC
-                - You choose actions unpredictably.
-                - You challenge frequently.
-                - You block aggressively even when risky.
-                - You may choose EXCHANGE or STEAL unexpectedly.
-                """;
+        ### PERSONALITY — CHAOTIC
+        - You choose actions unpredictably.
+        - You challenge frequently.
+        - You block aggressively even when risky.
+        - You may choose EXCHANGE or STEAL unexpectedly.
+        """;
 
         String analyticalRules = """
         ### PERSONALITY — ANALYTICAL
