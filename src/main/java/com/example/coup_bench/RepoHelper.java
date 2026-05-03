@@ -171,10 +171,10 @@ public class RepoHelper {
 
         return stats;
     }
-    private double safeRate(int success, int attempts) {
+    private static double safeRate(int success, int attempts) {
         return attempts == 0 ? 0.0 : (double) success / attempts;
     }
-    private double calculateEntropy(PersonalityStats ps) {
+    private static double calculateEntropy(PersonalityStats ps) {
 
         // Collect all action counts
         int[] counts = {
