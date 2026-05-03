@@ -6,12 +6,14 @@ import com.example.coup_bench.model.repoModels.AgentLifetimeStats;
 import com.example.coup_bench.model.repoModels.GameSummary;
 import com.example.coup_bench.model.repoModels.PersonalityStats;
 import com.example.coup_bench.repo.PlayerRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 
-public class RepoHelper {
+@Service
+public class RepoHelperService {
 
-    public static GameSummary getGameSummary(Game game) {
+    public GameSummary getGameSummary(Game game) {
         GameSummary summary = new GameSummary();
 
 // Basic identifiers
@@ -52,7 +54,7 @@ public class RepoHelper {
         return summary;
     }
 
-    public static AgentLifetimeStats getAgentLifetimeStats(Player player, PlayerRepository playerRepo, GameSummary gameSummary) {
+    public AgentLifetimeStats getAgentLifetimeStats(Player player, PlayerRepository playerRepo, GameSummary gameSummary) {
         String provider = player.getId();
         String personality = player.getPersonality();
 
@@ -171,10 +173,10 @@ public class RepoHelper {
 
         return stats;
     }
-    private static double safeRate(int success, int attempts) {
+    private double safeRate(int success, int attempts) {
         return attempts == 0 ? 0.0 : (double) success / attempts;
     }
-    private static double calculateEntropy(PersonalityStats ps) {
+    private double calculateEntropy(PersonalityStats ps) {
 
         // Collect all action counts
         int[] counts = {
@@ -204,7 +206,7 @@ public class RepoHelper {
 
         return entropy;
     }
-    public static long diffSeconds(long startMs) {
+    public long diffSeconds(long startMs) {
         long nowMs = System.currentTimeMillis();
         return (nowMs - startMs) / 1000;
     }

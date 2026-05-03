@@ -19,10 +19,12 @@ public class CoupService {
 
     private final GameRepository gameRepo;
     private final PlayerRepository playerRepo;
+    private final RepoHelperService repoHelperService;
 
-    public CoupService(GameRepository repo, PlayerRepository playerRepo) {
+    public CoupService(GameRepository repo, PlayerRepository playerRepo,  RepoHelperService repoHelperService) {
         this.gameRepo = repo;
         this.playerRepo = playerRepo;
+        this.repoHelperService = repoHelperService;
     }
 
     public Game createGame(long seed) {
@@ -41,10 +43,10 @@ public class CoupService {
 
     public Game saveIfFinished(Game game) {
         if (game.getState() == GameState.FINISHED || game.getState() == GameState.INVALID) {
-            GameSummary gamesummary = RepoHelper.getGameSummary(game);
+            GameSummary gamesummary = repoHelperService.getGameSummary(game);
             gameRepo.save(gamesummary);
             for(Player p : game.getPlayers()){
-                playerRepo.save(RepoHelper.getAgentLifetimeStats(p, playerRepo, gamesummary));
+                playerRepo.save(repoHelperService.getAgentLifetimeStats(p, playerRepo, gamesummary));
             }
         }
         return game;
