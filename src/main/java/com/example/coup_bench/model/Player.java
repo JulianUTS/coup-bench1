@@ -62,6 +62,7 @@ public class Player {
 
 
     public void incrementBluffsAttempted() {
+
         this.bluffsAttempted++;
     }
     public int getBluffsSuccessful() {

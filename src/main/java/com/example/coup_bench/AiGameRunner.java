@@ -16,11 +16,13 @@ public class AiGameRunner {
 
     private final CoupService coup;
     private final AiDecisionService ai;
+    private final PlayerHelperService playerHelperService;
 
 
-    public AiGameRunner(CoupService coup, AiDecisionService ai) {
+    public AiGameRunner(CoupService coup, AiDecisionService ai, PlayerHelperService playerHelperService) {
         this.coup = coup;
         this.ai = ai;
+        this.playerHelperService = playerHelperService;
     }
 
     public Game runGame(Game game) {
@@ -38,7 +40,8 @@ public class AiGameRunner {
             while(game.getState() == GameState.IN_PROGRESS && game.getInvalidAction() < 3) {
                 AiAction action = ai.getAction(game, player);
 
-                ActionRecord actionRecord = new ActionRecord(player.getId(), action.action, action.targetId, action.reason);
+                ActionRecord actionRecord = new ActionRecord(player.getId(), action.action,
+                        playerHelperService(); action.targetId, action.reason);
                // System.out.println(actionRecord.getDescription());
                 game = coup.declareAction(
                         game,

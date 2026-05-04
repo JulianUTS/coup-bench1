@@ -20,14 +20,17 @@ public class CoupService {
     private final GameRepository gameRepo;
     private final PlayerRepository playerRepo;
     private final RepoHelperService repoHelperService;
-    private final RoleService roleService;
+    private final ChallengeService challengeService;
+    private final GameActionService gameActionService;
 
     public CoupService(GameRepository repo, PlayerRepository playerRepo,  RepoHelperService repoHelperService,
-                       RoleService roleService) {
+                       ChallengeService challengeService,
+                       GameActionService gameActionService) {
         this.gameRepo = repo;
         this.playerRepo = playerRepo;
         this.repoHelperService = repoHelperService;
-        this.roleService = roleService;
+        this.challengeService = challengeService;
+        this.gameActionService = gameActionService;
 
     }
 
@@ -153,28 +156,8 @@ public class CoupService {
          return game;
     }
 
-    public Game declareBlock(Game game, String blockerId, AiReaction aiReaction) {
-
-        game.setState(GameState.BLOCK_DECLARED);
-        game.setBlockerId(blockerId);
-        game.setBlockingRole(roleService.getCard(aiReaction.action));
-        game.logGameMemory(blockerId + " declares " + aiReaction.action + " on " + game.getActingPlayerId());
-        game.incrementTotalBlocks();
-
-        ActionRecord record = new ActionRecord(
-                blockerId,
-                aiReaction.action,
-                game.getActingPlayerId(),
-                aiReaction.reason);
-
-        game.getPlayer(blockerId).incrementBlocksIssued();
-        if (!game.getPlayer(blockerId).hasCard(game.getBlockingRole())) {
-            game.getPlayer(blockerId).incrementBluffsAttempted();
-            game.getGameAnalyticsService().logBluff(record);
-        }
-
-        game.logAction(record);
-
+    public Game declareBlock(Game game, String blockerId, AiReaction reaction) {
+        gameActionService.declareBlock(game, challengeService, blockerId, reaction.action, reaction.reason);
         return game;
     }
 

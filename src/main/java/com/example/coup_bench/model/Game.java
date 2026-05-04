@@ -32,10 +32,6 @@ public class Game {
     private String actingPlayerId;
     private String targetId;
 
-    private String blockerId;
-    private CardType blockingRole;
-    private String challengerId;
-
 
     public Game(String id, long seed) {
         this.id = id;
@@ -102,14 +98,6 @@ public class Game {
     public String getActingPlayerId() { return actingPlayerId; }
     public String getTargetId() { return targetId; }
 
-    public String getBlockerId() { return blockerId; }
-    public void setBlockerId(String id) { this.blockerId = id; }
-
-    public CardType getBlockingRole() { return blockingRole; }
-    public void setBlockingRole(CardType role) { this.blockingRole = role; }
-
-    public String getChallengerId() { return challengerId; }
-    public void setChallengerId(String id) { this.challengerId = id; }
 
     public String getWinnerId(Game game) {
         return game.getPlayers()
@@ -216,10 +204,22 @@ public class Game {
 
     }
 
-    public void clearChallengeData(){
-        this.challengerId = null;
-        this.blockerId = null;
-        this.blockingRole = null;
+    public void blockDeclared(ActionRecord blockRecord) {
+        String blockerId = blockRecord.getPlayerId();
+        Player blocker = getPlayer(blockerId);
+
+
+        blocker.incrementBlocksIssued();
+
+        if(blockRecord.getActionIsBluff()) {
+            getPlayer(blockerId).incrementBluffsAttempted();
+        }
+
+        logAction(blockRecord);
+        setState(GameState.BLOCK_DECLARED);
+        logGameMemory(blockerId + " declares " + blockRecord.getAction() + " on " + blockRecord.getTargetId());
+        incrementTotalBlocks();
+
     }
 
     public void declareAction(ActionRecord actionRecord) {
