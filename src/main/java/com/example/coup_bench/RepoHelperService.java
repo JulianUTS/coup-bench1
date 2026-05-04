@@ -45,9 +45,9 @@ public class RepoHelperService {
 
 // Final player states
         summary.setPlayers(game.getPlayers());
-        summary.setBluffLog(game.getBluffLog());
-        summary.setInteractions(game.getInteractionLog());
-        summary.setTurnSnapshots(game.getTurnSnapshotLog());
+        summary.setBluffLog(game.getGameAnalyticsService().getBluffLog());
+        summary.setInteractions(game.getGameAnalyticsService().getInteractionLog());
+        summary.setTurnSnapshots(game.getGameAnalyticsService().getTurnSnapshotLog());
         summary.setSeed(game.getSeed());
         summary.setSeatOrder(game.getSeatOrder());
 

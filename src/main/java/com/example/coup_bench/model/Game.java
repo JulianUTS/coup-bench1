@@ -17,9 +17,8 @@ public class Game {
     private final List<String> gameMemory = new ArrayList<>();
     private final List<InvalidActionRecord> invalidActionLog = new ArrayList<>();
     private final long timestampStart = System.currentTimeMillis();
-    private final List<ActionRecord> bluffLog= new ArrayList<>();
-    private final List<InteractionRecord> interactionLog= new ArrayList<>();
-    private final List<TurnSnapshot> turnSnapshotLog= new ArrayList<>();
+    private final GameAnalyticsService gameAnalyticsService = new GameAnalyticsService();
+
     private final long seed;
 
     private int currentPlayerIndex = 0;
@@ -73,12 +72,7 @@ public class Game {
 
     public Map<String, Integer> seatOrder;
 
-    public List<ActionRecord> getBluffLog() {
-        return bluffLog;
-    }
-    public void logBluff(ActionRecord record){
-        bluffLog.add(record);
-    }
+
     public int getInvalidAction() {
         return invalidAction;
     }
@@ -249,23 +243,11 @@ public class Game {
 
     }
 
-
-    public List<TurnSnapshot> getTurnSnapshotLog() {
-        return turnSnapshotLog;
-    }
-
-    public List<InteractionRecord> getInteractionLog() {
-        return interactionLog;
-    }
-    public void logTurnSnapshot(TurnSnapshot turnSnapshot) {
-        this.turnSnapshotLog.add(turnSnapshot);
-    }
-    public void logInteraction(InteractionRecord interactionRecord) {
-        this.interactionLog.add(interactionRecord);
-    }
-
     public long getSeed() { return seed; }
 
     public Map<String, Integer> getSeatOrder() { return seatOrder; }
 
+    public GameAnalyticsService getGameAnalyticsService() {
+        return gameAnalyticsService;
+    }
 }

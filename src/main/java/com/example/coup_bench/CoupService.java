@@ -132,7 +132,7 @@ public class CoupService {
 
         if (!player.hasCard(roleForAction(action))) {
             player.incrementBluffsAttempted();
-            game.logBluff(actionRecord);
+            game.getGameAnalyticsService().logBluff(actionRecord);
         }
 
         if(actionRecord.getTargetId() != null){
@@ -166,7 +166,7 @@ public class CoupService {
         game.getPlayer(blockerId).incrementBlocksIssued();
         if (!game.getPlayer(blockerId).hasCard(game.getBlockingRole())) {
             game.getPlayer(blockerId).incrementBluffsAttempted();
-            game.logBluff(record);
+            game.getGameAnalyticsService().logBluff(record);
         }
 
         game.logAction(record);
@@ -243,7 +243,7 @@ public class CoupService {
 
         challenger.incrementChallengesLost();
         //Unsuccessful challenge
-        game.logInteraction(new InteractionRecord(challenger.getId(), claimedPlayer.getId(),
+        game.getGameAnalyticsService().logInteraction(new InteractionRecord(challenger.getId(), claimedPlayer.getId(),
                 ActionType.CHALLENGE, false));
 
         CardType lostCard = chooseCard(game, challenger, ai);
@@ -256,7 +256,7 @@ public class CoupService {
                 game.getPlayer(game.getActingPlayerId()).incrementBluffsFailed();
             }
             if(game.getTargetId() != null) {
-                game.logInteraction(new InteractionRecord(game.getActingPlayerId(),
+                game.getGameAnalyticsService().logInteraction(new InteractionRecord(game.getActingPlayerId(),
                         game.getTargetId(), game.getDeclaredAction(), false));
 
             }
@@ -274,7 +274,7 @@ public class CoupService {
         claimedPlayer.incrementBluffsFailed();
         challenger.incrementChallengesWon();
         //Successful challenge
-        game.logInteraction(new InteractionRecord(game.getChallengerId(), game.getBlockerId(),
+        game.getGameAnalyticsService().logInteraction(new InteractionRecord(game.getChallengerId(), game.getBlockerId(),
                 ActionType.CHALLENGE, true));
 
         CardType lostCard = chooseCard(game, claimedPlayer, ai);
@@ -283,13 +283,13 @@ public class CoupService {
         if (isBlockChallenge) {
             claimedPlayer.incrementBlocksFailed();
             //Unsuccessful block
-            game.logInteraction(new InteractionRecord(game.getBlockerId(), game.getActingPlayerId(),
+            game.getGameAnalyticsService().logInteraction(new InteractionRecord(game.getBlockerId(), game.getActingPlayerId(),
                     actionForRole(game.getBlockingRole()), false));
 
             game.setState(GameState.APPLYING_ACTION);
         } else {
             if(game.getTargetId() != null) {
-                game.logInteraction(new InteractionRecord(game.getActingPlayerId(),
+                game.getGameAnalyticsService().logInteraction(new InteractionRecord(game.getActingPlayerId(),
                         game.getTargetId(), game.getDeclaredAction(), false));
 
             }
@@ -358,7 +358,7 @@ public class CoupService {
         }
         //Successful Targeted Action
         if(target != null){
-            game.logInteraction(new InteractionRecord(player.getId(), target.getId(), action, true));
+            game.getGameAnalyticsService().logInteraction(new InteractionRecord(player.getId(), target.getId(), action, true));
         }
 
         return game;
@@ -376,7 +376,7 @@ public class CoupService {
                 game.getActingPlayerId(),
                 game.getTargetId()
         );
-        game.logTurnSnapshot(snap);
+        game.getGameAnalyticsService().logTurnSnapshot(snap);
 
 
 
@@ -391,11 +391,11 @@ public class CoupService {
         game.getPlayer(game.getBlockerId()).incrementBlocksSuccessful();
         //Unsuccessful targeted action
         if(game.getTargetId() != null){
-            game.logInteraction(new InteractionRecord(game.getActingPlayerId(), game.getTargetId(),
+            game.getGameAnalyticsService().logInteraction(new InteractionRecord(game.getActingPlayerId(), game.getTargetId(),
                     game.getDeclaredAction(), false));
         }
         //Successful Block
-        game.logInteraction(new InteractionRecord(game.getBlockerId(), game.getActingPlayerId(),
+        game.getGameAnalyticsService().logInteraction(new InteractionRecord(game.getBlockerId(), game.getActingPlayerId(),
                actionForRole(game.getBlockingRole()), true));
 
 
