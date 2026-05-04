@@ -20,11 +20,15 @@ public class CoupService {
     private final GameRepository gameRepo;
     private final PlayerRepository playerRepo;
     private final RepoHelperService repoHelperService;
+    private final RoleService roleService;
 
-    public CoupService(GameRepository repo, PlayerRepository playerRepo,  RepoHelperService repoHelperService) {
+    public CoupService(GameRepository repo, PlayerRepository playerRepo,  RepoHelperService repoHelperService,
+                       RoleService roleService) {
         this.gameRepo = repo;
         this.playerRepo = playerRepo;
         this.repoHelperService = repoHelperService;
+        this.roleService = roleService;
+
     }
 
     public Game createGame(long seed) {
@@ -130,7 +134,7 @@ public class CoupService {
         if (invalidResult != null)
             return invalidateAction(game, actionRecord, invalidResult);
 
-        if (!player.hasCard(roleForAction(action))) {
+        if (!player.hasCard(roleService.getCard(action))) {
             player.incrementBluffsAttempted();
             game.getGameAnalyticsService().logBluff(actionRecord);
         }
@@ -153,7 +157,7 @@ public class CoupService {
 
         game.setState(GameState.BLOCK_DECLARED);
         game.setBlockerId(blockerId);
-        game.setBlockingRole(roleForAction(aiReaction.action));
+        game.setBlockingRole(roleService.getCard(aiReaction.action));
         game.logGameMemory(blockerId + " declares " + aiReaction.action + " on " + game.getActingPlayerId());
         game.incrementTotalBlocks();
 
@@ -218,7 +222,7 @@ public class CoupService {
         } else {
             isBlockChallenge = false;
             claimedPlayer = game.getPlayer(game.getActingPlayerId());
-            claimedRole = roleForAction(game.getDeclaredAction());
+            claimedRole = roleService.getCard(game.getDeclaredAction());
         }
 
         boolean claimIsTrue = claimedPlayer.hasCard(claimedRole);
@@ -252,7 +256,7 @@ public class CoupService {
         game.removeCard(challenger.getId(), lostCard);
 
         if (isBlockChallenge) {
-            if(!game.getPlayer(game.getActingPlayerId()).hasCard(roleForAction(game.getDeclaredAction()))){
+            if(!game.getPlayer(game.getActingPlayerId()).hasCard(roleService.getCard(game.getDeclaredAction()))){
                 game.getPlayer(game.getActingPlayerId()).incrementBluffsFailed();
             }
             if(game.getTargetId() != null) {
@@ -284,7 +288,7 @@ public class CoupService {
             claimedPlayer.incrementBlocksFailed();
             //Unsuccessful block
             game.getGameAnalyticsService().logInteraction(new InteractionRecord(game.getBlockerId(), game.getActingPlayerId(),
-                    actionForRole(game.getBlockingRole()), false));
+                    roleService.getAction(game.getBlockingRole()), false));
 
             game.setState(GameState.APPLYING_ACTION);
         } else {
@@ -305,7 +309,7 @@ public class CoupService {
                 ? game.getPlayer(game.getTargetId())
                 : null;
 
-        if(!player.hasCard(roleForAction(action))){
+        if(!player.hasCard(roleService.getCard(action))){
             player.incrementBluffsSuccessful();
         }
 
@@ -396,13 +400,13 @@ public class CoupService {
         }
         //Successful Block
         game.getGameAnalyticsService().logInteraction(new InteractionRecord(game.getBlockerId(), game.getActingPlayerId(),
-               actionForRole(game.getBlockingRole()), true));
+               roleService.getAction(game.getBlockingRole()), true));
 
 
         if(!game.getPlayer(game.getBlockerId()).hasCard(game.getBlockingRole())){
             game.getPlayer(game.getBlockerId()).incrementBluffsSuccessful();
         }
-        if(!game.getPlayer(game.getActingPlayerId()).hasCard(roleForAction(game.getDeclaredAction()))){
+        if(!game.getPlayer(game.getActingPlayerId()).hasCard(roleService.getCard(game.getDeclaredAction()))){
             game.getPlayer(game.getActingPlayerId()).incrementBluffsFailed();
         }
         return game;
@@ -411,28 +415,5 @@ public class CoupService {
 
 
 
-    private CardType roleForAction(ActionType action) {
-        return switch (action) {
-            case TAX -> CardType.DUKE;
-            case STEAL -> CardType.CAPTAIN;
-            case ASSASSINATE -> CardType.ASSASSIN;
-            case EXCHANGE -> CardType.AMBASSADOR;
-            case BLOCK_USING_AMBASSADOR -> CardType.AMBASSADOR;
-            case BLOCK_USING_CAPTAIN -> CardType.CAPTAIN;
-            case BLOCK_USING_CONTESSA -> CardType.CONTESSA;
-            case BLOCK_USING_DUKE ->  CardType.DUKE;
 
-            default -> null;
-        };
-    }
-    private ActionType actionForRole(CardType card) {
-        return switch (card) {
-            case AMBASSADOR -> ActionType.BLOCK_USING_AMBASSADOR ;
-            case CAPTAIN -> ActionType.BLOCK_USING_CAPTAIN;
-            case CONTESSA -> ActionType.BLOCK_USING_CONTESSA;
-            case DUKE -> ActionType.BLOCK_USING_DUKE;
-
-            default -> null;
-        };
-    }
 }
