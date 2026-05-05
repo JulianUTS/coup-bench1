@@ -1,15 +1,12 @@
-package com.example.coup_bench.model;
+package com.example.coup_bench.util;
 
-import com.example.coup_bench.RoleUtil;
+import com.example.coup_bench.model.Player;
 import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.CardType;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class PlayerUtil {
-    private static List<ActionType> bluffableActions;
-
 
     public static Boolean isPlayerBluffing(Player player, ActionType action) {
         if(!RoleUtil.isBluffableAction(action)) return null;

@@ -1,10 +1,9 @@
 package com.example.coup_bench.model;
 
-import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.CardType;
 import com.example.coup_bench.model.Enums.GameState;
-import com.example.coup_bench.model.repoModels.InteractionRecord;
-import com.example.coup_bench.model.repoModels.TurnSnapshot;
+import com.example.coup_bench.service.DeckService;
+import com.example.coup_bench.service.GameAnalyticsService;
 
 import java.util.*;
 
@@ -12,30 +11,27 @@ public class Game {
 
     private final String id;
     private final List<Player> players = new ArrayList<>();
-    private final Deque<CardType> deck = new ArrayDeque<>();
     private final List<ActionRecord> actionLog = new ArrayList<>();
     private final List<String> gameMemory = new ArrayList<>();
     private final List<InvalidActionRecord> invalidActionLog = new ArrayList<>();
     private final long timestampStart = System.currentTimeMillis();
-    private final GameAnalyticsService gameAnalyticsService = new GameAnalyticsService();
+    private final GameAnalyticsService gameAnalyticsService;
 
     private final long seed;
 
     private int currentPlayerIndex = 0;
     private GameState state = GameState.WAITING_FOR_PLAYERS;
-    private int invalidAction = 0;
     private int turn = 1;
     private int TotalBlocks = 0;
     private int TotalChallenges = 0;
 
-    private ActionType declaredAction;
-    private String actingPlayerId;
-    private String targetId;
 
 
-    public Game(String id, long seed) {
+
+    public Game(String id, long seed, GameAnalyticsService gameAnalyticsService) {
         this.id = id;
         this.seed = seed;
+        this.gameAnalyticsService = gameAnalyticsService;
     }
 
     public int getTurn() {
@@ -70,13 +66,7 @@ public class Game {
 
 
     public int getInvalidAction() {
-        return invalidAction;
-    }
-    public void incrementInvalidAction() {
-        invalidAction++;
-    }
-    public void resetInvalidAction() {
-        invalidAction = 0;
+        return invalidActionLog.size();
     }
     public void logGameMemory(String memory) {
         System.out.println(memory);
@@ -94,9 +84,6 @@ public class Game {
     public GameState getState() { return state; }
     public void setState(GameState state) { this.state = state; }
 
-    public ActionType getDeclaredAction() { return declaredAction; }
-    public String getActingPlayerId() { return actingPlayerId; }
-    public String getTargetId() { return targetId; }
 
 
     public String getWinnerId(Game game) {
@@ -123,32 +110,10 @@ public class Game {
             seatOrder.put(players.get(i).getId(), i);
         }
 
-        initializeDeck();
-        dealCards();
         logGameMemory("Turn " + turn);
-        state = GameState.IN_PROGRESS;
     }
 
 
-    private void initializeDeck() {
-        List<CardType> cards = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            cards.add(CardType.DUKE);
-            cards.add(CardType.ASSASSIN);
-            cards.add(CardType.CAPTAIN);
-            cards.add(CardType.AMBASSADOR);
-            cards.add(CardType.CONTESSA);
-        }
-        Collections.shuffle(cards);
-        deck.addAll(cards);
-    }
-
-    private void dealCards() {
-        for (Player p : players) {
-            p.addCard(deck.pop());
-            p.addCard(deck.pop());
-        }
-    }
 
     public Player getCurrentPlayer() {
         return players.get(currentPlayerIndex);
@@ -171,8 +136,6 @@ public class Game {
         logGameMemory("Turn " + turn + ":");
     }
 
-    public CardType drawCard() { return deck.pop(); }
-
     public Player getPlayer(String id) {
         return players.stream()
                 .filter(p -> p.getId().equals(id))
@@ -180,68 +143,6 @@ public class Game {
                 .orElseThrow();
     }
 
-    public void switchCard(String playerID, CardType cardToRemove) {
-        logGameMemory(playerID + " switches a card" );
-        this.deck.add(getPlayer(playerID).switchCard(deck.pop(),cardToRemove));
-
-    }
-
-    public void exchangeCards(String playerID) {
-        for(int i = 0; i < getPlayer(playerID).getCards().size(); i++){
-            deck.add(getPlayer(playerID).getCards().removeFirst());
-            getPlayer(playerID).addCard(deck.pop());
-
-        }
-
-    }
-
-    public void removeCard(String playerID, CardType cardToRemove) {
-        logGameMemory(playerID + " looses a card" );
-        this.deck.add(getPlayer(playerID).removeCard(cardToRemove));
-        if(!getPlayer(playerID).isAlive()) {
-            logGameMemory(playerID + " is dead");
-        }
-
-    }
-
-    public void blockDeclared(ActionRecord blockRecord) {
-        String blockerId = blockRecord.getPlayerId();
-        Player blocker = getPlayer(blockerId);
-
-
-        blocker.incrementBlocksIssued();
-
-        if(blockRecord.getActionIsBluff()) {
-            getPlayer(blockerId).incrementBluffsAttempted();
-        }
-
-        logAction(blockRecord);
-        setState(GameState.BLOCK_DECLARED);
-        logGameMemory(blockerId + " declares " + blockRecord.getAction() + " on " + blockRecord.getTargetId());
-        incrementTotalBlocks();
-
-    }
-
-    public void declareAction(ActionRecord actionRecord) {
-        this.actingPlayerId = actionRecord.getPlayerId();
-        this.declaredAction = actionRecord.getAction();
-
-        switch(actionRecord.getAction()) {
-            case STEAL -> this.getPlayer(actingPlayerId).incrementStealAttempts();
-            case ASSASSINATE -> this.getPlayer(actingPlayerId).incrementAssassinationAttempts();
-        }
-
-
-        this.targetId = actionRecord.getTargetId();
-        this.state = GameState.ACTION_DECLARED;
-        this.actionLog.add(actionRecord);
-        if(actionRecord.getTargetId() == null){
-           logGameMemory(actionRecord.getPlayerId() + " calls " + actionRecord.getAction());
-        } else{
-            logGameMemory(actionRecord.getPlayerId() + " calls " + actionRecord.getAction() + " on " + actionRecord.getTargetId());
-        }
-
-    }
 
     public long getSeed() { return seed; }
 

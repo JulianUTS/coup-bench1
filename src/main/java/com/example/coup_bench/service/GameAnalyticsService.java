@@ -1,5 +1,6 @@
-package com.example.coup_bench.model;
+package com.example.coup_bench.service;
 
+import com.example.coup_bench.model.ActionRecord;
 import com.example.coup_bench.model.repoModels.InteractionRecord;
 import com.example.coup_bench.model.repoModels.TurnSnapshot;
 import org.springframework.stereotype.Service;

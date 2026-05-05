@@ -159,26 +159,7 @@ public class Player {
     public boolean isAlive() {
         return (alive);
     }
-    public void addCard(CardType card) {
-        cards.add(card); }
-    public CardType switchCard(CardType cardToAdd, CardType cardToRemove) {
-        addCard(cardToAdd);
-        //return card to deck
-        return removeCard(cardToRemove);
-    }
-    public CardType removeCard(CardType cardToRemove) {
-        for (CardType c : cards) {
-            if (c.equals(cardToRemove)) {
-                cards.remove(c);
-                //return card to deck
-                if(cards.isEmpty()) alive = false;{
 
-                }
-                return cardToRemove;
-            }
-        }
-        throw new IllegalStateException("Player does not have "  + cardToRemove + " to remove");
-    }
     public boolean hasCard(CardType type) {
         return cards.contains(type);
     }

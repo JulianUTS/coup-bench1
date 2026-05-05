@@ -1,4 +1,4 @@
-package com.example.coup_bench;
+package com.example.coup_bench.util;
 
 import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.CardType;

@@ -5,9 +5,10 @@ import com.example.coup_bench.model.AiResponses.AiAction;
 import com.example.coup_bench.model.AiResponses.AiReaction;
 import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.GameState;
+import com.example.coup_bench.service.AiDecisionService;
+import com.example.coup_bench.service.CoupService;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.Exchanger;
 import java.util.function.Predicate;
 
 
@@ -40,12 +41,13 @@ public class AiGameRunner {
             while(game.getState() == GameState.IN_PROGRESS && game.getInvalidAction() < 3) {
                 AiAction action = ai.getAction(game, player);
 
-                ActionRecord actionRecord = new ActionRecord(player.getId(), action.action,
-                        playerHelperService(); action.targetId, action.reason);
                // System.out.println(actionRecord.getDescription());
                 game = coup.declareAction(
                         game,
-                        actionRecord
+                        playerId,
+                        action.action,
+                        action.targetId,
+                        action.reason
                 );
             }
 
@@ -97,7 +99,7 @@ public class AiGameRunner {
 
             // 3. Apply action if still valid
             if (game.getState() == GameState.APPLYING_ACTION || game.getState() == GameState.ACTION_DECLARED) {
-                game = coup.applyAction(game, ai);
+                game = coup.applyAction(game);
             } else if(game.getState() == GameState.BLOCK_DECLARED){
                 game = coup.applyBlock(game);
             }

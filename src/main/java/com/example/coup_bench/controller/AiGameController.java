@@ -1,6 +1,8 @@
-package com.example.coup_bench;
+package com.example.coup_bench.controller;
 
+import com.example.coup_bench.AiGameRunner;
 import com.example.coup_bench.model.Game;
+import com.example.coup_bench.service.CoupService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;

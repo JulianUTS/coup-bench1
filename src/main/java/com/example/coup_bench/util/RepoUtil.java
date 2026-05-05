@@ -1,4 +1,4 @@
-package com.example.coup_bench;
+package com.example.coup_bench.util;
 
 import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.Player;
@@ -11,9 +11,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 
 @Service
-public class RepoHelperService {
+public class RepoUtil {
 
-    public GameSummary getGameSummary(Game game) {
+    public static GameSummary getGameSummary(Game game) {
         GameSummary summary = new GameSummary();
 
 // Basic identifiers
@@ -54,7 +54,7 @@ public class RepoHelperService {
         return summary;
     }
 
-    public AgentLifetimeStats getAgentLifetimeStats(Player player, PlayerRepository playerRepo, GameSummary gameSummary) {
+    public static AgentLifetimeStats getAgentLifetimeStats(Player player, PlayerRepository playerRepo, GameSummary gameSummary) {
         String provider = player.getId();
         String personality = player.getPersonality();
 
@@ -173,10 +173,10 @@ public class RepoHelperService {
 
         return stats;
     }
-    private double safeRate(int success, int attempts) {
+    public static double safeRate(int success, int attempts) {
         return attempts == 0 ? 0.0 : (double) success / attempts;
     }
-    private double calculateEntropy(PersonalityStats ps) {
+    public static double calculateEntropy(PersonalityStats ps) {
 
         // Collect all action counts
         int[] counts = {
@@ -206,7 +206,7 @@ public class RepoHelperService {
 
         return entropy;
     }
-    public long diffSeconds(long startMs) {
+    public static long diffSeconds(long startMs) {
         long nowMs = System.currentTimeMillis();
         return (nowMs - startMs) / 1000;
     }
