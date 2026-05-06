@@ -36,7 +36,7 @@ public class DeckService {
         }
     }
 
-    public void switchCard(Game game, Player player,  CardType cardToRemove) {
+    public void switchPlayerCard(Game game, Player player, CardType cardToRemove) {
         removeCardFromPlayer(player, cardToRemove);
         addCardToPlayer(player,removeCardFromDeck());
 
@@ -44,15 +44,14 @@ public class DeckService {
 
     }
 
-    public void exchangeCards(Game game, Player player) {
+    public void exchangePlayerCards(Player player) {
         List<CardType> playerCards = player.getCards();
         for(CardType c: playerCards){
             removeCardFromPlayer(player, c);
             addCardToPlayer(player,removeCardFromDeck());
         }
-        game.logGameMemory(player.getId() + " EXCHANGES their cards" );
     }
-    public void removeCard(Game game, Player player) {
+    public void removePlayerCard(Game game, Player player) {
         CardType cardToRemove = aiChooseCardService.getCardToLoose(game, player);
         removeCardFromPlayer(player, cardToRemove);
         addCardToDeck(cardToRemove);

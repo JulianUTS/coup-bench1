@@ -33,5 +33,21 @@ public class GameStats {
         this.bluffLog.add(record);
     }
 
+    private int TotalBlocks = 0;
+    private int TotalChallenges = 0;
+    public int getTotalBlocks() {
+        return TotalBlocks;
+    }
+    public int getTotalChallenges() {
+        return TotalChallenges;
+    }
+
+    public void incrementTotalBlocks() {
+        TotalBlocks++;
+    }
+    public void incrementTotalChallenges() {
+        TotalChallenges++;
+    }
+
 
 }

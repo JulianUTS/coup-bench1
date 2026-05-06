@@ -94,4 +94,17 @@ public class ActionUtil {
         }
         return null;
     }
+
+    public static boolean isTargetedAction(ActionType action){
+        switch (action) {
+            case STEAL, COUP, ASSASSINATE -> {
+                return true;
+            }
+            default -> {
+                return false;
+            }
+        }
+
+    }
+
 }

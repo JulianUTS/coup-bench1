@@ -13,6 +13,7 @@ public class Player {
     private boolean alive = true;
     private int coins = 2;
     private final List<CardType> cards = new ArrayList<>();
+    private final PlayerStats playerStats = new  PlayerStats();
 
 
 
@@ -37,4 +38,7 @@ public class Player {
     }
 
 
+    public PlayerStats getPlayerStats() {
+        return playerStats;
+    }
 }

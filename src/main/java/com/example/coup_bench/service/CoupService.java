@@ -75,7 +75,7 @@ public class CoupService {
 
 
     public Game declareAction(Game game, String playerId, ActionType action, String targetId, String reason) {
-        actionService.declareAction(game, playerId, action, targetId, reason);
+        actionService.declareAction(game, gameAnalyticsService, playerId, action, targetId, reason);
         return game;
     }
 
@@ -85,7 +85,7 @@ public class CoupService {
     }
 
     public Game declareBlock(Game game, String blockerId, AiReaction reaction) {
-        challengeService.declareBlock(game, blockerId, reaction.action,
+        challengeService.declareBlock(game, gameAnalyticsService, blockerId, reaction.action,
                 actionService.getActingPlayerId() ,reaction.reason);
         return game;
     }
@@ -98,7 +98,7 @@ public class CoupService {
         } else {
             challengedId = actionService.getActingPlayerId();
         }
-        challengeService.declareChallenge(game, challengerId, challengedId, aiReaction.reason);
+        challengeService.declareChallenge(game, gameAnalyticsService, challengerId, challengedId, aiReaction.reason);
         return game;
     }
 
@@ -124,7 +124,7 @@ public class CoupService {
 
 
     public Game applyAction(Game game) {
-        actionService.applyAction(game, deckService);
+        actionService.applyAction(game, deckService, gameAnalyticsService);
         return game;
     }
 

@@ -1,6 +1,5 @@
 package com.example.coup_bench.service;
 
-import com.example.coup_bench.model.repoModels.InteractionRecord;
 import com.example.coup_bench.util.ActionUtil;
 import com.example.coup_bench.model.ActionRecord;
 import com.example.coup_bench.model.Enums.GameState;
@@ -37,7 +36,7 @@ public class ActionService {
         incrementInvalidAction();
     }
 
-    public void declareAction(Game game, String playerId, ActionType action, String targetId, String reason) {
+    public void declareAction(Game game, GameAnalyticsService stats, String playerId, ActionType action, String targetId, String reason) {
         Player player = game.getPlayer(playerId);
 
         // Validate first
@@ -48,83 +47,77 @@ public class ActionService {
         ActionRecord actionRecord = new ActionRecord(playerId, action, targetId,
                 PlayerUtil.isPlayerBluffing(game.getPlayer(playerId), action),  reason);
 
-        updateActionAnalytics(game, player, actionRecord);
+        stats.logDeclaredAction(game, player, actionRecord);
         logNewAction(game, actionRecord);
         setCurrentAction(actionRecord);
         game.setState(GameState.ACTION_DECLARED);
     }
 
-    public void applyAction(Game game, DeckService deckService) {
+    public void applyAction(Game game, DeckService deckService, GameAnalyticsService gameAnalyticsService) {
 
         ActionType action = actionRecord.getAction();
         Player player = game.getPlayer(actionRecord.getPlayerId());
         Player target = game.getPlayer(actionRecord.getTargetId());
 
-        if (actionRecord.getActionIsBluff()) {
-            player.incrementBluffsSuccessful();
-        }
         switch (action) {
             case INCOME -> {
                 player.addCoins(1);
-                player.incrementIncomeCount();
-                game.logGameMemory(player.getId() + " gains 1 coin (INCOME)");
             }
 
             case FOREIGN_AID -> {
                 player.addCoins(2);
-                game.logGameMemory(player.getId() + " gains 2 coins (FOREIGN AID)");
             }
 
             case TAX -> {
-                player.incrementTaxCount();
                 player.addCoins(3);
-                game.logGameMemory(player.getId() + " gains 3 coins (DUKE TAX)");
             }
 
             case STEAL -> {
-                player.incrementStealSuccesses();
                 int stolen = Math.min(2, target.getCoins());
                 target.removeCoins(stolen);
                 player.addCoins(stolen);
-                game.logGameMemory(player.getId() + " steals " + stolen + " coins from " + target.getId());
             }
             case ASSASSINATE -> {
                 if (game.getPlayer(target.getId()).isAlive()) {
                     player.removeCoins(3);
-                    player.incrementAssassinationSuccesses();
-                    game.logGameMemory(player.getId() + " assassinates " + target.getId());
-                    deckService.removeCard(game, target);
+                    deckService.removePlayerCard(game, target);
                 }
             }
             case COUP -> {
                 player.removeCoins(7);
-                deckService.removeCard(game, target);
-                player.incrementCoupsPerformed();
+                deckService.removePlayerCard(game, target);
             }
 
             case EXCHANGE -> {
-                deckService.exchangeCards(game, player);
+                deckService.exchangePlayerCards(player);
             }
         }
-        //Successful Targeted Action
-        if (target != null) {
-            game.getGameAnalyticsService().logInteraction(new InteractionRecord(player.getId(), target.getId(), action, true));
+    }
+    public void logAction(Game game, Player player, Player target, ActionType action) {
+
+        switch (action) {
+
+            case INCOME -> game.logGameMemory(player.getId() + " gains 1 coin (INCOME)");
+
+            case FOREIGN_AID -> game.logGameMemory(player.getId() + " gains 2 coins (FOREIGN AID)");
+
+            case TAX -> game.logGameMemory(player.getId() + " gains 3 coins (DUKE TAX)");
+
+            case STEAL -> {
+                game.logGameMemory(player.getId() + " steals coins from " + target.getId() + " (CAPTAIN STEAL)");
+            }
+
+            case ASSASSINATE ->
+                    game.logGameMemory(player.getId() + " assassinates " + target.getId() + " (ASSASSIN ASSASSINATE)");
+
+            case COUP -> game.logGameMemory(player.getId() + " coups " + target.getId() + "COUP");
+
+            case EXCHANGE -> game.logGameMemory(player.getId() + " exchanges cards (AMBASSADOR EXCHANGE)");
         }
     }
 
-    public void updateActionAnalytics(Game game, Player player, ActionRecord actionRecord) {
-        //Update bluff values
-        if (actionRecord.getActionIsBluff()) {
-            player.incrementBluffsAttempted();
-            game.getGameAnalyticsService().logBluff(actionRecord);
-        }
 
-        //Update action values
-        switch(actionRecord.getAction()) {
-            case STEAL -> player.incrementStealAttempts();
-            case ASSASSINATE -> player.incrementAssassinationAttempts();
-        }
-    }
+
 
     public void logNewAction(Game game, ActionRecord actionRecord) {
         game.logAction(actionRecord);

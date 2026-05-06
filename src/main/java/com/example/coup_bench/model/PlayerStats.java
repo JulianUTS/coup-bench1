@@ -36,167 +36,101 @@ public class PlayerStats {
     private final List<String> blockTargets = new ArrayList<>();
     private final List<String> challengeTargets = new ArrayList<>();
 
-    public void addActionTarget(String targetId){
+    // --- Action / Block / Challenge Targets ---
+    public void addActionTarget(String targetId) {
         this.actionTargets.add(targetId);
     }
-    public void addBlockTarget(String targetId){
+
+    public void addBlockTarget(String targetId) {
         this.blockTargets.add(targetId);
     }
-    public void addChallengeTarget(String targetId){
+
+    public void addChallengeTarget(String targetId) {
         this.challengeTargets.add(targetId);
     }
 
-    public void incrementBluffsAttempted() {
-        this.bluffsAttempted++;
-    }
-    public int getBluffsSuccessful() {
-        return bluffsSuccessful;
-    }
-    public void incrementBluffsSuccessful() {
-        this.bluffsSuccessful++;
-    }
-    public int getBluffsFailed() {
-        return bluffsFailed;
-    }
-    public void incrementBluffsFailed() {
-        this.bluffsFailed++;
-    }
-    public int getChallengesIssued() {
-        return challengesIssued;
-    }
-    public void incrementChallengesIssued() {
-        this.challengesIssued++;
-    }
-    public int getChallengesWon() {
-        return challengesWon;
-    }
-    public void incrementChallengesWon() {
-        this.challengesWon++;
-    }
-    public int getChallengesLost() {
-        return challengesLost;
-    }
-    public void incrementChallengesLost() {
-        this.challengesLost++;
-    }
-    public int getBlocksIssued() {
-        return blocksIssued;
-    }
-    public void incrementBlocksIssued() {
-        this.blocksIssued++;
-    }
-    public int getBlocksSuccessful() {
-        return blocksSuccessful;
-    }
-    public void incrementBlocksSuccessful() {
-        this.blocksSuccessful++;
-    }
-    public int getBlocksFailed() {
-        return blocksFailed;
-    }
-    public void incrementBlocksFailed() {
-        this.blocksFailed++;
-    }
-    public int getIncomeCount() {
-        return incomeCount;
-    }
-    public void incrementIncomeCount() {
-        this.incomeCount++;
-    }
-    public int getTaxAttempts() {
-        return taxAttempts;
-    }
-    public void incrementTaxCount() {
-        this.taxAttempts++;
-    }
-    public int getStealAttempts() {
-        return stealAttempts;
-    }
-    public void incrementStealAttempts() {
-        this.stealAttempts++;
-    }
-    public int getStealSuccesses() {
-        return stealSuccesses;
-    }
-    public void incrementStealSuccesses() {
-        this.stealSuccesses++;
-    }
-    public int getAssassinationAttempts() {
-        return assassinationAttempts;
-    }
-    public void incrementAssassinationAttempts() {
-        this.assassinationAttempts++;
-    }
-    public int getCoupsCount() {
-        return coupsCount;
-    }
-    public void incrementCoupsCount() {
-        this.coupsCount++;
-    }
-    public int getBluffsAttempted() {return bluffsAttempted;}
+    // --- Bluffs ---
+    public int getBluffsAttempted() { return bluffsAttempted; }
+    public void incrementBluffsAttempted() { this.bluffsAttempted++; }
 
-    public int getAssassinationSuccesses() {return assassinationSuccesses;}
-    public void incrementAssassinationSuccesses() {
-        this.assassinationSuccesses++;
+    public int getBluffsSuccessful() { return bluffsSuccessful; }
+    public void incrementBluffsSuccessful() { this.bluffsSuccessful++; }
+
+    public int getBluffsFailed() { return bluffsFailed; }
+    public void incrementBluffsFailed() { this.bluffsFailed++; }
+
+    // --- Challenges ---
+    public int getChallengesIssued() { return challengesIssued; }
+    public void incrementChallengesIssued() { this.challengesIssued++; }
+
+    public int getChallengesWon() { return challengesWon; }
+    public void incrementChallengesWon() { this.challengesWon++; }
+
+    public int getChallengesLost() { return challengesLost; }
+    public void incrementChallengesLost() { this.challengesLost++; }
+
+    // --- Blocks ---
+    public int getBlocksIssued() { return blocksIssued; }
+    public void incrementBlocksIssued() { this.blocksIssued++; }
+
+    public int getBlocksSuccessful() { return blocksSuccessful; }
+    public void incrementBlocksSuccessful() { this.blocksSuccessful++; }
+
+    public int getBlocksFailed() { return blocksFailed; }
+    public void incrementBlocksFailed() { this.blocksFailed++; }
+
+    public int getBlocked() { return blocked;}
+    public void setBlocked(int blocked) { this.blocked = blocked;}
+
+    // --- Income / Tax ---
+    public int getIncomeCount() { return incomeCount; }
+    public void incrementIncomeCount() { this.incomeCount++; }
+
+    public int getTaxAttempts() { return taxAttempts; }
+    public void incrementTaxAttempts() {this.taxAttempts++;}
+
+    public int getTaxSuccessful() { return taxSuccessful; }
+    public void incrementTaxSuccesses() {
+        this.taxSuccessful++;
     }
 
-    public int getTurnsSurvived() {
-        return turnsSurvived;
-    }
+    // --- Steal ---
+    public int getStealAttempts() { return stealAttempts; }
+    public void incrementStealAttempts() { this.stealAttempts++; }
 
-    public void incrementTurnsSurvived() {
-        this.turnsSurvived++;
-    }
+    public int getStealSuccesses() { return stealSuccesses; }
+    public void incrementStealSuccesses() { this.stealSuccesses++; }
 
-    public void setTaxAttempts(int taxAttempts) {
-        this.taxAttempts = taxAttempts;
-    }
+    // --- Assassination ---
+    public int getAssassinationAttempts() { return assassinationAttempts; }
+    public void incrementAssassinationAttempts() { this.assassinationAttempts++; }
 
-    public int getTaxSuccessful() {
-        return taxSuccessful;
-    }
+    public int getAssassinationSuccesses() { return assassinationSuccesses; }
+    public void incrementAssassinationSuccesses() { this.assassinationSuccesses++; }
 
-    public void incrementTaxSuccesses(int taxSuccessful) {
-        this.taxSuccessful = taxSuccessful;
-    }
+    // --- Coup ---
+    public int getCoupsCount() { return coupsCount; }
+    public void incrementCoupsCount() { this.coupsCount++; }
 
-    public List<String> getPlayersKilled() {
-        return playersKilled;
-    }
+    // --- Exchange ---
+    public int getExchangeAttempts() {return exchangeAttempts;}
+    public void incrementExchangeAttempts() {this.exchangeAttempts++;}
 
-    public void addToKilledPlayers(String playerId) {
-        this.playersKilled.add(playerId);
-    }
+    public int getExchangeSuccessful() {return exchangeSuccessful;}
+    public void incrementExchangeSuccessful() {this.exchangeSuccessful++;}
 
-    public int getExchangeAttempts() {
-        return exchangeAttempts;
-    }
+    // --- Foreign Aid ---
+    public int getForeignAidAttempts() {return foreignAidAttempts;}
+    public void incrementForeignAidAttempts() {this.foreignAidAttempts++;}
 
-    public void setExchangeAttempts(int exchangeAttempts) {
-        this.exchangeAttempts = exchangeAttempts;
-    }
+    public int getForeignAidSuccessful() {return foreignAidSuccessful;}
+    public void incrementForeignAidSuccessful() {this.foreignAidSuccessful++;}
 
-    public int getExchangeSuccessful() {
-        return exchangeSuccessful;
-    }
+    // --- Survival ---
+    public int getTurnsSurvived() { return turnsSurvived; }
+    public void incrementTurnsSurvived() { this.turnsSurvived++; }
 
-    public void setExchangeSuccessful(int exchangeSuccessful) {
-        this.exchangeSuccessful = exchangeSuccessful;
-    }
+    // --- Players Killed ---
+    public List<String> getPlayersKilled() { return playersKilled; }
 
-    public int getForeignAidAttempts() {
-        return foreignAidAttempts;
-    }
-
-    public void setForeignAidAttempts(int foreignAidAttempts) {
-        this.foreignAidAttempts = foreignAidAttempts;
-    }
-
-    public int getForeignAidSuccessful() {
-        return foreignAidSuccessful;
-    }
-
-    public void setForeignAidSuccessful(int foreignAidSuccessful) {
-        this.foreignAidSuccessful = foreignAidSuccessful;
-    }
 }

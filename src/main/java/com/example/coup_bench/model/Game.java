@@ -22,8 +22,7 @@ public class Game {
     private int currentPlayerIndex = 0;
     private GameState state = GameState.WAITING_FOR_PLAYERS;
     private int turn = 1;
-    private int TotalBlocks = 0;
-    private int TotalChallenges = 0;
+
 
 
 
@@ -35,19 +34,6 @@ public class Game {
 
     public int getTurn() {
         return turn;
-    }
-    public int getTotalBlocks() {
-        return TotalBlocks;
-    }
-    public int getTotalChallenges() {
-        return TotalChallenges;
-    }
-
-    public void incrementTotalBlocks() {
-        TotalBlocks++;
-    }
-    public void incrementTotalChallenges() {
-        TotalChallenges++;
     }
     public List<ActionRecord> getActionLog() {
         return actionLog;
