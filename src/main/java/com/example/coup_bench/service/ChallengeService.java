@@ -5,7 +5,6 @@ import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.GameState;
 import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.Player;
-import com.example.coup_bench.model.repoModels.InteractionRecord;
 import com.example.coup_bench.util.PlayerUtil;
 import com.example.coup_bench.util.RoleUtil;
 import org.springframework.stereotype.Service;
@@ -148,7 +147,6 @@ public class ChallengeService {
     public Boolean blockIsBluff(){
         return getBlockRecord().getActionIsBluff();
     }
-
 
 
 

@@ -17,13 +17,21 @@ public class AiGameRunner {
 
     private final CoupService coup;
     private final AiDecisionService ai;
-    private final PlayerHelperService playerHelperService;
 
 
-    public AiGameRunner(CoupService coup, AiDecisionService ai, PlayerHelperService playerHelperService) {
+    public AiGameRunner(CoupService coup, AiDecisionService ai) {
         this.coup = coup;
         this.ai = ai;
-        this.playerHelperService = playerHelperService;
+    }
+    public Game newRunGame(Game game){
+        GameState gameState = game.getState();
+        switch (game.getState()) {
+            case WAITING_FOR_ACTION -> coup.getAction(game);
+            case WAITING_FOR_CHALLENGE -> 
+            case NEXT_TURN -> coup.nextTurn(game);
+
+        }
+        return game;
     }
 
     public Game runGame(Game game) {

@@ -7,8 +7,7 @@ import com.example.coup_bench.model.repoModels.TurnSnapshot;
 import com.example.coup_bench.util.ActionUtil;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -75,12 +74,29 @@ public class GameAnalyticsService {
         gameStats.incrementTotalBlocks();
 
     }
-    public void logSuccessfulBlock(GameStats gameStats, PlayerStats playerStats){
+    public void logSuccessfulBlock(Game game, Player blocker, Player blocked, ActionRecord blockAction ,ActionRecord blockedAction){
+        PlayerStats blockerStats = blocker.getPlayerStats();
+        GameStats gameStats = game.getGameStats();
+        PlayerStats blockedStats = blocked.getPlayerStats();
 
-    }
-    public void logUnsuccessfulBlock(GameStats gameStats, PlayerStats playerStats){
+        blockerStats.incrementBlocksSuccessful();
+        blockedStats.incrementedBlocked();
 
+        if(ActionUtil.isTargetedAction(blockedAction.getAction())) {
+            gameStats.logInteraction(new InteractionRecord(
+                    blockedAction.getPlayerId(),
+                    blockedAction.getTargetId(),
+                    blockedAction.getAction(), false));
+        }
+
+        if(blockAction.getActionIsBluff()) {
+            blockerStats.incrementBluffsSuccessful();
+        }
+        if(blockedAction.getActionIsBluff()){
+            blockedStats.incrementBluffsFailed();
+        }
     }
+
     public void logDeclaredChallenge(Game game, Player challenger, String challengedId){
         PlayerStats challengerStats = challenger.getPlayerStats();
         GameStats gameStats = game.getGameStats();
@@ -130,7 +146,48 @@ public class GameAnalyticsService {
                 false));
     }
 
+    public void logTurnSnapshot(Game game, ActionRecord actionRecord){
+        GameStats gameStats = game.getGameStats();
+        TurnSnapshot snap = new TurnSnapshot(
+                game.getTurn(),
+                game.getPlayers().stream()
+                        .collect(Collectors.toMap(Player::getId, Player::getCoins)),
+                game.getPlayers().stream()
+                        .collect(Collectors.toMap(Player::getId, p -> p.getCards().size())),
+                actionRecord.getAction(),
+                actionRecord.getPlayerId(),
+                actionRecord.getTargetId()
+        );
+
+        gameStats.logTurnSnapshot(snap);
+    }
 
 
+    /*
+                    Game scenarios:
+                    1- Tax/Exchange
+                    Action can be challenged by anyone, no block
 
+                    2- Foreign aid
+                    Action can be blocked by anyone, blocked can be challenged by anyone
+
+                    3- Steal
+                    Action can be challenged by anyone except for targeted player, action can be blocked by targeted player,
+                    counter can be challenged by anyone except for target and original player
+
+                    4- Assassination
+                    Action can be challenged by anyone, action can be blocked by targeted player,
+                    counter can be challenged by anyone except for target and original player
+                     */
+    public enum ChallengeScenario {
+        S1,
+        S2_1,
+        S2_2,
+        S3_1,
+        S3_2,
+        S3_3,
+        S4_1,
+        S4_2,
+        S4_3
+    }
 }

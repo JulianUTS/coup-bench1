@@ -44,8 +44,9 @@ public class AiDecisionService {
 
     }
 
-    public AiReaction getReaction(Game game, Player player, int scenario){
-        String prompt = buildReactionPrompt(game, player, scenario);
+    public AiReaction getReaction(Game game, ActionService actionService, ChallengeService challengeService,
+                                  Player player, int scenario){
+        String prompt = buildReactionPrompt(game, actionService, challengeService, player, scenario);
         String response = getResponse(player.getId(),  prompt);
 
         try {
@@ -58,28 +59,6 @@ public class AiDecisionService {
             fallback.action = ActionType.DO_NOTHING;
             return fallback;
         }
-    }
-
-    public CardType getCardToLoose(Game game, Player player) {
-        String prompt = buildChooseCardPrompt(game, player);
-        String response = getResponse(player.getId(),  prompt);
-
-        try {
-            AiChooseCard chosenCard = mapper.readValue(response, AiChooseCard.class);
-            if(player.hasCard(chosenCard.card)) {
-                return chosenCard.card;
-            } else{
-                System.err.println(player.getId() + "- Invalid Cards:\n" + response );
-                CardType fallback = player.getCards().get(new Random().nextInt(player.getCards().size()));;
-                return fallback;
-            }
-
-        } catch (Exception e) {
-            System.err.println(player.getId() + "- Invalid JSON:\n" + response );
-            CardType fallback = player.getCards().get(new Random().nextInt(player.getCards().size()));;
-            return fallback;
-        }
-
     }
 
     private String buildActionPrompt(Game game, Player player) {
@@ -146,62 +125,12 @@ public class AiDecisionService {
                         .filter(p -> !p.getId().equals(player.getId()))
                         .map(p -> p.getId() + " (" + p.getCoins() + " coins, " + p.getCards().size() + " cards)")
                         .toList(),
-                allowedActions(player)
+                PromptUtil.allowedActions(player)
         );
     }
 
-    private String buildChooseCardPrompt(Game game, Player player) {
-        return """
-                You are an AI agent playing Coup.
-                Your playstyle:
-                %s
-                
-                ### GAME INFO
-                Your ID: %s
-                Your coins: %d
-                Your cards: %s
-                
-                ### MEMORY
-                %s
-                
-                Other players:
-                %s
-                
-                Game state: You have failed a challenge and must choose a card to loose
-                
-                ### COUP RULES
-                - This card will not be revealed to the other players, take this into
-                account when choosing.
-                - If you choose null or an invalid card, a random card will be chosen instead.
-                
-                ### JSON SCHEMA (FOLLOW EXACTLY)
-                {
-                  "card": string | null,
-                }
-                
-                ### OUTPUT RULES
-                - Respond with ONLY the JSON object.
-                - No markdown, no backticks, no text outside JSON.
-                - Never output the string "null". Use actual null for targetId only.
-                - All fields MUST be present.
-                - Never output missing or extra fields.
-                - Never output lowercase action names.
-                
-               
-                """.formatted(
-                PromptUtil.getPersonalityPrompt(player.getPersonality()),
-                player.getId(),
-                player.getCoins(),
-                player.getCards().stream().toList(),
-                String.join("\n", game.getGameMemory()),
-                game.getPlayers().stream()
-                        .filter(p -> !p.getId().equals(player.getId()))
-                        .map(p -> p.getId() + " (" + p.getCoins() + " coins, " + p.getCards().size() + " cards)")
-                        .toList()
-        );
-    }
-
-    private String buildReactionPrompt(Game game, Player player, int scenario) {
+    private String buildReactionPrompt(Game game, ActionService actionService, ChallengeService challengeService,
+                                       Player player, int scenario) {
         return """
                 You are an AI agent playing Coup.
                 Your playstyle: %s
@@ -243,10 +172,10 @@ public class AiDecisionService {
                         .filter(p -> !p.getId().equals(player.getId()))
                         .map(p -> p.getId() + " (" + p.getCoins() + " coins, " + p.getCards().size() + " cards)")
                         .toList(),
-                scenarioText(game, scenario));
+                scenarioText(game, actionService, challengeService, scenario));
 }
 
-    private String scenarioText(Game game, int scenario) {
+    private String scenarioText(Game game, ActionService actionService, ChallengeService challengeService, int scenario) {
         return switch (scenario) {
             case 1 ->
 
@@ -266,9 +195,9 @@ public class AiDecisionService {
                             "reason": string
                             }
                             """.formatted(
-                            game.getActingPlayerId(),
-                            game.getDeclaredAction(),
-                            game.getActingPlayerId());
+                            actionService.getActingPlayerId(),
+                            actionService.getDeclaredAction(),
+                            actionService.getActingPlayerId());
             case 2 ->
                 //Scenario 2- Foreign aid can be blocked anyone
                     """       
@@ -289,7 +218,7 @@ public class AiDecisionService {
                             }
                             
                             """.formatted(
-                            game.getActingPlayerId()
+                            actionService.getActingPlayerId()
                     );
             case 3 ->
                 //Generic setup for challenge counteraction
@@ -298,7 +227,7 @@ public class AiDecisionService {
                 //Scenario 4- Block assassinate counteraction can be challenged by any player, except the original
 
                     """       
-                            Game state: Player %s has BLOCKED player %s's %s claiming %s
+                            Game state: Player %s has claimed %s on player %s's %s
                             
                             ### COUP RULES
                             - You may choose to challenge the block if you believe player %s is bluffing
@@ -313,12 +242,11 @@ public class AiDecisionService {
                             }
                             
                             """.formatted(
-                            game.getBlockerId(),
-                            game.getActingPlayerId(),
-                            game.getDeclaredAction(),
-                            game.getBlockingRole(),
-                            game.getBlockerId()
-
+                            challengeService.getBlockerId(),
+                            challengeService.getBlockAction(),
+                            actionService.getActingPlayerId(),
+                            actionService.getDeclaredAction(),
+                            challengeService.getBlockerId()
                     );
             case 4 ->
                 //Scenario 3- Steal can be challenged by any player, except for the target and original
@@ -338,9 +266,9 @@ public class AiDecisionService {
                             }
                             
                             """.formatted(
-                            game.getActingPlayerId(),
-                            game.getTargetId(),
-                            game.getActingPlayerId()
+                            actionService.getActingPlayerId(),
+                            actionService.getTargetId(),
+                            actionService.getActingPlayerId()
                     );
             case 5 ->
                 //Scenario 3- Steal can be blocked by targeted player if no one wants to challenge original steal
@@ -362,7 +290,7 @@ public class AiDecisionService {
                             }
                             
                             """.formatted(
-                            game.getActingPlayerId()
+                            actionService.getActingPlayerId()
                     );
             case 6 ->
                 //Scenario 4- Assassinate can be challenged by any player, except for the original
@@ -384,9 +312,9 @@ public class AiDecisionService {
                             }
                             
                             """.formatted(
-                            game.getActingPlayerId(),
-                            game.getTargetId(),
-                            game.getActingPlayerId()
+                            actionService.getActingPlayerId(),
+                            actionService.getTargetId(),
+                            actionService.getActingPlayerId()
 
                     );
             case 7 ->
@@ -409,7 +337,7 @@ public class AiDecisionService {
                             }
                             
                             """.formatted(
-                            game.getActingPlayerId()
+                            actionService.getActingPlayerId()
                     );
             default ->
                     """       
@@ -435,27 +363,6 @@ public class AiDecisionService {
         return PromptUtil.cleanResponse(response);
     }
 
-    private List<String> allowedActions( Player player){
-        List<String> allowedActions = new ArrayList<>();
-        allowedActions.add("INCOME");
-        allowedActions.add("FOREIGN_AID");
-        allowedActions.add("TAX");
-        allowedActions.add("EXCHANGE");
-        allowedActions.add("STEAL");
 
-        if (player.getCoins() >= 3) {
-            allowedActions.add("ASSASSINATE");
-        }
-
-        if (player.getCoins() >= 7) {
-            allowedActions.add("COUP");
-        }
-
-        if (player.getCoins() >= 10) {
-            allowedActions.clear();
-            allowedActions.add("COUP");
-        }
-        return allowedActions;
-    }
 }
 

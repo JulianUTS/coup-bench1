@@ -8,18 +8,19 @@ import com.example.coup_bench.model.InvalidActionRecord;
 import com.example.coup_bench.model.Player;
 import com.example.coup_bench.util.PlayerUtil;
 import com.example.coup_bench.model.Enums.ActionType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 
 @Service
 public class ActionService {
+    private static final Logger log = LoggerFactory.getLogger(ActionService.class);
     private ActionRecord actionRecord;
     private int invalidAction = 0;
 
     public ActionService() {
     }
-
-
 
     public void declareInvalidAction(Game game, String playerId,
                                      ActionType action, String targetId, String reason) {
@@ -34,6 +35,9 @@ public class ActionService {
 
         game.logInvalidAction(invalidActionRecord);
         incrementInvalidAction();
+        if(invalidAction == 3){
+            game.setState(GameState.INVALID);
+        }
     }
 
     public void declareAction(Game game, GameAnalyticsService stats, String playerId, ActionType action, String targetId, String reason) {
@@ -42,6 +46,7 @@ public class ActionService {
         // Validate first
         if (!ActionUtil.actionIsValid(game, playerId, action, targetId)){
             declareInvalidAction(game, playerId, action, targetId, reason);
+            return;
         }
 
         ActionRecord actionRecord = new ActionRecord(playerId, action, targetId,
@@ -50,7 +55,7 @@ public class ActionService {
         stats.logDeclaredAction(game, player, actionRecord);
         logNewAction(game, actionRecord);
         setCurrentAction(actionRecord);
-        game.setState(GameState.ACTION_DECLARED);
+        game.setState(GameState.WAITING_FOR_CHALLENGE);
     }
 
     public void applyAction(Game game, DeckService deckService, GameAnalyticsService gameAnalyticsService) {
@@ -87,13 +92,13 @@ public class ActionService {
                 player.removeCoins(7);
                 deckService.removePlayerCard(game, target);
             }
-
             case EXCHANGE -> {
                 deckService.exchangePlayerCards(player);
             }
         }
+        logAppliedAction(game, player, target, action);
     }
-    public void logAction(Game game, Player player, Player target, ActionType action) {
+    public void logAppliedAction(Game game, Player player, Player target, ActionType action) {
 
         switch (action) {
 
@@ -103,12 +108,9 @@ public class ActionService {
 
             case TAX -> game.logGameMemory(player.getId() + " gains 3 coins (DUKE TAX)");
 
-            case STEAL -> {
-                game.logGameMemory(player.getId() + " steals coins from " + target.getId() + " (CAPTAIN STEAL)");
-            }
+            case STEAL -> game.logGameMemory(player.getId() + " steals coins from " + target.getId() + " (CAPTAIN STEAL)");
 
-            case ASSASSINATE ->
-                    game.logGameMemory(player.getId() + " assassinates " + target.getId() + " (ASSASSIN ASSASSINATE)");
+            case ASSASSINATE -> game.logGameMemory(player.getId() + " assassinates " + target.getId() + " (ASSASSIN ASSASSINATE)");
 
             case COUP -> game.logGameMemory(player.getId() + " coups " + target.getId() + "COUP");
 

@@ -1,5 +1,10 @@
 package com.example.coup_bench.util;
 
+import com.example.coup_bench.model.Player;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class PromptUtil {
     public static String cleanResponse(String response) {
         return response
@@ -73,5 +78,28 @@ public class PromptUtil {
             case "default" -> defaultRules;
             default -> "";
         });
+    }
+
+    public static List<String> allowedActions(Player player){
+        List<String> allowedActions = new ArrayList<>();
+        allowedActions.add("INCOME");
+        allowedActions.add("FOREIGN_AID");
+        allowedActions.add("TAX");
+        allowedActions.add("EXCHANGE");
+        allowedActions.add("STEAL");
+
+        if (player.getCoins() >= 3) {
+            allowedActions.add("ASSASSINATE");
+        }
+
+        if (player.getCoins() >= 7) {
+            allowedActions.add("COUP");
+        }
+
+        if (player.getCoins() >= 10) {
+            allowedActions.clear();
+            allowedActions.add("COUP");
+        }
+        return allowedActions;
     }
 }

@@ -80,7 +80,7 @@ public class PlayerStats {
     public void incrementBlocksFailed() { this.blocksFailed++; }
 
     public int getBlocked() { return blocked;}
-    public void setBlocked(int blocked) { this.blocked = blocked;}
+    public void incrementedBlocked() { this.blocked++;}
 
     // --- Income / Tax ---
     public int getIncomeCount() { return incomeCount; }

@@ -41,4 +41,7 @@ public class Player {
     public PlayerStats getPlayerStats() {
         return playerStats;
     }
+    public boolean isHuman() {
+        return this.id.equals("human");
+    }
 }
