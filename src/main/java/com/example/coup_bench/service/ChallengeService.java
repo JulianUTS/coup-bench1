@@ -116,18 +116,7 @@ public class ChallengeService {
 
     public void updateUnsuccessfulChallengeAnalytics(Game game, Player challenger, Player challenged,
                                                    ActionRecord challengeRecord){
-        /*
-        Put this somewhere
-         if (isBlockChallenge) {
-            if(!game.getPlayer(game.getActingPlayerId()).hasCard(roleService.getCard(game.getDeclaredAction()))){
-                game.getPlayer(game.getActingPlayerId()).incrementBluffsFailed();
-            }
-            if(game.getTargetId() != null) {
-                game.getGameAnalyticsService().logInteraction(new InteractionRecord(game.getActingPlayerId(),
-                        game.getTargetId(), game.getDeclaredAction(), false));
 
-            }
-         */
         challenger.incrementChallengesLost();
         game.getGameAnalyticsService().logInteraction(new InteractionRecord(
                 challenger.getId(),
@@ -198,6 +187,21 @@ public class ChallengeService {
 
     public boolean challengeOnBlock(){
         return getBlockRecord() != null;
+    }
+
+    public String getBlockerId() {
+        return blockRecord.getPlayerId();
+    }
+    public Player getBlocker(Game game) {
+        return game.getPlayer(blockRecord.getPlayerId());
+    }
+
+    public ActionType getBlockAction(){
+        return getBlockRecord().getAction();
+    }
+
+    public Boolean blockIsBluff(){
+        return getBlockRecord().getActionIsBluff();
     }
 
 

@@ -13,141 +13,13 @@ public class Player {
     private boolean alive = true;
     private int coins = 2;
     private final List<CardType> cards = new ArrayList<>();
-    private int bluffsAttempted = 0;
-    private int bluffsSuccessful = 0;
-    private int bluffsFailed = 0;
-
-    private int challengesIssued = 0;
-    private int challengesWon = 0;
-    private int challengesLost = 0;
-
-    private int blocksIssued = 0;
-    private int blocksSuccessful = 0;
-    private int blocksFailed = 0;
-
-    private int incomeCount = 0;
-    private int taxCount = 0;
-    private int stealAttempts = 0;
-    private int stealSuccesses = 0;
-    private int assassinationAttempts = 0;
-    private int assassinationSuccesses = 0;
-    private int coupsPerformed = 0;
-    private int turnsSurvived = 0;
-    private String lastTargetProvider;
-    private String lastChallengedProvider;
-
-    public String getLastChallengedProvider() {
-        return lastChallengedProvider;
-    }
-
-    public void setLastChallengedProvider(String provider) {
-        this.lastChallengedProvider = provider;
-    }
 
 
-
-    public String getLastTargetProvider() {
-        return lastTargetProvider;
-    }
-
-    public void setLastTargetProvider(String provider) {
-        this.lastTargetProvider = provider;
-    }
 
 
     public Player(String id, String personality) {
         this.id = id;
         this.personality = personality;
-    }
-
-
-    public void incrementBluffsAttempted() {
-
-        this.bluffsAttempted++;
-    }
-    public int getBluffsSuccessful() {
-        return bluffsSuccessful;
-    }
-    public void incrementBluffsSuccessful() {
-        this.bluffsSuccessful++;
-    }
-    public int getBluffsFailed() {
-        return bluffsFailed;
-    }
-    public void incrementBluffsFailed() {
-        this.bluffsFailed++;
-    }
-    public int getChallengesIssued() {
-        return challengesIssued;
-    }
-    public void incrementChallengesIssued() {
-        this.challengesIssued++;
-    }
-    public int getChallengesWon() {
-        return challengesWon;
-    }
-    public void incrementChallengesWon() {
-        this.challengesWon++;
-    }
-    public int getChallengesLost() {
-        return challengesLost;
-    }
-    public void incrementChallengesLost() {
-        this.challengesLost++;
-    }
-    public int getBlocksIssued() {
-        return blocksIssued;
-    }
-    public void incrementBlocksIssued() {
-        this.blocksIssued++;
-    }
-    public int getBlocksSuccessful() {
-        return blocksSuccessful;
-    }
-    public void incrementBlocksSuccessful() {
-        this.blocksSuccessful++;
-    }
-    public int getBlocksFailed() {
-        return blocksFailed;
-    }
-    public void incrementBlocksFailed() {
-        this.blocksFailed++;
-    }
-    public int getIncomeCount() {
-        return incomeCount;
-    }
-    public void incrementIncomeCount() {
-        this.incomeCount++;
-    }
-    public int getTaxCount() {
-        return taxCount;
-    }
-    public void incrementTaxCount() {
-        this.taxCount++;
-    }
-    public int getStealAttempts() {
-        return stealAttempts;
-    }
-    public void incrementStealAttempts() {
-        this.stealAttempts++;
-    }
-    public int getStealSuccesses() {
-        return stealSuccesses;
-    }
-    public void incrementStealSuccesses() {
-        this.stealSuccesses++;
-    }
-    public int getAssassinationAttempts() {
-        return assassinationAttempts;
-    }
-    public void incrementAssassinationAttempts() {
-        this.assassinationAttempts++;
-    }
-    public int getCoupsPerformed() {
-        return coupsPerformed;
-    }
-    public void incrementCoupsPerformed() {
-        this.coupsPerformed++;
     }
 
     public String getId() { return id; }
@@ -164,23 +36,5 @@ public class Player {
         return cards.contains(type);
     }
 
-    public int getBluffsAttempted() {
-        return bluffsAttempted;
-    }
 
-    public int getAssassinationSuccesses() {
-        return assassinationSuccesses;
-    }
-
-    public void incrementAssassinationSuccesses() {
-        this.assassinationSuccesses++;
-    }
-
-    public int getTurnsSurvived() {
-        return turnsSurvived;
-    }
-
-    public void incrementTurnsSurvived() {
-        this.turnsSurvived++;
-    }
 }

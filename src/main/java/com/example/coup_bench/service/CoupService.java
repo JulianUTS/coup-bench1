@@ -22,15 +22,18 @@ public class CoupService {
     private final ChallengeService challengeService;
     private final ActionService actionService;
     private final DeckService deckService;
+    private final GameAnalyticsService gameAnalyticsService;
 
     public CoupService(GameRepository repo, PlayerRepository playerRepo,
                        ChallengeService challengeService,
-                       ActionService actionService,  DeckService deckService) {
+                       ActionService actionService,  DeckService deckService,
+                       GameAnalyticsService gameAnalyticsService) {
         this.gameRepo = repo;
         this.playerRepo = playerRepo;
         this.challengeService = challengeService;
         this.actionService = actionService;
         this.deckService = deckService;
+        this.gameAnalyticsService = gameAnalyticsService;
 
     }
 
@@ -126,7 +129,8 @@ public class CoupService {
     }
 
     public Game nextTurn(Game game){
-        game.clearChallengeData();
+        challengeService.clearChallengeService();
+        actionService.clearActionService();
         TurnSnapshot snap = new TurnSnapshot(
                 game.getTurn(),
                 game.getPlayers().stream()
@@ -149,23 +153,39 @@ public class CoupService {
     };
 
     public Game applyBlock(Game game){
-        game.getPlayer(game.getBlockerId()).incrementBlocksSuccessful();
+        gameAnalyticsService.logSuccessfulBlock(game.get);
+        challengeService.getBlocker(game).incrementBlocksSuccessful();
+
         //Unsuccessful targeted action
-        if(game.getTargetId() != null){
-            game.getGameAnalyticsService().logInteraction(new InteractionRecord(game.getActingPlayerId(), game.getTargetId(),
-                    game.getDeclaredAction(), false));
+        if(actionService.targetedAction()) {
+            game.getGameAnalyticsService().logInteraction(new InteractionRecord(
+                    actionService.getActingPlayerId(),
+                    actionService.getTargetId(),
+                    actionService.getDeclaredAction(), false));
+
         }
+
         //Successful Block
-        game.getGameAnalyticsService().logInteraction(new InteractionRecord(game.getBlockerId(), game.getActingPlayerId(),
-               roleService.getAction(game.getBlockingRole()), true));
+        game.getGameAnalyticsService().logInteraction(new InteractionRecord(
+                challengeService.getBlockerId(),
+                actionService.getActingPlayerId(),
+                challengeService.getBlockAction(), true));
 
 
-        if(!game.getPlayer(game.getBlockerId()).hasCard(game.getBlockingRole())){
-            game.getPlayer(game.getBlockerId()).incrementBluffsSuccessful();
+
+        if(challengeService.blockIsBluff()){
+            challengeService.getBlocker(game).incrementBluffsSuccessful();
         }
-        if(!game.getPlayer(game.getActingPlayerId()).hasCard(roleService.getCard(game.getDeclaredAction()))){
-            game.getPlayer(game.getActingPlayerId()).incrementBluffsFailed();
+
+        if(actionService.actionIsBluff()){
+            actionService.getActingPlayer(game).incrementBluffsFailed();
         }
+
+        return game;
+    };
+
+    public Game applyChallenge(Game game){
+
         return game;
     };
 

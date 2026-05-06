@@ -15,7 +15,7 @@ public class Game {
     private final List<String> gameMemory = new ArrayList<>();
     private final List<InvalidActionRecord> invalidActionLog = new ArrayList<>();
     private final long timestampStart = System.currentTimeMillis();
-    private final GameAnalyticsService gameAnalyticsService;
+    private final GameStats gameStats = new GameStats();
 
     private final long seed;
 
@@ -28,10 +28,9 @@ public class Game {
 
 
 
-    public Game(String id, long seed, GameAnalyticsService gameAnalyticsService) {
+    public Game(String id, long seed) {
         this.id = id;
         this.seed = seed;
-        this.gameAnalyticsService = gameAnalyticsService;
     }
 
     public int getTurn() {
@@ -148,7 +147,7 @@ public class Game {
 
     public Map<String, Integer> getSeatOrder() { return seatOrder; }
 
-    public GameAnalyticsService getGameAnalyticsService() {
-        return gameAnalyticsService;
+    public GameStats getGameStats() {
+        return gameStats;
     }
 }

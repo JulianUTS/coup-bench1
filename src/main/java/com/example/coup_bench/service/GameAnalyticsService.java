@@ -1,6 +1,8 @@
 package com.example.coup_bench.service;
 
 import com.example.coup_bench.model.ActionRecord;
+import com.example.coup_bench.model.GameStats;
+import com.example.coup_bench.model.PlayerStats;
 import com.example.coup_bench.model.repoModels.InteractionRecord;
 import com.example.coup_bench.model.repoModels.TurnSnapshot;
 import org.springframework.stereotype.Service;
@@ -11,30 +13,26 @@ import java.util.List;
 
 @Service
 public class GameAnalyticsService {
-    private final List<ActionRecord> bluffLog= new ArrayList<>();
-    private final List<InteractionRecord> interactionLog= new ArrayList<>();
-    private final List<TurnSnapshot> turnSnapshotLog= new ArrayList<>();
+    public void logSuccessfulAction(GameStats gameStats, PlayerStats playerStats){
 
-    public List<TurnSnapshot> getTurnSnapshotLog() {
-        return turnSnapshotLog;
     }
+    public void logUnsuccessfulAction(GameStats gameStats, PlayerStats playerStats){
 
-    public List<InteractionRecord> getInteractionLog() {
-        return interactionLog;
     }
-    public void logTurnSnapshot(TurnSnapshot turnSnapshot) {
-        this.turnSnapshotLog.add(turnSnapshot);
-    }
-    public void logInteraction(InteractionRecord interactionRecord) {
-        this.interactionLog.add(interactionRecord);
-    }
+    public void logSuccessfulBlock(GameStats gameStats, PlayerStats playerStats){
 
-    public List<ActionRecord> getBluffLog() {
-        return this.bluffLog;
+    }
+    public void logUnsuccessfulBlock(GameStats gameStats, PlayerStats playerStats){
+
+    }
+    public void logSuccessfulChallenge(GameStats gameStats, PlayerStats playerStats){
+
+    }
+    public void logUnsuccessfulChallenge(GameStats gameStats, PlayerStats playerStats){
+
     }
 
-    public void logBluff(ActionRecord record){
-        this.bluffLog.add(record);
-    }
+
+
 
 }

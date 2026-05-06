@@ -137,8 +137,12 @@ public class ActionService {
     }
 
     public void setCurrentAction(ActionRecord actionRecord) {
-        this.invalidAction = 0;
         this.actionRecord = actionRecord;
+    }
+
+    public void clearActionService(){
+        this.invalidAction = 0;
+        this.actionRecord = null;
     }
     public void incrementInvalidAction() {
         invalidAction++;
@@ -149,6 +153,24 @@ public class ActionService {
     }
     public ActionRecord getActionRecord() {
         return this.actionRecord;
+    }
+
+    public String getTargetId(){
+        return this.actionRecord.getTargetId();
+    }
+    public ActionType getDeclaredAction() {
+        return this.actionRecord.getAction();
+    }
+    public Boolean actionIsBluff() {
+        return this.actionRecord.getActionIsBluff();
+    }
+
+    public Player getActingPlayer(Game game){
+        return game.getPlayer(this.actionRecord.getPlayerId());
+    }
+
+    public boolean targetedAction(){
+        return  this.actionRecord.getTargetId() != null;
     }
 
 }
