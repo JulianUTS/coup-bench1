@@ -94,8 +94,8 @@ public class ChallengeService {
 
     }
 
-    public void applyS_1(Game game, ChallengeService challengeService) {
-
+    public void applyS_1(Game game, ChallengeService challengeService, AiDecisionService ai) {
+        int playerIndex = game.getPlayerIndex()
         game = findChallenger(
                 game, playerIndex,
                 p -> p.isAlive() && !p.getId().equals(playerId),

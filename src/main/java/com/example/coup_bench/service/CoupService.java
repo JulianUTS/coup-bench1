@@ -74,7 +74,7 @@ public class CoupService {
         Player currentPlayer = game.getCurrentPlayer();
         Scenario scenario = challenge.getChallengeScenario();
         switch (scenario) {
-            case S1       -> challenge.applyS_1(game, challenge);
+            case S1       -> challenge.applyS_1(game, challenge, ai);
             case S2_1     -> Scenario.S2_1;
             case S2_2     -> Scenario.S2_2;
             case S3_1     -> Scenario.S3_1;

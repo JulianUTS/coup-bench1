@@ -45,6 +45,9 @@ public class Game {
     public List<String> getGameMemory() {
         return gameMemory;
     }
+    public int getPlayerIndex(String id) {
+            return  players.indexOf(getPlayer(id));
+    }
    ;
 
     public Map<String, Integer> seatOrder;
