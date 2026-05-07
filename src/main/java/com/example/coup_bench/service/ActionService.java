@@ -40,7 +40,8 @@ public class ActionService {
         }
     }
 
-    public void declareAction(Game game, GameAnalyticsService stats, String playerId, ActionType action, String targetId, String reason) {
+    public void declareAction(Game game, GameAnalyticsService stats, ChallengeService challengeService,
+                              String playerId, ActionType action, String targetId, String reason) {
         Player player = game.getPlayer(playerId);
 
         // Validate first
@@ -55,6 +56,7 @@ public class ActionService {
         stats.logDeclaredAction(game, player, actionRecord);
         logNewAction(game, actionRecord);
         setCurrentAction(actionRecord);
+        challengeService.setChallengeScenario(ActionUtil.decideChallengeScenario(action));
         game.setState(GameState.WAITING_FOR_CHALLENGE);
     }
 

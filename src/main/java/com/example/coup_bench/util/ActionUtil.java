@@ -1,6 +1,7 @@
 package com.example.coup_bench.util;
 
 import com.example.coup_bench.model.Enums.ActionType;
+import com.example.coup_bench.model.Enums.Scenario;
 import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.Player;
 
@@ -105,6 +106,15 @@ public class ActionUtil {
             }
         }
 
+    }
+    public static Scenario decideChallengeScenario(ActionType action){
+        return switch (action) {
+            case TAX, EXCHANGE -> Scenario.S1;
+            case FOREIGN_AID -> Scenario.S2_1;
+            case STEAL -> Scenario.S3_1;
+            case ASSASSINATE ->  Scenario.S4_1;
+            default -> Scenario.NO_CHALLENGE;
+        };
     }
 
 }

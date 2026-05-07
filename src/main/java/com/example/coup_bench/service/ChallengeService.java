@@ -1,13 +1,17 @@
 package com.example.coup_bench.service;
 
 import com.example.coup_bench.model.ActionRecord;
+import com.example.coup_bench.model.AiResponses.AiReaction;
 import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.GameState;
+import com.example.coup_bench.model.Enums.Scenario;
 import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.Player;
 import com.example.coup_bench.util.PlayerUtil;
 import com.example.coup_bench.util.RoleUtil;
 import org.springframework.stereotype.Service;
+
+import java.util.function.Predicate;
 
 
 @Service
@@ -16,6 +20,8 @@ public class ChallengeService {
     private String challengerId;
     private Player challengeWinner;
     private Player challengeLoser;
+    private int shiftIndex = 0;
+    private Scenario challengeScenario;
 
     public void declareBlock(Game game, GameAnalyticsService stats, String blockerId,
                              ActionType blockAction, String blockedId, String blockReason) {
@@ -88,6 +94,16 @@ public class ChallengeService {
 
     }
 
+    public void applyS_1(Game game, ChallengeService challengeService) {
+
+        game = findChallenger(
+                game, playerIndex,
+                p -> p.isAlive() && !p.getId().equals(playerId),
+                1
+        );
+
+    }
+
     public void logNewBlock(Game game, ActionRecord blockRecord) {
         game.logGameMemory(blockRecord.getPlayerId() + " declares " + blockRecord.getAction() + " on " + blockRecord.getTargetId());
         game.logAction(blockRecord);
@@ -143,11 +159,43 @@ public class ChallengeService {
     public ActionType getBlockAction(){
         return getBlockRecord().getAction();
     }
+    public void setChallengeScenario(Scenario challengeScenario){
+        this.challengeScenario = challengeScenario;
+    }
+    public Scenario getChallengeScenario(){
+        return challengeScenario;
+    }
 
     public Boolean blockIsBluff(){
         return getBlockRecord().getActionIsBluff();
     }
+    private void incrementShiftIndex(){
+        this.shiftIndex++;
+    }
 
+    private Game findChallenger(Game game, ActionRecord action, Predicate<Player> filter, int reactionCode) {
+        int startIndex =
+        int playerCount = game.getPlayers().size();
+
+        for (int i = shiftIndex; i < playerCount; i++) {
+            Player p = game.getPlayers().get((startIndex + i) % playerCount);
+            if (!filter.test(p)) continue;
+
+            AiReaction reaction = ai.getReaction(game, p, reactionCode);
+
+            if (reaction.action == ActionType.CHALLENGE) {
+                declareChallenge(game, p.getId(), reaction);
+                game = coup.resolveChallenge(game, ai);
+                return game;
+            } else if(reaction.action == ActionType.BLOCK_USING_DUKE){
+                game = coup.declareBlock(game, p.getId(), reaction);
+                return game;
+            } else{
+                game = coup.logAction(game, new ActionRecord(p.getId(), reaction.action, null, reaction.reason));
+            }
+        }
+        return game;
+    }
 
 
 

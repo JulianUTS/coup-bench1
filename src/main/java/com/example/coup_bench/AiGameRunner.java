@@ -23,15 +23,31 @@ public class AiGameRunner {
         this.coup = coup;
         this.ai = ai;
     }
-    public Game newRunGame(Game game){
+
+    public Game newRunGame(Game game) {
+        while(!gameFinished(game) || !gameWaitingForHuman(game)) {
+            game = nextMove(game);
+        }
+        return game;
+    }
+    public Game nextMove(Game game){
         GameState gameState = game.getState();
         switch (game.getState()) {
             case WAITING_FOR_ACTION -> coup.getAction(game);
-            case WAITING_FOR_CHALLENGE -> 
+            case WAITING_FOR_CHALLENGE -> coup.getChallenge(game);
+            case INVALID -> coup.invalidGame(game);
             case NEXT_TURN -> coup.nextTurn(game);
+            case ENDGAME -> coup.endGame(game);
 
         }
         return game;
+    }
+
+    public boolean gameFinished(Game game) {
+        return game.getState() == GameState.FINISHED;
+    }
+    public boolean gameWaitingForHuman(Game game) {
+        return game.getState() == GameState.WAITING_FOR_HUMAN_ACTION;
     }
 
     public Game runGame(Game game) {
