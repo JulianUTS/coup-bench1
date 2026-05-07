@@ -1,11 +1,13 @@
 package com.example.coup_bench.service;
 
+import com.example.coup_bench.model.AiResponses.AiAction;
 import com.example.coup_bench.util.ActionUtil;
 import com.example.coup_bench.model.ActionRecord;
 import com.example.coup_bench.model.Enums.GameState;
 import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.InvalidActionRecord;
 import com.example.coup_bench.model.Player;
+import com.example.coup_bench.util.HumanUtil;
 import com.example.coup_bench.util.PlayerUtil;
 import com.example.coup_bench.model.Enums.ActionType;
 import org.slf4j.Logger;
@@ -15,11 +17,19 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ActionService {
-    private static final Logger log = LoggerFactory.getLogger(ActionService.class);
+    private final AiActionService ai;
+
     private ActionRecord actionRecord;
     private int invalidAction = 0;
 
-    public ActionService() {
+    public ActionService(AiActionService aiAction) {
+        this.ai = aiAction;
+    }
+
+    public AiAction getAction(Game game, Player player) {
+        AiAction action = ai.getAction(game, player);
+        game.setState(GameState.DECLARE_ACTION);
+        return action;
     }
 
     public void declareInvalidAction(Game game, String playerId,

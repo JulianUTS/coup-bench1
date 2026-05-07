@@ -5,7 +5,7 @@ import com.example.coup_bench.model.AiResponses.AiAction;
 import com.example.coup_bench.model.AiResponses.AiReaction;
 import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.GameState;
-import com.example.coup_bench.service.AiDecisionService;
+import com.example.coup_bench.service.AiActionService;
 import com.example.coup_bench.service.CoupService;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +16,10 @@ import java.util.function.Predicate;
 public class AiGameRunner {
 
     private final CoupService coup;
-    private final AiDecisionService ai;
+    private final AiActionService ai;
 
 
-    public AiGameRunner(CoupService coup, AiDecisionService ai) {
+    public AiGameRunner(CoupService coup, AiActionService ai) {
         this.coup = coup;
         this.ai = ai;
     }

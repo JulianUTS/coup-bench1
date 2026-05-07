@@ -1,6 +1,7 @@
 package com.example.coup_bench.service;
 
 import com.example.coup_bench.model.ActionRecord;
+import com.example.coup_bench.model.AiResponses.AiAction;
 import com.example.coup_bench.model.AiResponses.AiReaction;
 import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.GameState;
@@ -22,6 +23,11 @@ public class ChallengeService {
     private Player challengeLoser;
     private int shiftIndex = 0;
     private Scenario challengeScenario;
+    private final AiReactionService AiReaction;
+
+    public ChallengeService(AiReactionService aiReactionService){
+        this.AiReaction = aiReactionService;
+    }
 
     public void declareBlock(Game game, GameAnalyticsService stats, String blockerId,
                              ActionType blockAction, String blockedId, String blockReason) {
@@ -94,10 +100,10 @@ public class ChallengeService {
 
     }
 
-    public void applyS_1(Game game, ChallengeService challengeService, AiDecisionService ai) {
-        int playerIndex = game.getPlayerIndex()
-        game = findChallenger(
-                game, playerIndex,
+    public void applyS_1(Game game, ActionRecord challengedRecord) {
+        String playerId = challengedRecord.getPlayerId();
+        findChallenger(
+                game, challengedRecord,
                 p -> p.isAlive() && !p.getId().equals(playerId),
                 1
         );
@@ -173,18 +179,18 @@ public class ChallengeService {
         this.shiftIndex++;
     }
 
-    private Game findChallenger(Game game, ActionRecord action, Predicate<Player> filter, int reactionCode) {
-        int startIndex =
+    private Game findChallenger(Game game, ActionRecord actionRecord, Predicate<Player> filter, int reactionCode) {
+        int startIndex = game.getPlayerIndex(actionRecord.getPlayerId());
         int playerCount = game.getPlayers().size();
 
         for (int i = shiftIndex; i < playerCount; i++) {
             Player p = game.getPlayers().get((startIndex + i) % playerCount);
             if (!filter.test(p)) continue;
 
-            AiReaction reaction = ai.getReaction(game, p, reactionCode);
+            AiReaction reaction = AiReaction.getReaction(game, actionRecord, this, p, reactionCode);
 
             if (reaction.action == ActionType.CHALLENGE) {
-                declareChallenge(game, p.getId(), reaction);
+                declareChallenge(game, stats);
                 game = coup.resolveChallenge(game, ai);
                 return game;
             } else if(reaction.action == ActionType.BLOCK_USING_DUKE){

@@ -9,6 +9,7 @@ import com.example.coup_bench.model.Enums.GameState;
 import com.example.coup_bench.model.repoModels.*;
 import com.example.coup_bench.repo.GameRepository;
 import com.example.coup_bench.repo.PlayerRepository;
+import com.example.coup_bench.util.HumanUtil;
 import com.example.coup_bench.util.RepoUtil;
 import org.springframework.stereotype.Service;
 
@@ -19,22 +20,22 @@ public class CoupService {
 
     private final GameRepository gameRepo;
     private final PlayerRepository playerRepo;
-    private final ChallengeService challenge;
-    private final ActionService action;
+    private final ChallengeService challengeService;
+    private final ActionService actionService;
     private final DeckService deck;
     private final GameAnalyticsService stats;
-    private final AiDecisionService ai;
+    private final AiActionService ai;
     private final HumanDecisionService human;
 
     public CoupService(GameRepository repo, PlayerRepository playerRepo,
                        ChallengeService challengeService,
-                       ActionService actionService,  DeckService deckService,
+                       ActionService actionService, DeckService deckService,
                        GameAnalyticsService gameAnalyticsService,
-                       AiDecisionService aiDecisionService,  HumanDecisionService humanDecisionService) {
+                       AiActionService aiDecisionService, HumanDecisionService humanDecisionService) {
         this.gameRepo = repo;
         this.playerRepo = playerRepo;
-        this.challenge = challengeService;
-        this.action = actionService;
+        this.challengeService = challengeService;
+        this.actionService = actionService;
         this.deck = deckService;
         this.stats = gameAnalyticsService;
         this.ai = aiDecisionService;
@@ -60,21 +61,26 @@ public class CoupService {
 
     public Game getAction(Game game) {
         Player currentPlayer = game.getCurrentPlayer();
+
         if(currentPlayer.isHuman()){
             human.printGetActionPrompt(game, currentPlayer);
             game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
-        }else{
-            AiAction action = ai.getAction(game, currentPlayer);
-            declareAction(game, currentPlayer.getId(), action.action, action.targetId, action.reason );
+            return game;
         }
+        AiAction action= actionService.getAction(game, currentPlayer);
+        if(game.getState() != GameState.DECLARE_ACTION) {
+            return game;
+        }
+
+        declareAction(game, game.getCurrentPlayer().getId(), action.action, actionService.getTargetId(), action.reason);
         return game;
     }
 
     public Game getChallenge(Game game) {
         Player currentPlayer = game.getCurrentPlayer();
-        Scenario scenario = challenge.getChallengeScenario();
+        Scenario scenario = challengeService.getChallengeScenario();
         switch (scenario) {
-            case S1       -> challenge.applyS_1(game, challenge, ai);
+            case S1       -> challengeService.applyS_1(game, actionService.getActionRecord());
             case S2_1     -> Scenario.S2_1;
             case S2_2     -> Scenario.S2_2;
             case S3_1     -> Scenario.S3_1;
@@ -108,9 +114,8 @@ public class CoupService {
 
 
 
-    public Game declareAction(Game game, String playerId, ActionType action, String targetId, String reason) {
-        this.action.declareAction(game, stats, challenge, playerId, action, targetId, reason);
-        return game;
+    public void declareAction(Game game, String playerId, ActionType action, String targetId, String reason) {
+        this.actionService.declareAction(game, stats, challengeService, playerId, action, targetId, reason);
     }
 
     public Game logAction(Game game, ActionRecord actionRecord) {
@@ -119,45 +124,45 @@ public class CoupService {
     }
 
     public Game declareBlock(Game game, String blockerId, AiReaction reaction) {
-        challenge.declareBlock(game, stats, blockerId, reaction.action,
-                action.getActingPlayerId() ,reaction.reason);
+        challengeService.declareBlock(game, stats, blockerId, reaction.action,
+                actionService.getActingPlayerId() ,reaction.reason);
         return game;
     }
 
     public Game declareChallenge(Game game, String challengerId , AiReaction aiReaction) {
         String challengedId;
         //Determine target
-        if(challenge.challengeOnBlock()){
-            challengedId = challenge.getBlockRecord().getPlayerId();
+        if(challengeService.challengeOnBlock()){
+            challengedId = challengeService.getBlockRecord().getPlayerId();
         } else {
-            challengedId = action.getActingPlayerId();
+            challengedId = actionService.getActingPlayerId();
         }
-        challenge.declareChallenge(game, stats, challengerId, challengedId, aiReaction.reason);
+        challengeService.declareChallenge(game, stats, challengerId, challengedId, aiReaction.reason);
         return game;
     }
 
     public Game resolveChallenge(Game game) {
         ActionRecord challengedRecord;
-        if(challenge.challengeOnBlock()){
-            challengedRecord = challenge.getBlockRecord();
+        if(challengeService.challengeOnBlock()){
+            challengedRecord = challengeService.getBlockRecord();
         } else {
-            challengedRecord = action.getActionRecord();
+            challengedRecord = actionService.getActionRecord();
         }
-        challenge.resolveChallenge(game, stats, deck, challengedRecord);
+        challengeService.resolveChallenge(game, stats, deck, challengedRecord);
         return game;
     }
 
 
     public Game applyAction(Game game) {
-        action.applyAction(game, deck, stats);
+        actionService.applyAction(game, deck, stats);
         game.setState(GameState.NEXT_TURN);
         return game;
     }
 
     public Game nextTurn(Game game){
-        challenge.clearChallengeService();
-        action.clearActionService();
-        stats.logTurnSnapshot(game, action.getActionRecord());
+        challengeService.clearChallengeService();
+        actionService.clearActionService();
+        stats.logTurnSnapshot(game, actionService.getActionRecord());
         game.setState(GameState.WAITING_FOR_ACTION);
 
 
@@ -170,16 +175,16 @@ public class CoupService {
     };
 
     public Game applyBlock(Game game){
-        stats.logSuccessfulBlock(game, challenge.getBlocker(game),
-                action.getActingPlayer(game),
-                challenge.getBlockRecord(),
-                action.getActionRecord());
+        stats.logSuccessfulBlock(game, challengeService.getBlocker(game),
+                actionService.getActingPlayer(game),
+                challengeService.getBlockRecord(),
+                actionService.getActionRecord());
         game.setState(GameState.NEXT_TURN);
         return game;
     };
 
     public Game applyChallenge(Game game){
-        if(challenge.challengeOnBlock()){
+        if(challengeService.challengeOnBlock()){
             game.setState(GameState.APPLY_ACTION);
         } else{
             game.setState(GameState.NEXT_TURN);

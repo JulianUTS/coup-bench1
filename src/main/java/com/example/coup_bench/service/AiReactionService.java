@@ -1,52 +1,27 @@
 package com.example.coup_bench.service;
 
 import com.example.coup_bench.AiServices.MultiModelRouter;
-import com.example.coup_bench.model.*;
-import com.example.coup_bench.model.AiResponses.AiAction;
-import com.example.coup_bench.model.AiResponses.AiChooseCard;
+import com.example.coup_bench.model.ActionRecord;
 import com.example.coup_bench.model.AiResponses.AiReaction;
 import com.example.coup_bench.model.Enums.ActionType;
-import com.example.coup_bench.model.Enums.CardType;
+import com.example.coup_bench.model.Game;
+import com.example.coup_bench.model.Player;
 import com.example.coup_bench.util.PromptUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
 @Service
-public class AiDecisionService {
-
+public class AiReactionService {
     private final MultiModelRouter router;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public AiDecisionService(MultiModelRouter router) {
+    public AiReactionService(MultiModelRouter router) {
         this.router = router;
     }
 
-    public AiAction getAction(Game game, Player player) {
-
-        
-        String prompt = buildActionPrompt(game, player);
-        String response = getResponse(player.getId(),  prompt);
-
-        try {
-                return mapper.readValue(response, AiAction.class);
-
-        } catch (Exception e) {
-            System.err.println(player.getId() + "- Invalid JSON:\n" + response );
-
-            AiAction fallback = new AiAction();
-            fallback.action = ActionType.INVALID;
-            return fallback;
-        }
-
-    }
-
-    public AiReaction getReaction(Game game, ActionService actionService, ChallengeService challengeService,
+    public AiReaction getReaction(Game game, ActionRecord challengedRecord, ChallengeService challengeService,
                                   Player player, int scenario){
-        String prompt = buildReactionPrompt(game, actionService, challengeService, player, scenario);
+        String prompt = buildReactionPrompt(game, challengedRecord, challengeService, player, scenario);
         String response = getResponse(player.getId(),  prompt);
 
         try {
@@ -61,75 +36,7 @@ public class AiDecisionService {
         }
     }
 
-    private String buildActionPrompt(Game game, Player player) {
-        return """
-                You are an AI agent playing Coup.
-                Your playstyle:
-                %s
-                
-                ### GAME INFO
-                Your ID: %s
-                Your coins: %d
-                Your cards: %s
-                
-                ### MEMORY
-                %s
-                
-                Other players:
-                %s
-                
-                Game state: Choose an action
-                
-                ### COUP RULES
-                - You may ONLY choose COUP if you have 7 or more coins.
-                - If you have 10 or more coins, COUP is the ONLY valid action.
-                - When choosing COUP, you MUST select a valid targetId (any other alive player).
-                - Never choose COUP with fewer than 7 coins.
-                - You can only choose ASSASSINATE if you have 3 or more coins.
-                - When choosing ASSASSINATE, you can only choose a player with more than 0 coins.
-                - When choosing EXCHANGE, all your remaining cards will be automatically switched out
-                with random cards, you cannot choose which cards to EXCHANGE
-                
-                ### ALLOWED ACTIONS FOR YOU
-                %s
-                
-                
-                ### JSON SCHEMA (FOLLOW EXACTLY)
-                {
-                  "action": string | null,
-                  "targetId": string | null,
-                  "reason": string
-                }
-                
-                ### EXPLANATION RULES
-                - "reason" MUST be a short explanation (max 12 words).
-                - No markdown, no quotes, no special characters.
-                - Explanation MUST reflect your personality.
-                
-                ### OUTPUT RULES
-                - Respond with ONLY the JSON object.
-                - No markdown, no backticks, no text outside JSON.
-                - Never output the string "null". Use actual null for targetId only.
-                - All fields MUST be present.
-                - Never output missing or extra fields.
-                - Never output lowercase action names.
-                
-               
-                """.formatted(
-                PromptUtil.getPersonalityPrompt(player.getPersonality()),
-                player.getId(),
-                player.getCoins(),
-                player.getCards().stream().toList(),
-                String.join("\n", game.getGameMemory()),
-                game.getPlayers().stream()
-                        .filter(p -> !p.getId().equals(player.getId()))
-                        .map(p -> p.getId() + " (" + p.getCoins() + " coins, " + p.getCards().size() + " cards)")
-                        .toList(),
-                PromptUtil.allowedActions(player)
-        );
-    }
-
-    private String buildReactionPrompt(Game game, ActionService actionService, ChallengeService challengeService,
+    private String buildReactionPrompt(Game game, ActionRecord challengedRecord, ChallengeService challengeService,
                                        Player player, int scenario) {
         return """
                 You are an AI agent playing Coup.
@@ -172,10 +79,9 @@ public class AiDecisionService {
                         .filter(p -> !p.getId().equals(player.getId()))
                         .map(p -> p.getId() + " (" + p.getCoins() + " coins, " + p.getCards().size() + " cards)")
                         .toList(),
-                scenarioText(game, actionService, challengeService, scenario));
-}
-
-    private String scenarioText(Game game, ActionService actionService, ChallengeService challengeService, int scenario) {
+                scenarioText(game, challengedRecord, challengeService, scenario));
+    }
+    private String scenarioText(Game game, ActionRecord challengedRecord, ChallengeService challengeService, int scenario) {
         return switch (scenario) {
             case 1 ->
 
@@ -195,9 +101,9 @@ public class AiDecisionService {
                             "reason": string
                             }
                             """.formatted(
-                            actionService.getActingPlayerId(),
-                            actionService.getDeclaredAction(),
-                            actionService.getActingPlayerId());
+                            challengedRecord.getPlayerId(),
+                            challengedRecord.getAction(),
+                            challengedRecord.getPlayerId());
             case 2 ->
                 //Scenario 2- Foreign aid can be blocked anyone
                     """       
@@ -218,7 +124,7 @@ public class AiDecisionService {
                             }
                             
                             """.formatted(
-                            actionService.getActingPlayerId()
+                            challengedRecord.getPlayerId()
                     );
             case 3 ->
                 //Generic setup for challenge counteraction
@@ -244,8 +150,8 @@ public class AiDecisionService {
                             """.formatted(
                             challengeService.getBlockerId(),
                             challengeService.getBlockAction(),
-                            actionService.getActingPlayerId(),
-                            actionService.getDeclaredAction(),
+                            challengedRecord.getPlayerId(),
+                            challengedRecord.getAction(),
                             challengeService.getBlockerId()
                     );
             case 4 ->
@@ -266,9 +172,9 @@ public class AiDecisionService {
                             }
                             
                             """.formatted(
-                            actionService.getActingPlayerId(),
-                            actionService.getTargetId(),
-                            actionService.getActingPlayerId()
+                            challengedRecord.getPlayerId(),
+                            challengedRecord.getTargetId(),
+                            challengedRecord.getPlayerId()
                     );
             case 5 ->
                 //Scenario 3- Steal can be blocked by targeted player if no one wants to challenge original steal
@@ -290,7 +196,7 @@ public class AiDecisionService {
                             }
                             
                             """.formatted(
-                            actionService.getActingPlayerId()
+                            challengedRecord.getPlayerId()
                     );
             case 6 ->
                 //Scenario 4- Assassinate can be challenged by any player, except for the original
@@ -312,9 +218,9 @@ public class AiDecisionService {
                             }
                             
                             """.formatted(
-                            actionService.getActingPlayerId(),
-                            actionService.getTargetId(),
-                            actionService.getActingPlayerId()
+                            challengedRecord.getPlayerId(),
+                            challengedRecord.getTargetId(),
+                            challengedRecord.getPlayerId()
 
                     );
             case 7 ->
@@ -337,7 +243,7 @@ public class AiDecisionService {
                             }
                             
                             """.formatted(
-                            actionService.getActingPlayerId()
+                            challengedRecord.getPlayerId()
                     );
             default ->
                     """       
@@ -357,12 +263,10 @@ public class AiDecisionService {
 
 
     private String getResponse(String provider, String prompt) {
-       // System.out.println(prompt);
+        // System.out.println(prompt);
         String response = router.ask(provider, prompt);
         System.out.println(response);
         return PromptUtil.cleanResponse(response);
     }
 
-
 }
-
