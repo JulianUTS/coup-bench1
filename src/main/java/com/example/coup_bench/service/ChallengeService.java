@@ -102,11 +102,13 @@ public class ChallengeService {
 
     public void applyS_1(Game game, ActionRecord challengedRecord) {
         String playerId = challengedRecord.getPlayerId();
-        findChallenger(
+        AiReaction reaction = findChallenger(
                 game, challengedRecord,
                 p -> p.isAlive() && !p.getId().equals(playerId),
                 1
         );
+
+        if(reaction == null){}
 
     }
 
@@ -179,28 +181,31 @@ public class ChallengeService {
         this.shiftIndex++;
     }
 
-    private Game findChallenger(Game game, ActionRecord actionRecord, Predicate<Player> filter, int reactionCode) {
+    private AiReaction findChallenger(Game game, ActionRecord actionRecord, Predicate<Player> filter, int reactionCode) {
         int startIndex = game.getPlayerIndex(actionRecord.getPlayerId());
         int playerCount = game.getPlayers().size();
 
         for (int i = shiftIndex; i < playerCount; i++) {
-            Player p = game.getPlayers().get((startIndex + i) % playerCount);
+            incrementShiftIndex();
+            Player p = game.getPlayers().get((startIndex + i ) % playerCount);
             if (!filter.test(p)) continue;
+
+            if(p.isHuman()){
+                game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
+                return null;
+            }
 
             AiReaction reaction = AiReaction.getReaction(game, actionRecord, this, p, reactionCode);
 
             if (reaction.action == ActionType.CHALLENGE) {
-                declareChallenge(game, stats);
-                game = coup.resolveChallenge(game, ai);
-                return game;
-            } else if(reaction.action == ActionType.BLOCK_USING_DUKE){
-                game = coup.declareBlock(game, p.getId(), reaction);
-                return game;
-            } else{
-                game = coup.logAction(game, new ActionRecord(p.getId(), reaction.action, null, reaction.reason));
+                reaction.id = p.getId();
+                return reaction;
+            }
+            else{
+                game.logAction(new ActionRecord(p.getId(), ActionType.DO_NOTHING, null, null, reaction.reason));
             }
         }
-        return game;
+        return null;
     }
 
 
