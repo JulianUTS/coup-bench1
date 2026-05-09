@@ -10,6 +10,8 @@ public class GameStats {
     private final List<ActionRecord> bluffLog= new ArrayList<>();
     private final List<InteractionRecord> interactionLog= new ArrayList<>();
     private final List<TurnSnapshot> turnSnapshotLog= new ArrayList<>();
+    private int TotalBlocks = 0;
+    private int TotalChallenges = 0;
 
     public List<TurnSnapshot> getTurnSnapshotLog() {
         return turnSnapshotLog;
@@ -25,6 +27,8 @@ public class GameStats {
         this.interactionLog.add(interactionRecord);
     }
 
+
+
     public List<ActionRecord> getBluffLog() {
         return this.bluffLog;
     }
@@ -33,8 +37,6 @@ public class GameStats {
         this.bluffLog.add(record);
     }
 
-    private int TotalBlocks = 0;
-    private int TotalChallenges = 0;
     public int getTotalBlocks() {
         return TotalBlocks;
     }

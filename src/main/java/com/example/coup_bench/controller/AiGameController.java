@@ -2,6 +2,7 @@ package com.example.coup_bench.controller;
 
 import com.example.coup_bench.AiGameRunner;
 import com.example.coup_bench.model.Game;
+import com.example.coup_bench.repo.CurrentGameRepository;
 import com.example.coup_bench.service.CoupService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,6 +23,7 @@ public class AiGameController {
 
     private final CoupService coup;
     private final AiGameRunner runner;
+    private final CurrentGameRepository currentGame;
     private static final List<String> PROVIDERS = List.of(
             "openai",
             "claude",
@@ -41,9 +43,10 @@ public class AiGameController {
 
 
 
-    public AiGameController(CoupService coup, AiGameRunner runner) {
+    public AiGameController(CoupService coup, AiGameRunner runner,  CurrentGameRepository currentGame) {
         this.coup = coup;
         this.runner = runner;
+        this.currentGame = currentGame;
     }
 
     @PostMapping("/simulate")
@@ -93,10 +96,10 @@ public class AiGameController {
                 System.out.println("Player " + provider + " joined with " + personality + " personality");
             }
 
-            game = coup.startGame(game);
+            coup.startGame(game);
             System.out.println("Game "+ i + " started at: " +
                     LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-            game = runner.runGame(game);
+            runner.runGame(game);
 
             results.add(game);
             System.out.println("Game "+ i + " completed at: " +

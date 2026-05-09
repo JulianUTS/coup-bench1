@@ -1,9 +1,6 @@
 package com.example.coup_bench.model;
 
-import com.example.coup_bench.model.Enums.CardType;
 import com.example.coup_bench.model.Enums.GameState;
-import com.example.coup_bench.service.DeckService;
-import com.example.coup_bench.service.GameAnalyticsService;
 
 import java.util.*;
 
@@ -97,31 +94,21 @@ public class Game {
         for (int i = 0; i < players.size(); i++) {
             seatOrder.put(players.get(i).getId(), i);
         }
-
-        logGameMemory("Turn " + turn);
     }
-
 
 
     public Player getCurrentPlayer() {
         return players.get(currentPlayerIndex);
     }
+    public void incrementTurn() {
+        this.turn++;
+        logGameMemory("Turn " + turn + ":");
+    }
 
-    public void nextTurn() {
-        for (Player player:  players){
-            if(player.isAlive()){
-                player.incrementTurnsSurvived();
-            }
-        }
-        if (players.stream().filter(Player::isAlive).count() <= 1) {
-            state = GameState.FINISHED;
-            return;
-        }
+    public void nextCurrentPlayer(){
         do {
             currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
         } while (!players.get(currentPlayerIndex).isAlive());
-        this.turn++;
-        logGameMemory("Turn " + turn + ":");
     }
 
     public Player getPlayer(String id) {

@@ -4,6 +4,7 @@ import com.example.coup_bench.AiServices.MultiModelRouter;
 import com.example.coup_bench.model.ActionRecord;
 import com.example.coup_bench.model.AiResponses.AiReaction;
 import com.example.coup_bench.model.Enums.ActionType;
+import com.example.coup_bench.model.Enums.Scenario;
 import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.Player;
 import com.example.coup_bench.util.PromptUtil;
@@ -20,7 +21,7 @@ public class AiReactionService {
     }
 
     public AiReaction getReaction(Game game, ActionRecord challengedRecord, ChallengeService challengeService,
-                                  Player player, int scenario){
+                                  Player player, Scenario scenario){
         String prompt = buildReactionPrompt(game, challengedRecord, challengeService, player, scenario);
         String response = getResponse(player.getId(),  prompt);
 
@@ -37,7 +38,7 @@ public class AiReactionService {
     }
 
     private String buildReactionPrompt(Game game, ActionRecord challengedRecord, ChallengeService challengeService,
-                                       Player player, int scenario) {
+                                       Player player, Scenario scenario) {
         return """
                 You are an AI agent playing Coup.
                 Your playstyle: %s
@@ -81,9 +82,9 @@ public class AiReactionService {
                         .toList(),
                 scenarioText(game, challengedRecord, challengeService, scenario));
     }
-    private String scenarioText(Game game, ActionRecord challengedRecord, ChallengeService challengeService, int scenario) {
+    private String scenarioText(Game game, ActionRecord challengedRecord, ChallengeService challengeService, Scenario scenario) {
         return switch (scenario) {
-            case 1 ->
+            case S1 ->
 
                 //Scenario 1- Tax from duke & Exchange Cards from ambassador can be challenged by anyone
                     """       
@@ -104,7 +105,7 @@ public class AiReactionService {
                             challengedRecord.getPlayerId(),
                             challengedRecord.getAction(),
                             challengedRecord.getPlayerId());
-            case 2 ->
+            case S2_1 ->
                 //Scenario 2- Foreign aid can be blocked anyone
                     """       
                             Game state: Player %s has used FOREIGN_AID
@@ -126,7 +127,7 @@ public class AiReactionService {
                             """.formatted(
                             challengedRecord.getPlayerId()
                     );
-            case 3 ->
+            case S2_2,S3_3,S4_3 ->
                 //Generic setup for challenge counteraction
                 //Scenario 2- Block Foreign Aid counteraction can be challenged by anyone, except the original
                 //Scenario 3- Block steal counteraction can be challenged by any player, except the original
@@ -154,7 +155,7 @@ public class AiReactionService {
                             challengedRecord.getAction(),
                             challengeService.getBlockerId()
                     );
-            case 4 ->
+            case S3_1 ->
                 //Scenario 3- Steal can be challenged by any player, except for the target and original
                     """       
                             Game state: Player %s has used STEAL on player %s
@@ -176,7 +177,7 @@ public class AiReactionService {
                             challengedRecord.getTargetId(),
                             challengedRecord.getPlayerId()
                     );
-            case 5 ->
+            case S3_2 ->
                 //Scenario 3- Steal can be blocked by targeted player if no one wants to challenge original steal
                     """       
                             Game state: Player %s has used their CAPTAIN to STEAL from you
@@ -198,7 +199,7 @@ public class AiReactionService {
                             """.formatted(
                             challengedRecord.getPlayerId()
                     );
-            case 6 ->
+            case S4_1 ->
                 //Scenario 4- Assassinate can be challenged by any player, except for the original
                     """       
                             Game state: Player %s has used ASSASSINATE on player %s
@@ -223,7 +224,7 @@ public class AiReactionService {
                             challengedRecord.getPlayerId()
 
                     );
-            case 7 ->
+            case S4_2 ->
                 //Scenario 4- Assassinate can be blocked by targeted player if no one wants to challenge original assassinate
                     """       
                             Game state: Player %s has used their ASSASSIN to ASSASSINATE you

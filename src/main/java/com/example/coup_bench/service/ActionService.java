@@ -7,11 +7,9 @@ import com.example.coup_bench.model.Enums.GameState;
 import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.InvalidActionRecord;
 import com.example.coup_bench.model.Player;
-import com.example.coup_bench.util.HumanUtil;
 import com.example.coup_bench.util.PlayerUtil;
 import com.example.coup_bench.model.Enums.ActionType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.example.coup_bench.util.StatsUtil;
 import org.springframework.stereotype.Service;
 
 
@@ -50,7 +48,7 @@ public class ActionService {
         }
     }
 
-    public void declareAction(Game game, GameAnalyticsService stats, ChallengeService challengeService,
+    public void declareAction(Game game, ChallengeService challengeService,
                               String playerId, ActionType action, String targetId, String reason) {
         Player player = game.getPlayer(playerId);
 
@@ -63,14 +61,14 @@ public class ActionService {
         ActionRecord actionRecord = new ActionRecord(playerId, action, targetId,
                 PlayerUtil.isPlayerBluffing(game.getPlayer(playerId), action),  reason);
 
-        stats.logDeclaredAction(game, player, actionRecord);
+        StatsUtil.logDeclaredAction(game, player, actionRecord);
         logNewAction(game, actionRecord);
         setCurrentAction(actionRecord);
         challengeService.setChallengeScenario(ActionUtil.decideChallengeScenario(action));
         game.setState(GameState.WAITING_FOR_CHALLENGE);
     }
 
-    public void applyAction(Game game, DeckService deckService, GameAnalyticsService gameAnalyticsService) {
+    public void applyAction(Game game, DeckService deckService) {
 
         ActionType action = actionRecord.getAction();
         Player player = game.getPlayer(actionRecord.getPlayerId());
@@ -109,6 +107,7 @@ public class ActionService {
             }
         }
         logAppliedAction(game, player, target, action);
+        game.setState(GameState.NEXT_TURN);
     }
     public void logAppliedAction(Game game, Player player, Player target, ActionType action) {
 

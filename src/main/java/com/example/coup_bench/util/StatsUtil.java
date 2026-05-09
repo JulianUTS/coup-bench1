@@ -1,18 +1,18 @@
-package com.example.coup_bench.service;
+package com.example.coup_bench.util;
 
 import com.example.coup_bench.model.*;
 import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.repoModels.InteractionRecord;
 import com.example.coup_bench.model.repoModels.TurnSnapshot;
-import com.example.coup_bench.util.ActionUtil;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 
 @Service
-public class GameAnalyticsService {
-    public void logDeclaredAction(Game game, Player player, ActionRecord actionRecord){
+public class StatsUtil {
+    public static void logDeclaredAction(Game game, Player player, ActionRecord actionRecord){
         PlayerStats playerStats = player.getPlayerStats();
         GameStats gameStats = game.getGameStats();
         //Update bluff values
@@ -31,7 +31,7 @@ public class GameAnalyticsService {
         }
 
     }
-    public void logSuccessfulAction(Game game, Player player, ActionRecord actionRecord) {
+    public static void logSuccessfulAction(Game game, Player player, ActionRecord actionRecord) {
         PlayerStats playerStats = player.getPlayerStats();
         GameStats gameStats = game.getGameStats();
 
@@ -58,10 +58,10 @@ public class GameAnalyticsService {
 
 
     }
-    public void logUnsuccessfulAction(GameStats gameStats, PlayerStats playerStats){
+    public static void logUnsuccessfulAction(GameStats gameStats, PlayerStats playerStats){
 
     }
-    public void logDeclaredBlock(Game game, Player blocker, ActionRecord blockRecord){
+    public static void logDeclaredBlock(Game game, Player blocker, ActionRecord blockRecord){
         PlayerStats blockerStats = blocker.getPlayerStats();
         GameStats gameStats = game.getGameStats();
 
@@ -74,7 +74,7 @@ public class GameAnalyticsService {
         gameStats.incrementTotalBlocks();
 
     }
-    public void logSuccessfulBlock(Game game, Player blocker, Player blocked, ActionRecord blockAction ,ActionRecord blockedAction){
+    public static void logSuccessfulBlock(Game game, Player blocker, Player blocked, ActionRecord blockAction ,ActionRecord blockedAction){
         PlayerStats blockerStats = blocker.getPlayerStats();
         GameStats gameStats = game.getGameStats();
         PlayerStats blockedStats = blocked.getPlayerStats();
@@ -97,7 +97,7 @@ public class GameAnalyticsService {
         }
     }
 
-    public void logDeclaredChallenge(Game game, Player challenger, String challengedId){
+    public static void logDeclaredChallenge(Game game, Player challenger, String challengedId){
         PlayerStats challengerStats = challenger.getPlayerStats();
         GameStats gameStats = game.getGameStats();
 
@@ -107,7 +107,7 @@ public class GameAnalyticsService {
 
 
     }
-    public void logSuccessfulChallenge(Game game, Player challenger, Player challenged,
+    public static void logSuccessfulChallenge(Game game, Player challenger, Player challenged,
                                        ActionRecord challengeRecord, boolean onBlock){
         PlayerStats challengerStats = challenger.getPlayerStats();
         PlayerStats challengedStats = challenged.getPlayerStats();
@@ -134,7 +134,7 @@ public class GameAnalyticsService {
                     challengeRecord.getAction(), false));
         }
     }
-    public void logUnsuccessfulChallenge(Game game, Player challenger, Player challenged){
+    public static void logUnsuccessfulChallenge(Game game, Player challenger, Player challenged){
         PlayerStats challengerStats = challenger.getPlayerStats();
         GameStats gameStats = game.getGameStats();
 
@@ -146,7 +146,7 @@ public class GameAnalyticsService {
                 false));
     }
 
-    public void logTurnSnapshot(Game game, ActionRecord actionRecord){
+    public static void logTurnSnapshot(Game game, ActionRecord actionRecord){
         GameStats gameStats = game.getGameStats();
         TurnSnapshot snap = new TurnSnapshot(
                 game.getTurn(),
@@ -160,6 +160,15 @@ public class GameAnalyticsService {
         );
 
         gameStats.logTurnSnapshot(snap);
+    }
+
+    public static void incrementTurnsSurvived(List<Player> players){
+        for (Player player:  players){
+            if(player.isAlive()){
+                PlayerStats playerStats = player.getPlayerStats();
+                playerStats.incrementTurnsSurvived();
+            }
+        }
     }
 
 
