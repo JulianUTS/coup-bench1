@@ -26,7 +26,7 @@ public class AiGameRunner {
     public void runGame(Game game) {
 
         while(!gameFinished(game) && !gameWaitingForHuman(game)) {
-            System.out.println(game.getState().toString());
+            //System.out.println(game.getState().toString());
             nextMove(game);
         }
     }

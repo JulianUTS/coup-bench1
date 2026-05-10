@@ -90,6 +90,7 @@ public class Game {
     public void startGame() {
         Random rng = new Random(seed);
         Collections.shuffle(players, rng);
+        incrementTurn();
 
         this.seatOrder = new HashMap<>();
         for (int i = 0; i < players.size(); i++) {

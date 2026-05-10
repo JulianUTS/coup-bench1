@@ -100,19 +100,19 @@ public class RepoUtil {
 
         // Interaction heatmaps
         if (!playerStats.getActionTargets().isEmpty()) {
-            stats.getActionTargets().forEach((key, value) ->
-                    playerStats.getActionTargets().merge(key, value, Integer::sum)
+            playerStats.getActionTargets().forEach((key, value) ->
+                    stats.getActionTargets().merge(key, value, Integer::sum)
             );
         }
 
         if (!playerStats.getBlockTargets().isEmpty()) {
-            stats.getBlockTargets().forEach((key, value) ->
-                    playerStats.getBlockTargets().merge(key, value, Integer::sum)
+            playerStats.getBlockTargets().forEach((key, value) ->
+                    stats.getBlockTargets().merge(key, value, Integer::sum)
             );
         }
         if (!playerStats.getChallengeTargets().isEmpty()) {
-            stats.getChallengeTargets().forEach((key, value) ->
-                    playerStats.getChallengeTargets().merge(key, value, Integer::sum)
+            playerStats.getChallengeTargets().forEach((key, value) ->
+                    stats.getChallengeTargets().merge(key, value, Integer::sum)
             );
         }
         if(playerStats.getKilledBy() != null) {
@@ -154,11 +154,11 @@ public class RepoUtil {
         ps.setBlocksFailed(ps.getBlocksFailed() + playerStats.getBlocksFailed());
 
         ps.setIncomeCount(ps.getIncomeCount() + playerStats.getIncomeCount());
-        ps.setTaxAttempts(ps.getTaxAttempts() + playerStats.getTaxSuccessful());
+        ps.setTaxAttempts(ps.getTaxAttempts() + playerStats.getTaxAttempts());
         ps.setTaxSuccessful(ps.getTaxSuccessful() + playerStats.getTaxSuccessful());
-        ps.setExchangeAttempts(ps.getExchangeAttempts() + playerStats.getExchangeSuccessful());
+        ps.setExchangeAttempts(ps.getExchangeAttempts() + playerStats.getExchangeAttempts());
         ps.setExchangeSuccessful(ps.getExchangeSuccessful() + playerStats.getExchangeSuccessful());
-        ps.setForeignAidAttempts(ps.getForeignAidAttempts() + playerStats.getForeignAidSuccessful());
+        ps.setForeignAidAttempts(ps.getForeignAidAttempts() + playerStats.getForeignAidAttempts());
         ps.setForeignAidSuccessful(ps.getForeignAidSuccessful() + playerStats.getForeignAidSuccessful());
 
 
@@ -209,6 +209,8 @@ public class RepoUtil {
                 ps.getIncomeCount(),
                 ps.getTaxAttempts(),
                 ps.getStealAttempts(),
+                ps.getExchangeAttempts(),
+                ps.getForeignAidAttempts(),
                 ps.getAssassinationAttempts(),
                 ps.getCoupsPerformed(),
                 ps.getBluffsAttempted(),

@@ -64,7 +64,8 @@ public class ChallengeService {
                 block.targetId,
                 PlayerUtil.isPlayerBluffing(game.getPlayer(blocker.getId()), block.action),
                 block.reason);
-
+        if(blockRecord.getTargetId() == null){
+            System.out.print(blockRecord);}
 
         logNewBlock(game, blockRecord);
         setCurrentBlock(blockRecord);
@@ -81,10 +82,12 @@ public class ChallengeService {
                 challenge.targetId,
                 null,
                 challenge.reason);
+        if(challengeRecord.getTargetId() == null){
+            System.out.print(challengeRecord);}
 
         setCurrentChallenger(challenge.id);
         logNewChallenge(game, challengeRecord);
-        StatsUtil.logDeclaredChallenge(game, challenger, challenge.id);
+        StatsUtil.logDeclaredChallenge(game, challenger, challenge.targetId);
         game.setState(GameState.CHALLENGE_DECLARED);
     }
 
@@ -226,6 +229,8 @@ public class ChallengeService {
         AiReaction block = askChallenger(game, actionRecord, blocker, Scenario.S3_2);
         if (block.action != ActionType.DO_NOTHING){
             setChallengeScenario(Scenario.S3_3);
+            block.id = blocker.getId();
+            block.targetId = actionRecord.getPlayerId();
             declareBlock(game, block);
         } else{
             game.logAction(new ActionRecord(blocker.getId(), ActionType.DO_NOTHING, null, null, block.reason));
@@ -255,6 +260,8 @@ public class ChallengeService {
 
         AiReaction block = askChallenger(game, actionRecord, blocker, Scenario.S4_2);
         if (block.action != ActionType.DO_NOTHING){
+            block.id = blocker.getId();
+            block.targetId = actionRecord.getPlayerId();
             setChallengeScenario(Scenario.S4_3);
             declareBlock(game, block);
         } else{
