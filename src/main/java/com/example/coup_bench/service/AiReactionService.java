@@ -80,9 +80,9 @@ public class AiReactionService {
                         .filter(p -> !p.getId().equals(player.getId()))
                         .map(p -> p.getId() + " (" + p.getCoins() + " coins, " + p.getCards().size() + " cards)")
                         .toList(),
-                scenarioText(game, challengedRecord, challengeService, scenario));
+                scenarioText(challengedRecord, challengeService, scenario));
     }
-    private String scenarioText(Game game, ActionRecord challengedRecord, ChallengeService challengeService, Scenario scenario) {
+    private String scenarioText(ActionRecord challengedRecord, ChallengeService challengeService, Scenario scenario) {
         return switch (scenario) {
             case S1 ->
 

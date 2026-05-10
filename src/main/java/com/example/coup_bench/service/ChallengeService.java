@@ -7,6 +7,7 @@ import com.example.coup_bench.model.Enums.GameState;
 import com.example.coup_bench.model.Enums.Scenario;
 import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.Player;
+import com.example.coup_bench.util.HumanUtil;
 import com.example.coup_bench.util.PlayerUtil;
 import com.example.coup_bench.util.RoleUtil;
 import com.example.coup_bench.util.StatsUtil;
@@ -75,7 +76,6 @@ public class ChallengeService {
         }
         if(PlayerUtil.onlyOneLeft(game.getPlayers())){
             game.setState(GameState.ENDGAME);
-            return;
         }
     }
 
@@ -121,7 +121,6 @@ public class ChallengeService {
         } else{
             game.setState(GameState.APPLY_ACTION);
         }
-
     }
 
     public void resolveBlock(Game game, ActionRecord actionRecord) {
@@ -134,6 +133,9 @@ public class ChallengeService {
     public void applyS_1(Game game, ActionRecord actionRecord) {
         Predicate<Player> filter = p -> p.isAlive() && !p.getId().equals(actionRecord.getPlayerId());
         loopChallengers(game, actionRecord, Scenario.S1, filter);
+        if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
+            return;
+        }
         if(noChallenge()){
             game.setState(GameState.APPLY_ACTION);
         }
@@ -141,6 +143,9 @@ public class ChallengeService {
     public void applyS_2_1(Game game, ActionRecord actionRecord) {
         Predicate<Player> filter = p -> p.isAlive() && !p.getId().equals(actionRecord.getPlayerId());
         loopChallengers(game, actionRecord, Scenario.S2_1, filter);
+        if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
+            return;
+        }
         if(blockDetected()){
             setChallengeScenario(Scenario.S2_2);
         }
@@ -151,6 +156,9 @@ public class ChallengeService {
                 !p.getId().equals(actionRecord.getPlayerId()) &&
                 !p.getId().equals(actionRecord.getTargetId());
         loopChallengers(game, actionRecord, Scenario.S3_1, filter);
+        if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
+            return;
+        }
         if(noChallenge()){
             setChallengeScenario(Scenario.S3_2);
         }
@@ -171,6 +179,9 @@ public class ChallengeService {
         Predicate<Player> filter  = p -> p.isAlive() &&
                 !p.getId().equals(actionRecord.getPlayerId());
         loopChallengers(game, actionRecord, Scenario.S4_1, filter);
+        if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
+            return;
+        }
         if(noChallenge()){
             setChallengeScenario(Scenario.S4_2);
         }
@@ -200,6 +211,7 @@ public class ChallengeService {
             if (!filter.test(challenger)) continue;
 
             if (challenger.isHuman()) {
+                HumanUtil.printGetReactionPrompt(game, challengedRecord, this, challenger, scenario);
                 game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
                 return;
             }

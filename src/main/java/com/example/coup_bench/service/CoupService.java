@@ -7,6 +7,7 @@ import com.example.coup_bench.model.Enums.GameState;
 import com.example.coup_bench.model.repoModels.*;
 import com.example.coup_bench.repo.GameRepository;
 import com.example.coup_bench.repo.PlayerRepository;
+import com.example.coup_bench.util.HumanUtil;
 import com.example.coup_bench.util.PlayerUtil;
 import com.example.coup_bench.util.RepoUtil;
 import com.example.coup_bench.util.StatsUtil;
@@ -57,7 +58,7 @@ public class CoupService {
         Player currentPlayer = game.getCurrentPlayer();
 
         if(currentPlayer.isHuman()){
-            human.printGetActionPrompt(game, currentPlayer);
+            HumanUtil.printGetActionPrompt(game, currentPlayer);
             game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
             return;
         }

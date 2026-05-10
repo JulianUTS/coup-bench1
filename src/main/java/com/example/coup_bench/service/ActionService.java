@@ -7,6 +7,7 @@ import com.example.coup_bench.model.Enums.GameState;
 import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.InvalidActionRecord;
 import com.example.coup_bench.model.Player;
+import com.example.coup_bench.util.HumanUtil;
 import com.example.coup_bench.util.PlayerUtil;
 import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.util.StatsUtil;
@@ -114,6 +115,11 @@ public class ActionService {
 
         switch (action) {
             case COUP, ASSASSINATE: {
+                if(game.getPlayer(targetId).isHuman() && game.getPlayer(targetId).getCards().size() > 1){
+                    HumanUtil.printGetCardPrompt(game,player);
+                    game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
+                    return;
+                }
                 targetAlive = deckService.removePlayerCard(game, game.getPlayer(targetId));
             }
         }

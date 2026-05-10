@@ -125,5 +125,81 @@ public class AiGameController {
                 ThreadLocalRandom.current().nextInt(PERSONALITIES.size())
         );
     }
+    @PostMapping("/simulateHuman")
+    public Game simulateHuman(@RequestBody SimulationRequest req) {
+        long seed = (req.getSeed() == 0)
+                ? System.currentTimeMillis()
+                : req.getSeed();
+
+        Game game = coup.createGame(seed);
+        System.out.println("Game with human created with seed " + seed);
+
+        // Track which providers are already used
+        Set<String> usedProviders = new HashSet<>();
+        for (PlayerConfig pc : req.getPlayers()) {
+
+            // -----------------------------
+            // 1. Resolve provider
+            // -----------------------------
+            String provider = pc.getProvider();
+
+            if (provider.equalsIgnoreCase("random")) {
+                provider = pickRandomProvider(usedProviders);
+            }
+
+            usedProviders.add(provider);
+
+            // -----------------------------
+            // 2. Resolve personality
+            // -----------------------------
+            String personality = pc.getPersonality();
+
+            if (personality.equalsIgnoreCase("random")) {
+                personality = pickRandomPersonality();
+            }
+
+            // -----------------------------
+            // 3. Join player
+            // -----------------------------
+
+            game = coup.joinGame(game, provider, personality);
+            System.out.println("Player " + provider + " joined with " + personality + " personality");
+        }
+        coup.startGame(game);
+        System.out.println("Game with human started at: " +
+                LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        runner.runGame(game);
+        currentGame.save(game);
+        return game;
+
+    }
+
+    @PostMapping("/human/action")
+    public Game humanAction(@RequestBody HumanActionRequest req) {
+        Game game = currentGame.get();
+        game = runner.applyHumanAction(game, req);
+        runner.runUntilHuman(game);
+        currentGame.save(game);
+        return game;
+    }
+    @PostMapping("/human/reaction")
+    public Game humanReaction(@RequestBody HumanReactionRequest req) {
+        Game game = currentGame.get();
+        game = runner.applyHumanReaction(game, req);
+        runner.runUntilHuman(game);
+        currentGame.save(game);
+        return game;
+    }
+    @PostMapping("/human/chooseCard")
+    public Game humanChooseCard(@RequestBody HumanChooseCardRequest req) {
+        Game game = currentGame.get();
+        game = runner.applyHumanChooseCard(game, req);
+        runner.runUntilHuman(game);
+        currentGame.save(game);
+        return game;
+    }
+
+
+
 }
 
