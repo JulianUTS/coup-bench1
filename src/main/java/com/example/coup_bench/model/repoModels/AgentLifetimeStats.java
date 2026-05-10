@@ -17,9 +17,13 @@ public class AgentLifetimeStats {
     private int losses;
 
     // Aggression
+    private int totalIncomeCount;
+    private int totalTaxAttempts;
+    private int totalForeignAidAttempts;
+    private int totalExchangeAttempts;
     private int totalStealAttempts;
     private int totalAssassinationAttempts;
-    private int totalCoupsPerformed;
+    private int totalCoupCount;
 
     // Risk
     private int totalBluffsAttempted;
@@ -38,12 +42,12 @@ public class AgentLifetimeStats {
     private double averageGameDurationSec;
 
     // Interaction heatmaps
-    private Map<String, Integer> targetedProviders = new HashMap<>();
-    private Map<String, Integer> challengedProviders = new HashMap<>();
+    private Map<String, Integer> actionTargets = new HashMap<>();
+    private Map<String, Integer> blockTargets = new HashMap<>();
+    private Map<String, Integer> challengeTargets = new HashMap<>();
+    private Map<String, Integer> killedBy = new HashMap<>();
 
     private Map<String, PersonalityStats> personalities = new HashMap<>();
-
-    public AgentLifetimeStats() {}
 
     public AgentLifetimeStats(String provider) {
         this.provider = provider;
@@ -58,6 +62,8 @@ public class AgentLifetimeStats {
     public void setProvider(String provider) {
         this.provider = provider;
     }
+
+// -------------------- Total Games / Wins / Losses --------------------
 
     public int getTotalGames() {
         return totalGames;
@@ -83,6 +89,172 @@ public class AgentLifetimeStats {
         this.losses = losses;
     }
 
+// -------------------- Aggression --------------------
+
+    public int getTotalIncomeCount() {
+        return totalIncomeCount;
+    }
+
+    public void setTotalIncomeCount(int totalIncomeCount) {
+        this.totalIncomeCount = totalIncomeCount;
+    }
+
+    public int getTotalTaxAttempts() {
+        return totalTaxAttempts;
+    }
+
+    public void setTotalTaxAttempts(int totalTaxAttempts) {
+        this.totalTaxAttempts = totalTaxAttempts;
+    }
+
+    public int getTotalForeignAidAttempts() {
+        return totalForeignAidAttempts;
+    }
+
+    public void setTotalForeignAidAttempts(int totalForeignAidAttempts) {
+        this.totalForeignAidAttempts = totalForeignAidAttempts;
+    }
+
+    public int getTotalExchangeAttempts() {
+        return totalExchangeAttempts;
+    }
+
+    public void setTotalExchangeAttempts(int totalExchangeAttempts) {
+        this.totalExchangeAttempts = totalExchangeAttempts;
+    }
+
+    public int getTotalStealAttempts() {
+        return totalStealAttempts;
+    }
+
+    public void setTotalStealAttempts(int totalStealAttempts) {
+        this.totalStealAttempts = totalStealAttempts;
+    }
+
+    public int getTotalAssassinationAttempts() {
+        return totalAssassinationAttempts;
+    }
+
+    public void setTotalAssassinationAttempts(int totalAssassinationAttempts) {
+        this.totalAssassinationAttempts = totalAssassinationAttempts;
+    }
+
+    public int getTotalCoupCount() {
+        return totalCoupCount;
+    }
+
+    public void setTotalCoupCount(int totalCoupCount) {
+        this.totalCoupCount = totalCoupCount;
+    }
+
+// -------------------- Risk --------------------
+
+    public int getTotalBluffsAttempted() {
+        return totalBluffsAttempted;
+    }
+
+    public void setTotalBluffsAttempted(int totalBluffsAttempted) {
+        this.totalBluffsAttempted = totalBluffsAttempted;
+    }
+
+    public int getTotalChallengesIssued() {
+        return totalChallengesIssued;
+    }
+
+    public void setTotalChallengesIssued(int totalChallengesIssued) {
+        this.totalChallengesIssued = totalChallengesIssued;
+    }
+
+// -------------------- Defense --------------------
+
+    public int getTotalBlocksIssued() {
+        return totalBlocksIssued;
+    }
+
+    public void setTotalBlocksIssued(int totalBlocksIssued) {
+        this.totalBlocksIssued = totalBlocksIssued;
+    }
+
+// -------------------- Survival --------------------
+
+    public int getTotalTurnsSurvived() {
+        return totalTurnsSurvived;
+    }
+
+    public void setTotalTurnsSurvived(int totalTurnsSurvived) {
+        this.totalTurnsSurvived = totalTurnsSurvived;
+    }
+
+    public int getTotalTurnsPlayed() {
+        return totalTurnsPlayed;
+    }
+
+    public void setTotalTurnsPlayed(int totalTurnsPlayed) {
+        this.totalTurnsPlayed = totalTurnsPlayed;
+    }
+
+    public double getAverageSurvivalRate() {
+        return averageSurvivalRate;
+    }
+
+    public void setAverageSurvivalRate(double averageSurvivalRate) {
+        this.averageSurvivalRate = averageSurvivalRate;
+    }
+
+// -------------------- Game Flow --------------------
+
+    public long getTotalGameDurationSec() {
+        return totalGameDurationSec;
+    }
+
+    public void setTotalGameDurationSec(long totalGameDurationSec) {
+        this.totalGameDurationSec = totalGameDurationSec;
+    }
+
+    public double getAverageGameDurationSec() {
+        return averageGameDurationSec;
+    }
+
+    public void setAverageGameDurationSec(double averageGameDurationSec) {
+        this.averageGameDurationSec = averageGameDurationSec;
+    }
+
+// -------------------- Interaction Heatmaps --------------------
+
+    public Map<String, Integer> getActionTargets() {
+        return actionTargets;
+    }
+
+    public void setActionTargets(Map<String, Integer> actionTargets) {
+        this.actionTargets = actionTargets;
+    }
+
+    public Map<String, Integer> getBlockTargets() {
+        return blockTargets;
+    }
+
+    public void setBlockTargets(Map<String, Integer> blockTargets) {
+        this.blockTargets = blockTargets;
+    }
+
+    public Map<String, Integer> getChallengeTargets() {
+        return challengeTargets;
+    }
+
+    public void setChallengeTargets(Map<String, Integer> challengeTargets) {
+        this.challengeTargets = challengeTargets;
+    }
+
+    public Map<String, Integer> getKilledBy() {
+        return killedBy;
+    }
+
+    public void setKilledBy(Map<String, Integer> killedBy) {
+        this.killedBy = killedBy;
+    }
+
+// -------------------- Personalities --------------------
+
     public Map<String, PersonalityStats> getPersonalities() {
         return personalities;
     }
@@ -90,49 +262,4 @@ public class AgentLifetimeStats {
     public void setPersonalities(Map<String, PersonalityStats> personalities) {
         this.personalities = personalities;
     }
-    // Aggression
-    public int getTotalStealAttempts() { return totalStealAttempts; }
-    public void setTotalStealAttempts(int totalStealAttempts) { this.totalStealAttempts = totalStealAttempts; }
-
-    public int getTotalAssassinationAttempts() { return totalAssassinationAttempts; }
-    public void setTotalAssassinationAttempts(int totalAssassinationAttempts) { this.totalAssassinationAttempts = totalAssassinationAttempts; }
-
-    public int getTotalCoupsPerformed() { return totalCoupsPerformed; }
-    public void setTotalCoupsPerformed(int totalCoupsPerformed) { this.totalCoupsPerformed = totalCoupsPerformed; }
-
-    // Risk
-    public int getTotalBluffsAttempted() { return totalBluffsAttempted; }
-    public void setTotalBluffsAttempted(int totalBluffsAttempted) { this.totalBluffsAttempted = totalBluffsAttempted; }
-
-    public int getTotalChallengesIssued() { return totalChallengesIssued; }
-    public void setTotalChallengesIssued(int totalChallengesIssued) { this.totalChallengesIssued = totalChallengesIssued; }
-
-    // Defense
-    public int getTotalBlocksIssued() { return totalBlocksIssued; }
-    public void setTotalBlocksIssued(int totalBlocksIssued) { this.totalBlocksIssued = totalBlocksIssued; }
-
-    // Survival
-    public int getTotalTurnsSurvived() { return totalTurnsSurvived; }
-    public void setTotalTurnsSurvived(int totalTurnsSurvived) { this.totalTurnsSurvived = totalTurnsSurvived; }
-
-    public int getTotalTurnsPlayed() { return totalTurnsPlayed; }
-    public void setTotalTurnsPlayed(int totalTurnsPlayed) { this.totalTurnsPlayed = totalTurnsPlayed; }
-
-    public double getAverageSurvivalRate() { return averageSurvivalRate; }
-    public void setAverageSurvivalRate(double averageSurvivalRate) { this.averageSurvivalRate = averageSurvivalRate; }
-
-    // Game flow
-    public long getTotalGameDurationSec() { return totalGameDurationSec; }
-    public void setTotalGameDurationMs(long totalGameDurationMs) { this.totalGameDurationSec = totalGameDurationMs; }
-
-    public double getAverageGameDurationSec() { return averageGameDurationSec; }
-    public void setAverageGameDurationMs(double averageGameDurationMs) { this.averageGameDurationSec = averageGameDurationMs; }
-
-    // Interaction heatmaps
-    public Map<String, Integer> getTargetedProviders() { return targetedProviders; }
-    public void setTargetedProviders(Map<String, Integer> targetedProviders) { this.targetedProviders = targetedProviders; }
-
-    public Map<String, Integer> getChallengedProviders() { return challengedProviders; }
-    public void setChallengedProviders(Map<String, Integer> challengedProviders) { this.challengedProviders = challengedProviders; }
 }
-

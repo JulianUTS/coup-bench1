@@ -1,7 +1,9 @@
 package com.example.coup_bench.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PlayerStats {
     private int bluffsAttempted = 0;
@@ -15,7 +17,7 @@ public class PlayerStats {
     private int blocksIssued = 0;
     private int blocksSuccessful = 0;
     private int blocksFailed = 0;
-    private int blocked= 0;
+    private int timesBlocked = 0;
 
     private int incomeCount = 0;
     private int taxAttempts = 0;
@@ -32,21 +34,32 @@ public class PlayerStats {
     private int turnsSurvived = 0;
     private String killedBy;
     private final List<String> playersKilled = new ArrayList<>();
-    private final List<String> actionTargets = new ArrayList<>();
-    private final List<String> blockTargets = new ArrayList<>();
-    private final List<String> challengeTargets = new ArrayList<>();
+    private final Map<String, Integer> actionTargets = new HashMap<>();
+    private final Map<String, Integer> blockTargets = new HashMap<>();
+    private final Map<String, Integer> challengeTargets = new HashMap<>();
 
     // --- Action / Block / Challenge Targets ---
     public void addActionTarget(String targetId) {
-        this.actionTargets.add(targetId);
+        this.actionTargets.merge(targetId, 1, Integer::sum);
     }
 
     public void addBlockTarget(String targetId) {
-        this.blockTargets.add(targetId);
+        this.blockTargets.merge(targetId, 1, Integer::sum);
     }
 
     public void addChallengeTarget(String targetId) {
-        this.challengeTargets.add(targetId);
+        this.challengeTargets.merge(targetId, 1, Integer::sum);
+    }
+
+
+    public Map<String, Integer> getActionTargets() {
+        return this.actionTargets;
+    }
+    public Map<String, Integer>getBlockTargets() {
+        return this.blockTargets;
+    }
+    public Map<String, Integer> getChallengeTargets() {
+        return this.challengeTargets;
     }
 
     // --- Bluffs ---
@@ -79,8 +92,8 @@ public class PlayerStats {
     public int getBlocksFailed() { return blocksFailed; }
     public void incrementBlocksFailed() { this.blocksFailed++; }
 
-    public int getBlocked() { return blocked;}
-    public void incrementedBlocked() { this.blocked++;}
+    public int getTimesBlocked() { return timesBlocked;}
+    public void incrementedBlocked() { this.timesBlocked++;}
 
     // --- Income / Tax ---
     public int getIncomeCount() { return incomeCount; }
@@ -132,5 +145,8 @@ public class PlayerStats {
 
     // --- Players Killed ---
     public List<String> getPlayersKilled() { return playersKilled; }
+    public void addPlayersKilled(String playerId) { this.playersKilled.add(playerId); }
+    public void setKilledBy(String killedBy) { this.killedBy = killedBy; }
+    public String getKilledBy() { return killedBy; }
 
 }

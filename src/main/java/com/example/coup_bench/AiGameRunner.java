@@ -16,16 +16,17 @@ import java.util.function.Predicate;
 public class AiGameRunner {
 
     private final CoupService coup;
-    private final AiActionService ai;
 
 
-    public AiGameRunner(CoupService coup, AiActionService ai) {
+
+    public AiGameRunner(CoupService coup) {
         this.coup = coup;
-        this.ai = ai;
     }
 
     public void runGame(Game game) {
-        while(!gameFinished(game) || !gameWaitingForHuman(game)) {
+
+        while(!gameFinished(game) && !gameWaitingForHuman(game)) {
+            System.out.println(game.getState().toString());
             nextMove(game);
         }
     }
@@ -35,8 +36,6 @@ public class AiGameRunner {
             case WAITING_FOR_ACTION -> coup.getAction(game);
             case WAITING_FOR_CHALLENGE -> coup.getChallenge(game);
             case APPLY_ACTION -> coup.applyAction(game);
-            case APPLY_BLOCK ->  coup.applyBlock(game);
-            case APPLY_CHALLENGE ->  coup.applyChallenge(game);
             case CHALLENGE_DECLARED -> coup.resolveChallenge(game);
             case BLOCK_DECLARED -> coup.resolveBlock(game);
             case INVALID -> coup.invalidGame(game);

@@ -10,7 +10,6 @@ public class Player {
     private final String id;
     private final String personality;
 
-    private boolean alive = true;
     private int coins = 2;
     private final List<CardType> cards = new ArrayList<>();
     private final PlayerStats playerStats = new  PlayerStats();
@@ -30,7 +29,7 @@ public class Player {
     public void addCoins(int amount) { coins += amount; }
     public void removeCoins(int amount) { coins = Math.max(0, coins - amount); }
     public boolean isAlive() {
-        return (alive);
+        return !cards.isEmpty();
     }
 
     public boolean hasCard(CardType type) {

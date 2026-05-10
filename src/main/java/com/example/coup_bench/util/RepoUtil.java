@@ -1,7 +1,9 @@
 package com.example.coup_bench.util;
 
 import com.example.coup_bench.model.Game;
+import com.example.coup_bench.model.GameStats;
 import com.example.coup_bench.model.Player;
+import com.example.coup_bench.model.PlayerStats;
 import com.example.coup_bench.model.repoModels.AgentLifetimeStats;
 import com.example.coup_bench.model.repoModels.GameSummary;
 import com.example.coup_bench.model.repoModels.PersonalityStats;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 public class RepoUtil {
 
     public static GameSummary getGameSummary(Game game) {
+        GameStats gameStats = game.getGameStats();
         GameSummary summary = new GameSummary();
 
 // Basic identifiers
@@ -30,8 +33,8 @@ public class RepoUtil {
         summary.setWinnerId(game.getWinnerId(game));
         summary.setTotalTurns(game.getTurn());
         summary.setTotalActions(game.getActionLog().size());
-        summary.setTotalChallenges(game.getTotalBlocks());
-        summary.setTotalBlocks(game.getTotalChallenges());
+        summary.setTotalChallenges(gameStats.getTotalBlocks());
+        summary.setTotalBlocks(gameStats.getTotalChallenges());
         summary.setTotalInvalidActions(game.getInvalidActionLog().size());
 
 // Game memory (if you store AI thoughts or logs)
@@ -45,9 +48,9 @@ public class RepoUtil {
 
 // Final player states
         summary.setPlayers(game.getPlayers());
-        summary.setBluffLog(game.getGameAnalyticsService().getBluffLog());
-        summary.setInteractions(game.getGameAnalyticsService().getInteractionLog());
-        summary.setTurnSnapshots(game.getGameAnalyticsService().getTurnSnapshotLog());
+        summary.setBluffLog(gameStats.getBluffLog());
+        summary.setInteractions(gameStats.getInteractionLog());
+        summary.setTurnSnapshots(gameStats.getTurnSnapshotLog());
         summary.setSeed(game.getSeed());
         summary.setSeatOrder(game.getSeatOrder());
 
@@ -56,6 +59,7 @@ public class RepoUtil {
 
     public static AgentLifetimeStats getAgentLifetimeStats(Player player, PlayerRepository playerRepo, GameSummary gameSummary) {
         String provider = player.getId();
+        PlayerStats playerStats = player.getPlayerStats();
         String personality = player.getPersonality();
 
         // Load or create provider-level stats
@@ -72,31 +76,47 @@ public class RepoUtil {
         else stats.setLosses(stats.getLosses() + 1);
 
         // Aggression
-        stats.setTotalStealAttempts(stats.getTotalStealAttempts() + player.getStealAttempts());
-        stats.setTotalAssassinationAttempts(stats.getTotalAssassinationAttempts() + player.getAssassinationAttempts());
-        stats.setTotalCoupsPerformed(stats.getTotalCoupsPerformed() + player.getCoupsPerformed());
+        stats.setTotalStealAttempts(stats.getTotalStealAttempts() + playerStats.getStealAttempts());
+        stats.setTotalAssassinationAttempts(stats.getTotalAssassinationAttempts() + playerStats.getAssassinationAttempts());
+        stats.setTotalCoupCount(stats.getTotalCoupCount() + playerStats.getCoupsCount());
+        stats.setTotalTaxAttempts(stats.getTotalTaxAttempts() + playerStats.getTaxAttempts());
+        stats.setTotalForeignAidAttempts(stats.getTotalForeignAidAttempts() + playerStats.getForeignAidAttempts());
+        stats.setTotalExchangeAttempts(stats.getTotalExchangeAttempts() + playerStats.getExchangeAttempts());
+        stats.setTotalIncomeCount(stats.getTotalIncomeCount() + playerStats.getIncomeCount());
 
         // Risk
-        stats.setTotalBluffsAttempted(stats.getTotalBluffsAttempted() + player.getBluffsAttempted());
-        stats.setTotalChallengesIssued(stats.getTotalChallengesIssued() + player.getChallengesIssued());
+        stats.setTotalBluffsAttempted(stats.getTotalBluffsAttempted() + playerStats.getBluffsAttempted());
+        stats.setTotalChallengesIssued(stats.getTotalChallengesIssued() + playerStats.getChallengesIssued());
 
         // Defense
-        stats.setTotalBlocksIssued(stats.getTotalBlocksIssued() + player.getBlocksIssued());
+        stats.setTotalBlocksIssued(stats.getTotalBlocksIssued() + playerStats.getBlocksIssued());
 
         // Survival
-        stats.setTotalTurnsSurvived(stats.getTotalTurnsSurvived() + player.getTurnsSurvived());
+        stats.setTotalTurnsSurvived(stats.getTotalTurnsSurvived() + playerStats.getTurnsSurvived());
         stats.setTotalTurnsPlayed(stats.getTotalTurnsPlayed() + gameSummary.getTotalTurns());
 
         // Game duration
-        stats.setTotalGameDurationMs(stats.getTotalGameDurationSec() + gameSummary.getTotalGameDurationSec());
+        stats.setTotalGameDurationSec(stats.getTotalGameDurationSec() + gameSummary.getTotalGameDurationSec());
 
         // Interaction heatmaps
-        if (player.getLastTargetProvider() != null) {
-            stats.getTargetedProviders().merge(player.getLastTargetProvider(), 1, Integer::sum);
+        if (!playerStats.getActionTargets().isEmpty()) {
+            stats.getActionTargets().forEach((key, value) ->
+                    playerStats.getActionTargets().merge(key, value, Integer::sum)
+            );
         }
 
-        if (player.getLastChallengedProvider() != null) {
-            stats.getChallengedProviders().merge(player.getLastChallengedProvider(), 1, Integer::sum);
+        if (!playerStats.getBlockTargets().isEmpty()) {
+            stats.getBlockTargets().forEach((key, value) ->
+                    playerStats.getBlockTargets().merge(key, value, Integer::sum)
+            );
+        }
+        if (!playerStats.getChallengeTargets().isEmpty()) {
+            stats.getChallengeTargets().forEach((key, value) ->
+                    playerStats.getChallengeTargets().merge(key, value, Integer::sum)
+            );
+        }
+        if(playerStats.getKilledBy() != null) {
+            stats.getKilledBy().merge(playerStats.getKilledBy(), 1, Integer::sum);
         }
 
         // Recompute provider averages
@@ -104,7 +124,7 @@ public class RepoUtil {
                 safeRate(stats.getTotalTurnsSurvived(), stats.getTotalTurnsPlayed())
         );
 
-        stats.setAverageGameDurationMs(
+        stats.setAverageGameDurationSec(
                 (double) stats.getTotalGameDurationSec() / stats.getTotalGames()
         );
 
@@ -121,31 +141,37 @@ public class RepoUtil {
         else ps.setLosses(ps.getLosses() + 1);
 
         // Raw stats
-        ps.setBluffsAttempted(ps.getBluffsAttempted() + player.getBluffsAttempted());
-        ps.setBluffsSuccessful(ps.getBluffsSuccessful() + player.getBluffsSuccessful());
-        ps.setBluffsFailed(ps.getBluffsFailed() + player.getBluffsFailed());
+        ps.setBluffsAttempted(ps.getBluffsAttempted() + playerStats.getBluffsAttempted());
+        ps.setBluffsSuccessful(ps.getBluffsSuccessful() + playerStats.getBluffsSuccessful());
+        ps.setBluffsFailed(ps.getBluffsFailed() + playerStats.getBluffsFailed());
 
-        ps.setChallengesIssued(ps.getChallengesIssued() + player.getChallengesIssued());
-        ps.setChallengesWon(ps.getChallengesWon() + player.getChallengesWon());
-        ps.setChallengesLost(ps.getChallengesLost() + player.getChallengesLost());
+        ps.setChallengesIssued(ps.getChallengesIssued() + playerStats.getChallengesIssued());
+        ps.setChallengesWon(ps.getChallengesWon() + playerStats.getChallengesWon());
+        ps.setChallengesLost(ps.getChallengesLost() + playerStats.getChallengesLost());
 
-        ps.setBlocksIssued(ps.getBlocksIssued() + player.getBlocksIssued());
-        ps.setBlocksSuccessful(ps.getBlocksSuccessful() + player.getBlocksSuccessful());
-        ps.setBlocksFailed(ps.getBlocksFailed() + player.getBlocksFailed());
+        ps.setBlocksIssued(ps.getBlocksIssued() + playerStats.getBlocksIssued());
+        ps.setBlocksSuccessful(ps.getBlocksSuccessful() + playerStats.getBlocksSuccessful());
+        ps.setBlocksFailed(ps.getBlocksFailed() + playerStats.getBlocksFailed());
 
-        ps.setIncomeCount(ps.getIncomeCount() + player.getIncomeCount());
-        ps.setTaxCount(ps.getTaxCount() + player.getTaxCount());
+        ps.setIncomeCount(ps.getIncomeCount() + playerStats.getIncomeCount());
+        ps.setTaxAttempts(ps.getTaxAttempts() + playerStats.getTaxSuccessful());
+        ps.setTaxSuccessful(ps.getTaxSuccessful() + playerStats.getTaxSuccessful());
+        ps.setExchangeAttempts(ps.getExchangeAttempts() + playerStats.getExchangeSuccessful());
+        ps.setExchangeSuccessful(ps.getExchangeSuccessful() + playerStats.getExchangeSuccessful());
+        ps.setForeignAidAttempts(ps.getForeignAidAttempts() + playerStats.getForeignAidSuccessful());
+        ps.setForeignAidSuccessful(ps.getForeignAidSuccessful() + playerStats.getForeignAidSuccessful());
 
-        ps.setStealAttempts(ps.getStealAttempts() + player.getStealAttempts());
-        ps.setStealSuccesses(ps.getStealSuccesses() + player.getStealSuccesses());
 
-        ps.setAssassinationAttempts(ps.getAssassinationAttempts() + player.getAssassinationAttempts());
-        ps.setAssassinationSuccesses(ps.getAssassinationSuccesses() + player.getAssassinationSuccesses());
+        ps.setStealAttempts(ps.getStealAttempts() + playerStats.getStealAttempts());
+        ps.setStealSuccesses(ps.getStealSuccesses() + playerStats.getStealSuccesses());
 
-        ps.setCoupsPerformed(ps.getCoupsPerformed() + player.getCoupsPerformed());
+        ps.setAssassinationAttempts(ps.getAssassinationAttempts() + playerStats.getAssassinationAttempts());
+        ps.setAssassinationSuccesses(ps.getAssassinationSuccesses() + playerStats.getAssassinationSuccesses());
+
+        ps.setCoupsPerformed(ps.getCoupsPerformed() + playerStats.getCoupsCount());
 
         // Survival
-        ps.setTotalTurnsSurvived(ps.getTotalTurnsSurvived() + player.getTurnsSurvived());
+        ps.setTotalTurnsSurvived(ps.getTotalTurnsSurvived() + playerStats.getTurnsSurvived());
         ps.setAverageTurnsSurvived(
                 (double) ps.getTotalTurnsSurvived() / ps.getTotalGames()
         );
@@ -181,7 +207,7 @@ public class RepoUtil {
         // Collect all action counts
         int[] counts = {
                 ps.getIncomeCount(),
-                ps.getTaxCount(),
+                ps.getTaxAttempts(),
                 ps.getStealAttempts(),
                 ps.getAssassinationAttempts(),
                 ps.getCoupsPerformed(),

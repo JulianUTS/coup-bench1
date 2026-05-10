@@ -39,9 +39,10 @@ public class ChallengeService {
                 PlayerUtil.isPlayerBluffing(game.getPlayer(blocker.getId()), block.action),
                 block.reason);
 
-        StatsUtil.logDeclaredBlock(game, blocker, blockRecord);
+
         logNewBlock(game, blockRecord);
         setCurrentBlock(blockRecord);
+        StatsUtil.logDeclaredBlock(game, blocker, blockRecord);
         game.setState(GameState.BLOCK_DECLARED);
     }
 
@@ -55,46 +56,70 @@ public class ChallengeService {
                 null,
                 challenge.reason);
 
-        setCurrentChallenger(challengerId);
-        StatsUtil.logDeclaredChallenge(game, challenger, challenge.id);
+        setCurrentChallenger(challenge.id);
         logNewChallenge(game, challengeRecord);
+        StatsUtil.logDeclaredChallenge(game, challenger, challenge.id);
         game.setState(GameState.CHALLENGE_DECLARED);
     }
 
     public void resolveChallenge(Game game, DeckService deckService, ActionRecord challengedRecord){
         Player challenger = game.getPlayer(challengerId);
-        Player challenged = game.getPlayer(challengedRecord.getTargetId());
-
+        Player challenged = game.getPlayer(challengedRecord.getPlayerId());
 
         //Challenger is winner
         if(challengedRecord.getActionIsBluff()){
-            game.logGameMemory(challenger.getId() + " wins challenge");
-            StatsUtil.logSuccessfulChallenge(game, challenger, challenged, challengedRecord, challengeOnBlock());
-            setChallengeOutcome(challenger, challenged);
-            deckService.removePlayerCard(game, challenged);
-
-            if(challengeOnBlock()){
-                game.setState(GameState.APPLY_ACTION);
-            } else{
-                game.setState(GameState.APPLY_CHALLENGE);
-            }
-
-
-
+            challengerWins(game, deckService, challengedRecord, challenger, challenged);
         } //Challenged is winner
         else{
-            game.logGameMemory(challenger.getId() + " looses challenge");
-            StatsUtil.logUnsuccessfulChallenge(game, challenger, challenged);
-            setChallengeOutcome(challenged, challenger);
+            challengerLost(game, deckService, challengedRecord, challenger, challenged);
+        }
+        if(PlayerUtil.onlyOneLeft(game.getPlayers())){
+            game.setState(GameState.ENDGAME);
+            return;
+        }
+    }
 
-            deckService.removePlayerCard(game, challenger);
-            deckService.switchPlayerCard(game, challenged, RoleUtil.getCard(challengedRecord.getAction()));
+    public void challengerWins(Game game, DeckService deckService, ActionRecord challengedRecord,
+                               Player challenger, Player challenged){
+        game.logGameMemory(challenger.getId() + " wins challenge");
+        setChallengeOutcome(challenger, challenged);
+        StatsUtil.logSuccessfulChallenge(game, challenger, challenged, challengedRecord, challengeOnBlock());
 
-            if(challengeOnBlock()){
-                game.setState(GameState.APPLY_BLOCK);
-            } else{
-                game.setState(GameState.APPLY_ACTION);
-            }
+
+        if(!deckService.removePlayerCard(game, challenged)){
+            StatsUtil.logPlayerKilled(challenger, challenged);
+            game.logGameMemory(challenged.getId() + " has lost all their cards");
+        }
+
+        if(challengeOnBlock()){
+            game.setState(GameState.APPLY_ACTION);
+        } else{
+            game.setState(GameState.NEXT_TURN);
+        }
+    }
+    public void challengerLost(Game game, DeckService deckService, ActionRecord challengedRecord,
+                               Player challenger, Player challenged){
+        game.logGameMemory(challenger.getId() + " looses challenge");
+        setChallengeOutcome(challenged, challenger);
+        StatsUtil.logUnsuccessfulChallenge(game, challenger, challenged);
+
+
+        if(!deckService.removePlayerCard(game, challenger)){
+            StatsUtil.logPlayerKilled(challenged, challenger);
+            game.logGameMemory(challenger.getId() + " has lost all their cards");
+        }
+
+        deckService.switchPlayerCard(game, challenged, RoleUtil.getCard(challengedRecord.getAction()));
+
+        if(challengeOnBlock()){
+            StatsUtil.logSuccessfulBlock(game,
+                    getBlocker(game),
+                    game.getPlayer(challengedRecord.getPlayerId()),
+                    getBlockRecord(),
+                    challengedRecord);
+            game.setState(GameState.NEXT_TURN);
+        } else{
+            game.setState(GameState.APPLY_ACTION);
         }
 
     }
@@ -116,7 +141,7 @@ public class ChallengeService {
     public void applyS_2_1(Game game, ActionRecord actionRecord) {
         Predicate<Player> filter = p -> p.isAlive() && !p.getId().equals(actionRecord.getPlayerId());
         loopChallengers(game, actionRecord, Scenario.S2_1, filter);
-        if(!noBlock()){
+        if(blockDetected()){
             setChallengeScenario(Scenario.S2_2);
         }
     }
@@ -135,9 +160,8 @@ public class ChallengeService {
         Player blocker = game.getPlayer(actionRecord.getTargetId());
         AiReaction block = askChallenger(game, actionRecord, blocker, Scenario.S3_2);
         if (block.action != ActionType.DO_NOTHING){
-            declareBlock(game, block);
             setChallengeScenario(Scenario.S3_3);
-
+            declareBlock(game, block);
         } else{
             game.logAction(new ActionRecord(blocker.getId(), ActionType.DO_NOTHING, null, null, block.reason));
         }
@@ -156,14 +180,12 @@ public class ChallengeService {
         Player blocker = game.getPlayer(actionRecord.getTargetId());
         AiReaction block = askChallenger(game, actionRecord, blocker, Scenario.S4_2);
         if (block.action != ActionType.DO_NOTHING){
-            declareBlock(game, block);
             setChallengeScenario(Scenario.S4_3);
-
+            declareBlock(game, block);
         } else{
             game.logAction(new ActionRecord(blocker.getId(), ActionType.DO_NOTHING, null, null, block.reason));
         }
     }
-
 
     private void loopChallengers(Game game, ActionRecord challengedRecord, Scenario scenario, Predicate<Player> filter){
         String challengedPlayerId = challengedRecord.getPlayerId();
@@ -208,13 +230,7 @@ public class ChallengeService {
 
     }
     private AiReaction askChallenger(Game game, ActionRecord actionRecord, Player player, Scenario scenario) {
-
-        AiReaction reaction = AiReaction.getReaction(game, actionRecord, this, player, scenario);
-
-        if (reaction.action == ActionType.DO_NOTHING) {
-            game.logAction(new ActionRecord(player.getId(), ActionType.DO_NOTHING, null, null, reaction.reason));
-        }
-        return reaction;
+        return AiReaction.getReaction(game, actionRecord, this, player, scenario);
     }
 
     public void logNewBlock(Game game, ActionRecord blockRecord) {
@@ -245,8 +261,8 @@ public class ChallengeService {
         return challengerId == null;
     }
 
-    public boolean noBlock(){
-        return blockRecord == null;
+    public boolean blockDetected(){
+        return this.blockRecord != null;
     }
 
     public Player getChallengeWinner() {
@@ -261,6 +277,9 @@ public class ChallengeService {
         this.challengerId = null;
         this.blockRecord = null;
         this.challengeScenario = null;
+        this.challengeWinner = null;
+        this.challengeLoser  = null;
+        this.shiftIndex =0;
     }
 
     public ActionRecord getBlockRecord() {

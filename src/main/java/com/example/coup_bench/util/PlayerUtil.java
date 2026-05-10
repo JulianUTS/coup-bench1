@@ -1,6 +1,5 @@
 package com.example.coup_bench.util;
 
-import com.example.coup_bench.model.Enums.GameState;
 import com.example.coup_bench.model.Player;
 import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.CardType;
@@ -22,7 +21,7 @@ public class PlayerUtil {
         return !player.getCards().isEmpty();
 
     }
-    public static boolean moreThanOnePlayer(List<Player> players){
-        return (players.stream().filter(Player::isAlive).count() > 1);
+    public static boolean onlyOneLeft(List<Player> players){
+        return (players.stream().filter(Player::isAlive).count() == 1);
     }
 }

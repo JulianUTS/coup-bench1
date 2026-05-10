@@ -30,13 +30,13 @@ public class AiChooseCardService {
                 return chosenCard.card;
             } else{
                 System.err.println(player.getId() + "- Invalid Cards:\n" + response );
-                CardType fallback = player.getCards().get(new Random().nextInt(player.getCards().size()));;
+                CardType fallback = player.getCards().get(new Random().nextInt(2));;
                 return fallback;
             }
 
         } catch (Exception e) {
             System.err.println(player.getId() + "- Invalid JSON:\n" + response );
-            CardType fallback = player.getCards().get(new Random().nextInt(player.getCards().size()));;
+            CardType fallback = player.getCards().get(new Random().nextInt(2));
             return fallback;
         }
 
@@ -105,7 +105,7 @@ public class AiChooseCardService {
     private String getResponse(String provider, String prompt) {
         // System.out.println(prompt);
         String response = router.ask(provider, prompt);
-        System.out.println(response);
+        System.out.println(provider + ": " + response);
         return cleanResponse(response);
     }
 }

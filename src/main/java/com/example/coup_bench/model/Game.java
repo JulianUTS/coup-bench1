@@ -18,7 +18,7 @@ public class Game {
 
     private int currentPlayerIndex = 0;
     private GameState state = GameState.WAITING_FOR_PLAYERS;
-    private int turn = 1;
+    private int turn = 0;
 
 
 
@@ -53,6 +53,7 @@ public class Game {
     public int getInvalidAction() {
         return invalidActionLog.size();
     }
+
     public void logGameMemory(String memory) {
         System.out.println(memory);
         gameMemory.add(memory);

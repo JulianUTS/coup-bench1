@@ -25,9 +25,7 @@ public class ActionService {
     }
 
     public AiAction getAction(Game game, Player player) {
-        AiAction action = ai.getAction(game, player);
-        game.setState(GameState.DECLARE_ACTION);
-        return action;
+        return ai.getAction(game, player);
     }
 
     public void declareInvalidAction(Game game, String playerId,
@@ -42,6 +40,8 @@ public class ActionService {
                 ActionUtil.getInvalidReason(game, game.getPlayer(playerId), action, targetId));
 
         game.logInvalidAction(invalidActionRecord);
+        logActionToMemory(game, playerId, action, targetId);
+        game.logGameMemory(ActionUtil.getInvalidReason(game, game.getPlayer(playerId), action, targetId));
         incrementInvalidAction();
         if(invalidAction == 3){
             game.setState(GameState.INVALID);
@@ -49,8 +49,11 @@ public class ActionService {
     }
 
     public void declareAction(Game game, ChallengeService challengeService,
-                              String playerId, ActionType action, String targetId, String reason) {
+                              String playerId, AiAction actionResponse) {
         Player player = game.getPlayer(playerId);
+        ActionType action = actionResponse.action;
+        String targetId = actionResponse.targetId;
+        String reason = actionResponse.reason;
 
         // Validate first
         if (!ActionUtil.actionIsValid(game, playerId, action, targetId)){
@@ -61,9 +64,10 @@ public class ActionService {
         ActionRecord actionRecord = new ActionRecord(playerId, action, targetId,
                 PlayerUtil.isPlayerBluffing(game.getPlayer(playerId), action),  reason);
 
-        StatsUtil.logDeclaredAction(game, player, actionRecord);
+
         logNewAction(game, actionRecord);
         setCurrentAction(actionRecord);
+        StatsUtil.logDeclaredAction(game, player, actionRecord);
         challengeService.setChallengeScenario(ActionUtil.decideChallengeScenario(action));
         game.setState(GameState.WAITING_FOR_CHALLENGE);
     }
@@ -72,7 +76,8 @@ public class ActionService {
 
         ActionType action = actionRecord.getAction();
         Player player = game.getPlayer(actionRecord.getPlayerId());
-        Player target = game.getPlayer(actionRecord.getTargetId());
+        String targetId = actionRecord.getTargetId();
+        boolean targetAlive = true;
 
         switch (action) {
             case INCOME -> {
@@ -88,44 +93,55 @@ public class ActionService {
             }
 
             case STEAL -> {
-                int stolen = Math.min(2, target.getCoins());
-                target.removeCoins(stolen);
+                int stolen = Math.min(2, game.getPlayer(targetId).getCoins());
+                game.getPlayer(targetId).removeCoins(stolen);
                 player.addCoins(stolen);
             }
             case ASSASSINATE -> {
-                if (game.getPlayer(target.getId()).isAlive()) {
+                if (game.getPlayer(game.getPlayer(targetId).getId()).isAlive()) {
                     player.removeCoins(3);
-                    deckService.removePlayerCard(game, target);
                 }
             }
             case COUP -> {
                 player.removeCoins(7);
-                deckService.removePlayerCard(game, target);
             }
             case EXCHANGE -> {
                 deckService.exchangePlayerCards(player);
             }
         }
-        logAppliedAction(game, player, target, action);
+        logAppliedAction(game, player.getId(), targetId, action);
+        StatsUtil.logSuccessfulAction(game, player, actionRecord);
+
+        switch (action) {
+            case COUP, ASSASSINATE: {
+                targetAlive = deckService.removePlayerCard(game, game.getPlayer(targetId));
+            }
+        }
+
+        if(!targetAlive){
+            StatsUtil.logPlayerKilled(player, game.getPlayer(targetId));
+            game.logGameMemory(targetId + " has lost all their cards");
+        }
+
         game.setState(GameState.NEXT_TURN);
     }
-    public void logAppliedAction(Game game, Player player, Player target, ActionType action) {
+    public void logAppliedAction(Game game, String player, String target, ActionType action) {
 
         switch (action) {
 
-            case INCOME -> game.logGameMemory(player.getId() + " gains 1 coin (INCOME)");
+            case INCOME -> game.logGameMemory(player + " gains 1 coin (INCOME)");
 
-            case FOREIGN_AID -> game.logGameMemory(player.getId() + " gains 2 coins (FOREIGN AID)");
+            case FOREIGN_AID -> game.logGameMemory(player + " gains 2 coins (FOREIGN AID)");
 
-            case TAX -> game.logGameMemory(player.getId() + " gains 3 coins (DUKE TAX)");
+            case TAX -> game.logGameMemory(player + " gains 3 coins (DUKE TAX)");
 
-            case STEAL -> game.logGameMemory(player.getId() + " steals coins from " + target.getId() + " (CAPTAIN STEAL)");
+            case STEAL -> game.logGameMemory(player + " steals coins from " + target + " (CAPTAIN STEAL)");
 
-            case ASSASSINATE -> game.logGameMemory(player.getId() + " assassinates " + target.getId() + " (ASSASSIN ASSASSINATE)");
+            case ASSASSINATE -> game.logGameMemory(player + " assassinates " + target + " (ASSASSIN ASSASSINATE)");
 
-            case COUP -> game.logGameMemory(player.getId() + " coups " + target.getId() + "COUP");
+            case COUP -> game.logGameMemory(player + " coups " + target + " (COUP)");
 
-            case EXCHANGE -> game.logGameMemory(player.getId() + " exchanges cards (AMBASSADOR EXCHANGE)");
+            case EXCHANGE -> game.logGameMemory(player + " exchanges cards (AMBASSADOR EXCHANGE)");
         }
     }
 
@@ -134,11 +150,13 @@ public class ActionService {
 
     public void logNewAction(Game game, ActionRecord actionRecord) {
         game.logAction(actionRecord);
-
-        if(actionRecord.getTargetId() == null){
-            game.logGameMemory(actionRecord.getPlayerId() + " calls " + actionRecord.getAction());
+        logActionToMemory(game, actionRecord.getPlayerId(),actionRecord.getAction(), actionRecord.getTargetId());
+    }
+    public void logActionToMemory(Game game, String playerId, ActionType action,String targetId) {
+        if(targetId == null){
+            game.logGameMemory(playerId + " calls " + action);
         } else{
-            game.logGameMemory(actionRecord.getPlayerId() + " calls " + actionRecord.getAction() + " on " + actionRecord.getTargetId());
+            game.logGameMemory(playerId + " calls " + action + " on " + targetId);
         }
     }
 

@@ -3,6 +3,7 @@ package com.example.coup_bench.service;
 import com.example.coup_bench.model.Enums.CardType;
 import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.Player;
+import com.example.coup_bench.util.PlayerUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -46,16 +47,23 @@ public class DeckService {
 
     public void exchangePlayerCards(Player player) {
         List<CardType> playerCards = player.getCards();
-        for(CardType c: playerCards){
-            removeCardFromPlayer(player, c);
+        int cardsToAdd = playerCards.size();
+        for(int i = 0; i < cardsToAdd; i++){
+            addCardToDeck(playerCards.removeFirst());
             addCardToPlayer(player,removeCardFromDeck());
         }
     }
-    public void removePlayerCard(Game game, Player player) {
-        CardType cardToRemove = aiChooseCardService.getCardToLoose(game, player);
+    public boolean removePlayerCard(Game game, Player player) {
+        CardType cardToRemove;
+        if(player.getCards().size() == 1){
+            cardToRemove = player.getCards().getFirst();
+        } else {
+            cardToRemove = aiChooseCardService.getCardToLoose(game, player);
+        }
         removeCardFromPlayer(player, cardToRemove);
         addCardToDeck(cardToRemove);
         game.logGameMemory(player.getId() + " looses a card" );
+        return PlayerUtil.isPlayerAlive(player);
     }
 
     private void addCardToPlayer(Player player,CardType card) {

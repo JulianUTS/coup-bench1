@@ -17,14 +17,20 @@ public class PersonalityStats {
     private int blocksIssued;
     private int blocksSuccessful;
     private int blocksFailed;
+    private int timesBlocked;
 
     private int incomeCount;
-    private int taxCount;
+    private int taxAttempts;
+    private int taxSuccessful;
+    private int exchangeAttempts;
+    private int exchangeSuccessful;
+    private int foreignAidAttempts;
+    private int foreignAidSuccessful;
     private int stealAttempts;
     private int stealSuccesses;
     private int assassinationAttempts;
     private int assassinationSuccesses;
-    private int coupsPerformed;
+    private int coupsCount;
 
     private int aggressionScore;          // steal + assassinate + coup
     private int riskScore;                // bluffs + challenges
@@ -152,13 +158,54 @@ public class PersonalityStats {
         this.incomeCount = incomeCount;
     }
 
-    public int getTaxCount() {
-        return taxCount;
+    public int getTaxAttempts() {
+        return taxAttempts;
     }
 
-    public void setTaxCount(int taxCount) {
-        this.taxCount = taxCount;
+    public void setTaxAttempts(int taxAttempts) {
+        this.taxAttempts = taxAttempts;
     }
+
+    public int getTaxSuccessful() {
+        return taxSuccessful;
+    }
+
+    public void setTaxSuccessful(int taxSuccessful) {
+        this.taxSuccessful = taxSuccessful;
+    }
+
+    public int getExchangeAttempts() {
+        return exchangeAttempts;
+    }
+
+    public void setExchangeAttempts(int exchangeAttempts) {
+        this.exchangeAttempts = exchangeAttempts;
+    }
+
+    public int getExchangeSuccessful() {
+        return exchangeSuccessful;
+    }
+
+    public void setExchangeSuccessful(int exchangeSuccessful) {
+        this.exchangeSuccessful = exchangeSuccessful;
+    }
+
+    public int getForeignAidAttempts() {
+        return foreignAidAttempts;
+    }
+
+    public void setForeignAidAttempts(int foreignAidAttempts) {
+        this.foreignAidAttempts = foreignAidAttempts;
+    }
+
+    public int getForeignAidSuccessful() {
+        return foreignAidSuccessful;
+    }
+
+    public void setForeignAidSuccessful(int foreignAidSuccessful) {
+        this.foreignAidSuccessful = foreignAidSuccessful;
+    }
+
 
     public int getStealAttempts() {
         return stealAttempts;
@@ -193,41 +240,32 @@ public class PersonalityStats {
     }
 
     public int getCoupsPerformed() {
-        return coupsPerformed;
+        return coupsCount;
     }
 
     public void setCoupsPerformed(int coupsPerformed) {
-        this.coupsPerformed = coupsPerformed;
+        this.coupsCount = coupsPerformed;
     }
 
-    public int getAggressionScore() { return aggressionScore; }
     public void setAggressionScore(int aggressionScore) { this.aggressionScore = aggressionScore; }
 
-    public int getRiskScore() { return riskScore; }
     public void setRiskScore(int riskScore) { this.riskScore = riskScore; }
 
-    public double getBluffSuccessRate() { return bluffSuccessRate; }
     public void setBluffSuccessRate(double bluffSuccessRate) { this.bluffSuccessRate = bluffSuccessRate; }
 
-    public double getChallengeSuccessRate() { return challengeSuccessRate; }
     public void setChallengeSuccessRate(double challengeSuccessRate) { this.challengeSuccessRate = challengeSuccessRate; }
 
-    public double getBlockSuccessRate() { return blockSuccessRate; }
     public void setBlockSuccessRate(double blockSuccessRate) { this.blockSuccessRate = blockSuccessRate; }
 
-    public double getStealSuccessRate() { return stealSuccessRate; }
     public void setStealSuccessRate(double stealSuccessRate) { this.stealSuccessRate = stealSuccessRate; }
 
-    public double getAssassinationSuccessRate() { return assassinationSuccessRate; }
     public void setAssassinationSuccessRate(double assassinationSuccessRate) { this.assassinationSuccessRate = assassinationSuccessRate; }
 
     public int getTotalTurnsSurvived() { return totalTurnsSurvived; }
     public void setTotalTurnsSurvived(int totalTurnsSurvived) { this.totalTurnsSurvived = totalTurnsSurvived; }
 
-    public double getAverageTurnsSurvived() { return averageTurnsSurvived; }
     public void setAverageTurnsSurvived(double averageTurnsSurvived) { this.averageTurnsSurvived = averageTurnsSurvived; }
 
-    public double getActionEntropy() { return actionEntropy; }
     public void setActionEntropy(double actionEntropy) { this.actionEntropy = actionEntropy; }
 }
 

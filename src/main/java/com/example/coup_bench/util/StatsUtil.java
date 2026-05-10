@@ -15,10 +15,9 @@ public class StatsUtil {
     public static void logDeclaredAction(Game game, Player player, ActionRecord actionRecord){
         PlayerStats playerStats = player.getPlayerStats();
         GameStats gameStats = game.getGameStats();
-        //Update bluff values
-        if (actionRecord.getActionIsBluff()) {
-            playerStats.incrementBluffsAttempted();
-            gameStats.logBluff(actionRecord);
+
+        if(ActionUtil.isTargetedAction(actionRecord.getAction())){
+            playerStats.addActionTarget(actionRecord.getTargetId());
         }
 
         //Update action values
@@ -29,15 +28,17 @@ public class StatsUtil {
             case FOREIGN_AID -> playerStats.incrementForeignAidAttempts();
             case TAX -> playerStats.incrementTaxAttempts();
         }
+        if(!RoleUtil.isBluffableAction(actionRecord.getAction())) return;
+        if (actionRecord.getActionIsBluff()) {
+            playerStats.incrementBluffsAttempted();
+            gameStats.logBluff(actionRecord);
+        }
+
 
     }
     public static void logSuccessfulAction(Game game, Player player, ActionRecord actionRecord) {
         PlayerStats playerStats = player.getPlayerStats();
         GameStats gameStats = game.getGameStats();
-
-        if (actionRecord.getActionIsBluff()) {
-            playerStats.incrementBluffsSuccessful();
-        }
 
         if (ActionUtil.isTargetedAction(actionRecord.getAction())) {
             gameStats.logInteraction(new InteractionRecord(
@@ -55,10 +56,11 @@ public class StatsUtil {
             case ASSASSINATE -> playerStats.incrementAssassinationSuccesses();
             case EXCHANGE -> playerStats.incrementExchangeSuccessful();
         }
+        if(!RoleUtil.isBluffableAction(actionRecord.getAction())) return;
+        if (actionRecord.getActionIsBluff()) {
+            playerStats.incrementBluffsSuccessful();
+        }
 
-
-    }
-    public static void logUnsuccessfulAction(GameStats gameStats, PlayerStats playerStats){
 
     }
     public static void logDeclaredBlock(Game game, Player blocker, ActionRecord blockRecord){
@@ -66,6 +68,7 @@ public class StatsUtil {
         GameStats gameStats = game.getGameStats();
 
         blockerStats.incrementBlocksIssued();
+        blockerStats.addBlockTarget(blockRecord.getTargetId());
 
         if(blockRecord.getActionIsBluff()) {
             blockerStats.incrementBluffsAttempted();
@@ -92,6 +95,7 @@ public class StatsUtil {
         if(blockAction.getActionIsBluff()) {
             blockerStats.incrementBluffsSuccessful();
         }
+        if(!RoleUtil.isBluffableAction(blockedAction.getAction())) return;
         if(blockedAction.getActionIsBluff()){
             blockedStats.incrementBluffsFailed();
         }
@@ -169,6 +173,14 @@ public class StatsUtil {
                 playerStats.incrementTurnsSurvived();
             }
         }
+    }
+
+    public static void logPlayerKilled(Player killer, Player killed){
+        PlayerStats killerStats = killer.getPlayerStats();
+        PlayerStats killedStats = killed.getPlayerStats();
+
+        killerStats.addPlayersKilled(killed.getId());
+        killedStats.setKilledBy(killer.getId());
     }
 
 

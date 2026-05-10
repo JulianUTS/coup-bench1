@@ -109,7 +109,7 @@ public class AiActionService {
     private String getResponse(String provider, String prompt) {
        // System.out.println(prompt);
         String response = router.ask(provider, prompt);
-        System.out.println(response);
+        System.out.println(provider + ": " + response);
         return PromptUtil.cleanResponse(response);
     }
 

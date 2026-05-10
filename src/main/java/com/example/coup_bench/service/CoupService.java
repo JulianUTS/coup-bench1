@@ -2,14 +2,11 @@ package com.example.coup_bench.service;
 
 import com.example.coup_bench.model.*;
 import com.example.coup_bench.model.AiResponses.AiAction;
-import com.example.coup_bench.model.AiResponses.AiReaction;
-import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.Scenario;
 import com.example.coup_bench.model.Enums.GameState;
 import com.example.coup_bench.model.repoModels.*;
 import com.example.coup_bench.repo.GameRepository;
 import com.example.coup_bench.repo.PlayerRepository;
-import com.example.coup_bench.util.ActionUtil;
 import com.example.coup_bench.util.PlayerUtil;
 import com.example.coup_bench.util.RepoUtil;
 import com.example.coup_bench.util.StatsUtil;
@@ -65,13 +62,9 @@ public class CoupService {
             return;
         }
         AiAction action= actionService.getAction(game, currentPlayer);
-        if(game.getState() != GameState.DECLARE_ACTION) {
-            return;
-        }
 
-        declareAction(game, game.getCurrentPlayer().getId(), action.action, actionService.getTargetId(), action.reason);
-        challengeService.setChallengeScenario(ActionUtil.decideChallengeScenario(actionService.getDeclaredAction()));
-        return;
+        declareAction(game, game.getCurrentPlayer().getId(), action);
+
     }
 
     public void resolveBlock(Game game) {
@@ -93,6 +86,7 @@ public class CoupService {
     }
 
     public void endGame(Game game) {
+        game.logGameMemory(game.getWinnerId(game) + " wins!!!");
         GameSummary gamesummary = RepoUtil.getGameSummary(game);
         gameRepo.save(gamesummary);
         for (Player p : game.getPlayers()) {
@@ -106,8 +100,8 @@ public class CoupService {
         game.setState(GameState.ENDGAME);
     }
 
-    public void declareAction(Game game, String playerId, ActionType action, String targetId, String reason) {
-        this.actionService.declareAction(game, challengeService, playerId, action, targetId, reason);
+    public void declareAction(Game game, String playerId, AiAction action) {
+        this.actionService.declareAction(game, challengeService, playerId, action);
     }
 
     public void resolveChallenge(Game game) {
@@ -123,41 +117,20 @@ public class CoupService {
 
     public void applyAction(Game game) {
         actionService.applyAction(game, deck);
-        game.setState(GameState.NEXT_TURN);
     }
 
     public void nextTurn(Game game){
-        if(!PlayerUtil.moreThanOnePlayer(game.getPlayers())){
+        if(PlayerUtil.onlyOneLeft(game.getPlayers())){
             game.setState(GameState.ENDGAME);
             return;
         }
-
+        StatsUtil.logTurnSnapshot(game, actionService.getActionRecord());
         challengeService.clearChallengeService();
         actionService.clearActionService();
-        StatsUtil.logTurnSnapshot(game, actionService.getActionRecord());
+
         game.nextCurrentPlayer();
         game.incrementTurn();
+        StatsUtil.incrementTurnsSurvived(game.getPlayers());
         game.setState(GameState.WAITING_FOR_ACTION);
-
-        if (game.getState() != GameState.FINISHED) {
-            game.setState(GameState.IN_PROGRESS);
-        }
     };
-
-    public void applyBlock(Game game){
-        StatsUtil.logSuccessfulBlock(game, challengeService.getBlocker(game),
-                actionService.getActingPlayer(game),
-                challengeService.getBlockRecord(),
-                actionService.getActionRecord());
-        game.setState(GameState.NEXT_TURN);
-    };
-
-    public void applyChallenge(Game game){
-        if(challengeService.challengeOnBlock()){
-            game.setState(GameState.APPLY_ACTION);
-        } else{
-            game.setState(GameState.NEXT_TURN);
-        }
-    };
-
 }
