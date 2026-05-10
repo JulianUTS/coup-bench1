@@ -46,6 +46,8 @@ public class ActionService {
         incrementInvalidAction();
         if(invalidAction == 3){
             game.setState(GameState.INVALID);
+        } else{
+            game.setState(GameState.WAITING_FOR_ACTION);
         }
     }
 
@@ -73,7 +75,7 @@ public class ActionService {
         game.setState(GameState.WAITING_FOR_CHALLENGE);
     }
 
-    public void applyAction(Game game, DeckService deckService) {
+    public void applyAction(Game game, DeckService deckService, HumanService human) {
 
         ActionType action = actionRecord.getAction();
         Player player = game.getPlayer(actionRecord.getPlayerId());
@@ -117,6 +119,7 @@ public class ActionService {
             case COUP, ASSASSINATE: {
                 if(game.getPlayer(targetId).isHuman() && game.getPlayer(targetId).getCards().size() > 1){
                     HumanUtil.printGetCardPrompt(game,player);
+                    human.setPrevious(GameState.NEXT_TURN);
                     game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
                     return;
                 }

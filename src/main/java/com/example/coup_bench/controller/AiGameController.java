@@ -2,6 +2,9 @@ package com.example.coup_bench.controller;
 
 import com.example.coup_bench.AiGameRunner;
 import com.example.coup_bench.model.Game;
+import com.example.coup_bench.model.HumanActionRequest;
+import com.example.coup_bench.model.HumanChooseCardRequest;
+import com.example.coup_bench.model.HumanReactionRequest;
 import com.example.coup_bench.repo.CurrentGameRepository;
 import com.example.coup_bench.service.CoupService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -177,24 +180,24 @@ public class AiGameController {
     @PostMapping("/human/action")
     public Game humanAction(@RequestBody HumanActionRequest req) {
         Game game = currentGame.get();
-        game = runner.applyHumanAction(game, req);
-        runner.runUntilHuman(game);
+        coup.getHumanAction(game, req);
+        runner.runGame(game);
         currentGame.save(game);
         return game;
     }
     @PostMapping("/human/reaction")
     public Game humanReaction(@RequestBody HumanReactionRequest req) {
         Game game = currentGame.get();
-        game = runner.applyHumanReaction(game, req);
-        runner.runUntilHuman(game);
+        coup.getChallengeService().getHumanReaction(game, req);
+        runner.runGame(game);
         currentGame.save(game);
         return game;
     }
     @PostMapping("/human/chooseCard")
     public Game humanChooseCard(@RequestBody HumanChooseCardRequest req) {
         Game game = currentGame.get();
-        game = runner.applyHumanChooseCard(game, req);
-        runner.runUntilHuman(game);
+        coup.getHumanChooseCard(game, req);
+        runner.runGame(game);
         currentGame.save(game);
         return game;
     }

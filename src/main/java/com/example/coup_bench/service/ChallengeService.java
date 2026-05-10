@@ -6,6 +6,7 @@ import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.GameState;
 import com.example.coup_bench.model.Enums.Scenario;
 import com.example.coup_bench.model.Game;
+import com.example.coup_bench.model.HumanReactionRequest;
 import com.example.coup_bench.model.Player;
 import com.example.coup_bench.util.HumanUtil;
 import com.example.coup_bench.util.PlayerUtil;
@@ -28,6 +29,30 @@ public class ChallengeService {
 
     public ChallengeService(AiReactionService aiReactionService){
         this.AiReaction = aiReactionService;
+    }
+
+    public void getHumanReaction(Game game, HumanReactionRequest humanReaction){
+        AiReaction reaction = new AiReaction();
+        reaction.action = humanReaction.getReaction();
+        reaction.targetId = humanReaction.getTargetId();
+        reaction.id = "human";
+
+        switch (humanReaction.getReaction()) {
+            case CHALLENGE:
+                declareChallenge(game, reaction);
+                return;
+            case DO_NOTHING:
+                game.logAction(new ActionRecord(reaction.id, ActionType.DO_NOTHING, null, null, null));
+                game.setState(GameState.WAITING_FOR_CHALLENGE);
+                return;
+            default:
+                declareBlock(game, reaction);
+                switch (challengeScenario){
+                    case S2_1 -> setChallengeScenario(Scenario.S2_2);
+                    case S3_2 -> setChallengeScenario(Scenario.S3_3);
+                    case S4_2 -> setChallengeScenario(Scenario.S4_3);
+                }
+        }
     }
 
     public void declareBlock(Game game, AiReaction block) {
@@ -63,16 +88,16 @@ public class ChallengeService {
         game.setState(GameState.CHALLENGE_DECLARED);
     }
 
-    public void resolveChallenge(Game game, DeckService deckService, ActionRecord challengedRecord){
+    public void resolveChallenge(Game game, DeckService deckService, ActionRecord challengedRecord,HumanService human){
         Player challenger = game.getPlayer(challengerId);
         Player challenged = game.getPlayer(challengedRecord.getPlayerId());
 
         //Challenger is winner
         if(challengedRecord.getActionIsBluff()){
-            challengerWins(game, deckService, challengedRecord, challenger, challenged);
+            challengerWins(game, deckService, challengedRecord, challenger, challenged, human);
         } //Challenged is winner
         else{
-            challengerLost(game, deckService, challengedRecord, challenger, challenged);
+            challengerLost(game, deckService, challengedRecord, challenger, challenged, human);
         }
         if(PlayerUtil.onlyOneLeft(game.getPlayers())){
             game.setState(GameState.ENDGAME);
@@ -80,36 +105,35 @@ public class ChallengeService {
     }
 
     public void challengerWins(Game game, DeckService deckService, ActionRecord challengedRecord,
-                               Player challenger, Player challenged){
+                               Player challenger, Player challenged, HumanService human){
         game.logGameMemory(challenger.getId() + " wins challenge");
         setChallengeOutcome(challenger, challenged);
         StatsUtil.logSuccessfulChallenge(game, challenger, challenged, challengedRecord, challengeOnBlock());
-
-
-        if(!deckService.removePlayerCard(game, challenged)){
-            StatsUtil.logPlayerKilled(challenger, challenged);
-            game.logGameMemory(challenged.getId() + " has lost all their cards");
-        }
 
         if(challengeOnBlock()){
             game.setState(GameState.APPLY_ACTION);
         } else{
             game.setState(GameState.NEXT_TURN);
         }
+
+        if(challenged.isHuman() && challenged.getCards().size() > 1){
+            HumanUtil.printGetCardPrompt(game,challenger);
+            human.setPrevious(game.getState());
+            game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
+            return;
+        }
+
+        if(!deckService.removePlayerCard(game, challenged)){
+            StatsUtil.logPlayerKilled(challenger, challenged);
+            game.logGameMemory(challenged.getId() + " has lost all their cards");
+        }
+
     }
     public void challengerLost(Game game, DeckService deckService, ActionRecord challengedRecord,
-                               Player challenger, Player challenged){
+                               Player challenger, Player challenged, HumanService human){
         game.logGameMemory(challenger.getId() + " looses challenge");
         setChallengeOutcome(challenged, challenger);
         StatsUtil.logUnsuccessfulChallenge(game, challenger, challenged);
-
-
-        if(!deckService.removePlayerCard(game, challenger)){
-            StatsUtil.logPlayerKilled(challenged, challenger);
-            game.logGameMemory(challenger.getId() + " has lost all their cards");
-        }
-
-        deckService.switchPlayerCard(game, challenged, RoleUtil.getCard(challengedRecord.getAction()));
 
         if(challengeOnBlock()){
             StatsUtil.logSuccessfulBlock(game,
@@ -121,6 +145,24 @@ public class ChallengeService {
         } else{
             game.setState(GameState.APPLY_ACTION);
         }
+
+        deckService.switchPlayerCard(game, challenged, RoleUtil.getCard(challengedRecord.getAction()));
+
+        if(challenger.isHuman() && challenger.getCards().size() > 1){
+            HumanUtil.printGetCardPrompt(game,challenger);
+            human.setPrevious(game.getState());
+            game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
+            return;
+        }
+
+        if(!deckService.removePlayerCard(game, challenger)){
+            StatsUtil.logPlayerKilled(challenged, challenger);
+            game.logGameMemory(challenger.getId() + " has lost all their cards");
+        }
+
+
+
+
     }
 
     public void resolveBlock(Game game, ActionRecord actionRecord) {
@@ -128,6 +170,14 @@ public class ChallengeService {
                 !p.getId().equals(actionRecord.getPlayerId()) &&
                 !p.getId().equals(blockRecord.getPlayerId());
         loopChallengers(game, blockRecord, challengeScenario, filter);
+        if(noChallenge()){
+            StatsUtil.logSuccessfulBlock(game,
+                    getBlocker(game),
+                    game.getPlayer(actionRecord.getPlayerId()),
+                    getBlockRecord(),
+                    actionRecord);
+            game.setState(GameState.NEXT_TURN);
+        }
     }
 
     public void applyS_1(Game game, ActionRecord actionRecord) {
@@ -146,7 +196,9 @@ public class ChallengeService {
         if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
             return;
         }
-        if(blockDetected()){
+        if(!blockDetected()){
+            game.setState(GameState.APPLY_ACTION);
+        } else{
             setChallengeScenario(Scenario.S2_2);
         }
     }
@@ -166,12 +218,18 @@ public class ChallengeService {
     }
     public void applyS_3_2(Game game, ActionRecord actionRecord) {
         Player blocker = game.getPlayer(actionRecord.getTargetId());
+        if (blocker.isHuman()) {
+            HumanUtil.printGetReactionPrompt(game, actionRecord, this, blocker, Scenario.S3_2);
+            game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
+            return;
+        }
         AiReaction block = askChallenger(game, actionRecord, blocker, Scenario.S3_2);
         if (block.action != ActionType.DO_NOTHING){
             setChallengeScenario(Scenario.S3_3);
             declareBlock(game, block);
         } else{
             game.logAction(new ActionRecord(blocker.getId(), ActionType.DO_NOTHING, null, null, block.reason));
+            game.setState(GameState.APPLY_ACTION);
         }
     }
 
@@ -189,12 +247,19 @@ public class ChallengeService {
 
     public void applyS_4_2(Game game, ActionRecord actionRecord) {
         Player blocker = game.getPlayer(actionRecord.getTargetId());
+        if (blocker.isHuman()) {
+            HumanUtil.printGetReactionPrompt(game, actionRecord, this, blocker, Scenario.S4_2);
+            game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
+            return;
+        }
+
         AiReaction block = askChallenger(game, actionRecord, blocker, Scenario.S4_2);
         if (block.action != ActionType.DO_NOTHING){
             setChallengeScenario(Scenario.S4_3);
             declareBlock(game, block);
         } else{
             game.logAction(new ActionRecord(blocker.getId(), ActionType.DO_NOTHING, null, null, block.reason));
+            game.setState(GameState.APPLY_ACTION);
         }
     }
 
@@ -234,12 +299,6 @@ public class ChallengeService {
             }
         }
         resetShiftIndex();
-        if(challengeOnBlock()){
-            game.setState(GameState.APPLY_BLOCK);
-        } else {
-            game.setState(GameState.APPLY_ACTION);
-        }
-
     }
     private AiReaction askChallenger(Game game, ActionRecord actionRecord, Player player, Scenario scenario) {
         return AiReaction.getReaction(game, actionRecord, this, player, scenario);

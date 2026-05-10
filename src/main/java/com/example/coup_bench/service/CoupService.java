@@ -23,19 +23,28 @@ public class CoupService {
     private final ChallengeService challengeService;
     private final ActionService actionService;
     private final DeckService deck;
-    private final HumanDecisionService human;
+    private final HumanService human;
 
     public CoupService(GameRepository repo, PlayerRepository playerRepo,
                        ChallengeService challengeService,
                        ActionService actionService,
                        DeckService deckService,
-                       HumanDecisionService humanDecisionService) {
+                       HumanService humanDecisionService) {
         this.gameRepo = repo;
         this.playerRepo = playerRepo;
         this.challengeService = challengeService;
         this.actionService = actionService;
         this.deck = deckService;
         this.human = humanDecisionService;
+    }
+
+
+    public void getHumanChooseCard(Game game, HumanChooseCardRequest req) {
+        deck.removeHumanCard(game, req.getCard());
+        game.setState(human.getPrevious());
+        human.setPrevious(null);
+
+
     }
 
     public Game createGame(long seed) {
@@ -67,6 +76,12 @@ public class CoupService {
         declareAction(game, game.getCurrentPlayer().getId(), action);
 
     }
+    public void getHumanAction(Game game, HumanActionRequest humanAction){
+        AiAction action = new AiAction();
+        action.action = humanAction.getAction();
+        action.targetId = humanAction.getTargetId();
+        declareAction(game, game.getCurrentPlayer().getId(), action);
+    }
 
     public void resolveBlock(Game game) {
         challengeService.resolveBlock(game, actionService.getActionRecord());
@@ -83,8 +98,8 @@ public class CoupService {
             case S4_2     -> challengeService.applyS_4_2(game, actionService.getActionRecord());
             case NO_CHALLENGE -> game.setState(GameState.APPLY_ACTION);
         };
-
     }
+
 
     public void endGame(Game game) {
         game.logGameMemory(game.getWinnerId(game) + " wins!!!");
@@ -112,12 +127,12 @@ public class CoupService {
         } else {
             challengedRecord = actionService.getActionRecord();
         }
-        challengeService.resolveChallenge(game, deck, challengedRecord);
+        challengeService.resolveChallenge(game, deck, challengedRecord, human);
     }
 
 
     public void applyAction(Game game) {
-        actionService.applyAction(game, deck);
+        actionService.applyAction(game, deck, human);
     }
 
     public void nextTurn(Game game){
@@ -134,4 +149,8 @@ public class CoupService {
         StatsUtil.incrementTurnsSurvived(game.getPlayers());
         game.setState(GameState.WAITING_FOR_ACTION);
     };
+
+    public ChallengeService getChallengeService() {
+        return challengeService;
+    }
 }

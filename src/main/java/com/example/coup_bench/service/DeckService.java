@@ -2,6 +2,7 @@ package com.example.coup_bench.service;
 
 import com.example.coup_bench.model.Enums.CardType;
 import com.example.coup_bench.model.Game;
+import com.example.coup_bench.model.HumanChooseCardRequest;
 import com.example.coup_bench.model.Player;
 import com.example.coup_bench.util.PlayerUtil;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,11 @@ public class DeckService {
             addCardToDeck(playerCards.removeFirst());
             addCardToPlayer(player,removeCardFromDeck());
         }
+    }
+
+    public void removeHumanCard(Game game, CardType cardToRemove) {
+        List<CardType> humanCards = game.getPlayer("human").getCards();
+        humanCards.remove(cardToRemove);
     }
     public boolean removePlayerCard(Game game, Player player) {
         CardType cardToRemove;
