@@ -1,4 +1,4 @@
-package com.example.coup_bench.model;
+package com.example.coup_bench.model.humanResponses;
 
 import com.example.coup_bench.model.Enums.CardType;
 

@@ -64,8 +64,6 @@ public class AiActionService {
                 - Never choose COUP with fewer than 7 coins.
                 - You can only choose ASSASSINATE if you have 3 or more coins.
                 - When choosing ASSASSINATE, you can only choose a player with more than 0 coins.
-                - When choosing EXCHANGE, all your remaining cards will be automatically switched out
-                with random cards, you cannot choose which cards to EXCHANGE
                 
                 ### ALLOWED ACTIONS FOR YOU
                 %s

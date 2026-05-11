@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class HumanService {
    private GameState previous;
+    private String currentPrompt;
 
     public GameState getPrevious() {
         return previous;
@@ -17,6 +18,13 @@ public class HumanService {
 
     public void setPrevious(GameState previous) {
         this.previous = previous;
+    }
+    public String getCurrentPrompt() {
+        return currentPrompt;
+    }
+
+    public void setCurrentPrompt(String currentPrompt) {
+        this.currentPrompt = currentPrompt;
     }
 
 }

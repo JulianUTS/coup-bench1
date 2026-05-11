@@ -1,10 +1,11 @@
 package com.example.coup_bench.controller;
 
 import com.example.coup_bench.AiGameRunner;
-import com.example.coup_bench.model.Game;
-import com.example.coup_bench.model.HumanActionRequest;
-import com.example.coup_bench.model.HumanChooseCardRequest;
-import com.example.coup_bench.model.HumanReactionRequest;
+import com.example.coup_bench.model.*;
+import com.example.coup_bench.model.humanResponses.HumanActionRequest;
+import com.example.coup_bench.model.humanResponses.HumanChooseCardRequest;
+import com.example.coup_bench.model.humanResponses.HumanExchangeCardRequest;
+import com.example.coup_bench.model.humanResponses.HumanReactionRequest;
 import com.example.coup_bench.repo.CurrentGameRepository;
 import com.example.coup_bench.service.CoupService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -129,7 +130,7 @@ public class AiGameController {
         );
     }
     @PostMapping("/simulateHuman")
-    public Game simulateHuman(@RequestBody SimulationRequest req) {
+    public String simulateHuman(@RequestBody SimulationRequest req) {
         long seed = (req.getSeed() == 0)
                 ? System.currentTimeMillis()
                 : req.getSeed();
@@ -173,33 +174,41 @@ public class AiGameController {
                 LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         runner.runGame(game);
         currentGame.save(game);
-        return game;
+        return coup.getHuman().getCurrentPrompt();
 
     }
 
     @PostMapping("/human/action")
-    public Game humanAction(@RequestBody HumanActionRequest req) {
+    public String humanAction(@RequestBody HumanActionRequest req) {
         Game game = currentGame.get();
         coup.getHumanAction(game, req);
         runner.runGame(game);
         currentGame.save(game);
-        return game;
+        return coup.getHuman().getCurrentPrompt();
     }
     @PostMapping("/human/reaction")
-    public Game humanReaction(@RequestBody HumanReactionRequest req) {
+    public String humanReaction(@RequestBody HumanReactionRequest req) {
         Game game = currentGame.get();
-        coup.getChallengeService().getHumanReaction(game, req);
+        coup.getHumanReaction(game, req);
         runner.runGame(game);
         currentGame.save(game);
-        return game;
+        return coup.getHuman().getCurrentPrompt();
     }
     @PostMapping("/human/chooseCard")
-    public Game humanChooseCard(@RequestBody HumanChooseCardRequest req) {
+    public String humanChooseCard(@RequestBody HumanChooseCardRequest req) {
         Game game = currentGame.get();
         coup.getHumanChooseCard(game, req);
         runner.runGame(game);
         currentGame.save(game);
-        return game;
+        return coup.getHuman().getCurrentPrompt();
+    }
+    @PostMapping("/human/exchangeCards")
+    public String humanExchangeCards(@RequestBody HumanExchangeCardRequest req) {
+        Game game = currentGame.get();
+        coup.getHumanExchangeCard(game, req);
+        runner.runGame(game);
+        currentGame.save(game);
+        return coup.getHuman().getCurrentPrompt();
     }
 
 

@@ -6,7 +6,7 @@ import com.example.coup_bench.model.Enums.ActionType;
 import com.example.coup_bench.model.Enums.GameState;
 import com.example.coup_bench.model.Enums.Scenario;
 import com.example.coup_bench.model.Game;
-import com.example.coup_bench.model.HumanReactionRequest;
+import com.example.coup_bench.model.humanResponses.HumanReactionRequest;
 import com.example.coup_bench.model.Player;
 import com.example.coup_bench.util.HumanUtil;
 import com.example.coup_bench.util.PlayerUtil;
@@ -31,10 +31,10 @@ public class ChallengeService {
         this.AiReaction = aiReactionService;
     }
 
-    public void getHumanReaction(Game game, HumanReactionRequest humanReaction){
+    public void getHumanReaction(Game game, HumanReactionRequest humanReaction, String targetId){
         AiReaction reaction = new AiReaction();
         reaction.action = humanReaction.getReaction();
-        reaction.targetId = humanReaction.getTargetId();
+        reaction.targetId = targetId;
         reaction.id = "human";
 
         switch (humanReaction.getReaction()) {
@@ -120,7 +120,7 @@ public class ChallengeService {
         }
 
         if(challenged.isHuman() && challenged.getCards().size() > 1){
-            HumanUtil.printGetCardPrompt(game,challenger);
+            human.setCurrentPrompt(HumanUtil.printGetCardPrompt(game,challenged));
             human.setPrevious(game.getState());
             game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
             return;
@@ -152,7 +152,7 @@ public class ChallengeService {
         deckService.switchPlayerCard(game, challenged, RoleUtil.getCard(challengedRecord.getAction()));
 
         if(challenger.isHuman() && challenger.getCards().size() > 1){
-            HumanUtil.printGetCardPrompt(game,challenger);
+            human.setCurrentPrompt(HumanUtil.printGetCardPrompt(game,challenger));
             human.setPrevious(game.getState());
             game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
             return;
@@ -161,18 +161,24 @@ public class ChallengeService {
         if(!deckService.removePlayerCard(game, challenger)){
             StatsUtil.logPlayerKilled(challenged, challenger);
             game.logGameMemory(challenger.getId() + " has lost all their cards");
+            if(challengedRecord.getAction() == ActionType.ASSASSINATE && challenger.getId().equals(challengedRecord.getTargetId())){
+                StatsUtil.logFailedAction(game, challengedRecord);
+                game.setState(GameState.NEXT_TURN);
+            }
         }
+
+
 
 
 
 
     }
 
-    public void resolveBlock(Game game, ActionRecord actionRecord) {
+    public void resolveBlock(Game game, ActionRecord actionRecord, HumanService human) {
         Predicate<Player> filter = p -> p.isAlive() &&
                 !p.getId().equals(actionRecord.getPlayerId()) &&
                 !p.getId().equals(blockRecord.getPlayerId());
-        loopChallengers(game, blockRecord, challengeScenario, filter);
+        loopChallengers(game, blockRecord, challengeScenario, filter, human);
         if(noChallenge()){
             StatsUtil.logSuccessfulBlock(game,
                     getBlocker(game),
@@ -183,9 +189,9 @@ public class ChallengeService {
         }
     }
 
-    public void applyS_1(Game game, ActionRecord actionRecord) {
+    public void applyS_1(Game game, ActionRecord actionRecord, HumanService human) {
         Predicate<Player> filter = p -> p.isAlive() && !p.getId().equals(actionRecord.getPlayerId());
-        loopChallengers(game, actionRecord, Scenario.S1, filter);
+        loopChallengers(game, actionRecord, Scenario.S1, filter, human);
         if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
             return;
         }
@@ -193,9 +199,9 @@ public class ChallengeService {
             game.setState(GameState.APPLY_ACTION);
         }
     }
-    public void applyS_2_1(Game game, ActionRecord actionRecord) {
+    public void applyS_2_1(Game game, ActionRecord actionRecord, HumanService human) {
         Predicate<Player> filter = p -> p.isAlive() && !p.getId().equals(actionRecord.getPlayerId());
-        loopChallengers(game, actionRecord, Scenario.S2_1, filter);
+        loopChallengers(game, actionRecord, Scenario.S2_1, filter, human);
         if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
             return;
         }
@@ -206,11 +212,11 @@ public class ChallengeService {
         }
     }
 
-    public void applyS_3_1(Game game, ActionRecord actionRecord) {
+    public void applyS_3_1(Game game, ActionRecord actionRecord, HumanService human) {
         Predicate<Player> filter  = p -> p.isAlive() &&
                 !p.getId().equals(actionRecord.getPlayerId()) &&
                 !p.getId().equals(actionRecord.getTargetId());
-        loopChallengers(game, actionRecord, Scenario.S3_1, filter);
+        loopChallengers(game, actionRecord, Scenario.S3_1, filter, human);
         if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
             return;
         }
@@ -219,10 +225,10 @@ public class ChallengeService {
         }
 
     }
-    public void applyS_3_2(Game game, ActionRecord actionRecord) {
+    public void applyS_3_2(Game game, ActionRecord actionRecord, HumanService human) {
         Player blocker = game.getPlayer(actionRecord.getTargetId());
         if (blocker.isHuman()) {
-            HumanUtil.printGetReactionPrompt(game, actionRecord, this, blocker, Scenario.S3_2);
+            human.setCurrentPrompt(HumanUtil.printGetReactionPrompt(game, actionRecord, this, blocker, Scenario.S3_2));
             game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
             return;
         }
@@ -238,10 +244,10 @@ public class ChallengeService {
         }
     }
 
-    public void applyS_4_1(Game game, ActionRecord actionRecord) {
+    public void applyS_4_1(Game game, ActionRecord actionRecord, HumanService human) {
         Predicate<Player> filter  = p -> p.isAlive() &&
                 !p.getId().equals(actionRecord.getPlayerId());
-        loopChallengers(game, actionRecord, Scenario.S4_1, filter);
+        loopChallengers(game, actionRecord, Scenario.S4_1, filter, human);
         if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
             return;
         }
@@ -250,10 +256,10 @@ public class ChallengeService {
         }
     }
 
-    public void applyS_4_2(Game game, ActionRecord actionRecord) {
+    public void applyS_4_2(Game game, ActionRecord actionRecord, HumanService human) {
         Player blocker = game.getPlayer(actionRecord.getTargetId());
         if (blocker.isHuman()) {
-            HumanUtil.printGetReactionPrompt(game, actionRecord, this, blocker, Scenario.S4_2);
+            human.setCurrentPrompt(HumanUtil.printGetReactionPrompt(game, actionRecord, this, blocker, Scenario.S4_2));
             game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
             return;
         }
@@ -270,7 +276,8 @@ public class ChallengeService {
         }
     }
 
-    private void loopChallengers(Game game, ActionRecord challengedRecord, Scenario scenario, Predicate<Player> filter){
+    private void loopChallengers(Game game, ActionRecord challengedRecord, Scenario scenario, Predicate<Player> filter,
+                                 HumanService human){
         String challengedPlayerId = challengedRecord.getPlayerId();
 
         int startIndex = game.getPlayerIndex(challengedRecord.getPlayerId());
@@ -283,7 +290,7 @@ public class ChallengeService {
             if (!filter.test(challenger)) continue;
 
             if (challenger.isHuman()) {
-                HumanUtil.printGetReactionPrompt(game, challengedRecord, this, challenger, scenario);
+                human.setCurrentPrompt(HumanUtil.printGetReactionPrompt(game, challengedRecord, this, challenger, scenario));
                 game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
                 return;
             }

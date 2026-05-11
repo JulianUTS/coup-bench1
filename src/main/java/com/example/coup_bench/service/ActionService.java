@@ -82,6 +82,8 @@ public class ActionService {
         String targetId = actionRecord.getTargetId();
         boolean targetAlive = true;
 
+
+
         switch (action) {
             case INCOME -> {
                 player.addCoins(1);
@@ -109,16 +111,24 @@ public class ActionService {
                 player.removeCoins(7);
             }
             case EXCHANGE -> {
-                deckService.exchangePlayerCards(player);
+                if(player.isHuman()){
+                    int original = player.getCards().size();
+                    deckService.addExchangeCards(player);
+                    human.setCurrentPrompt(HumanUtil.printGetCardsToExchange(game,player, original));
+                    game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
+                    return;
+                }
+                deckService.exchangePlayerCards(game, player);
             }
         }
         logAppliedAction(game, player.getId(), targetId, action);
         StatsUtil.logSuccessfulAction(game, player, actionRecord);
 
+
         switch (action) {
             case COUP, ASSASSINATE: {
                 if(game.getPlayer(targetId).isHuman() && game.getPlayer(targetId).getCards().size() > 1){
-                    HumanUtil.printGetCardPrompt(game,player);
+                    human.setCurrentPrompt(HumanUtil.printGetCardPrompt(game,player));
                     human.setPrevious(GameState.NEXT_TURN);
                     game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
                     return;

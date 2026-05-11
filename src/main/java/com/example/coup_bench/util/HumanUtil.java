@@ -1,25 +1,84 @@
 package com.example.coup_bench.util;
 
 import com.example.coup_bench.model.ActionRecord;
+import com.example.coup_bench.model.Enums.CardType;
 import com.example.coup_bench.model.Enums.Scenario;
 import com.example.coup_bench.model.Game;
 import com.example.coup_bench.model.Player;
 import com.example.coup_bench.service.ChallengeService;
 
+import java.util.List;
+
 public class HumanUtil {
-    public static void printGetActionPrompt(Game game, Player player){
+    public static String printGetActionPrompt(Game game, Player player){
         String actionPrompt = buildActionPrompt(game, player);
         System.out.println(actionPrompt);
+        return actionPrompt;
     }
 
-    public static void printGetReactionPrompt(Game game, ActionRecord challengedRecord, ChallengeService challengeService,
+    public static String printGetReactionPrompt(Game game, ActionRecord challengedRecord, ChallengeService challengeService,
                                               Player player, Scenario scenario){
         String reactionPrompt = buildReactionPrompt(game, challengedRecord, challengeService, player, scenario);
         System.out.println(reactionPrompt);
+        return reactionPrompt;
     }
-    public static void printGetCardPrompt(Game game, Player player){
+    public static String printGetCardPrompt(Game game, Player player){
         String prompt = buildChooseCardPrompt(game, player);
         System.out.println(prompt);
+        return prompt;
+    }
+    public static String printGetCardsToExchange(Game game, Player player, int cardsToExchange){
+        String prompt = buildExchangeCardsPrompt(game, player, cardsToExchange);
+        System.out.println(prompt);
+        return prompt;
+    }
+    private static String buildExchangeCardsPrompt(Game game, Player player, int cardsToExchange) {
+        return """
+                ### GAME INFO
+                Your ID: %s
+                Your coins: %d
+                
+                ### MEMORY
+                %s
+                
+                Other players:
+                %s
+                
+                Game state: You have chosen to exchange your cards. Pick %s cards you would like to keep for the
+                selection below.
+                
+                ### CARDS SELECTION
+                %s
+                
+                ### COUP RULES
+                - These cards will not be revealed to the other players.
+                -If you choose invalid cards or an incorrect amount of cards, random valid cards will be chosen instead.
+                
+                ### JSON SCHEMA (FOLLOW EXACTLY)
+                {
+                  "cards": %s
+                }
+                
+        
+               
+                """.formatted(
+                player.getId(),
+                player.getCoins(),
+                String.join("\n", game.getGameMemory()),
+                game.getPlayers().stream()
+                        .filter(p -> !p.getId().equals(player.getId()))
+                        .map(p -> p.getId() + " (" + p.getCoins() + " coins, " + p.getCards().size() + " cards)")
+                        .toList(),
+                cardsToExchange,
+                player.getCards().stream().toList(),
+                correctListFormat(cardsToExchange)
+        );
+    }
+    private static String correctListFormat(int cardsToExchange) {
+        if(cardsToExchange == 2){
+            return("[string, string]");
+        }
+        return("[string]");
     }
 
     private static String buildActionPrompt(Game game, Player player) {
@@ -229,7 +288,7 @@ public class HumanUtil {
                 Other players:
                 %s
                 
-                Game state: You have failed a challenge and must choose a card to loose
+                Game state: You must choose a card to loose
 
                 """.formatted(
                 player.getId(),

@@ -4,6 +4,10 @@ import com.example.coup_bench.model.*;
 import com.example.coup_bench.model.AiResponses.AiAction;
 import com.example.coup_bench.model.Enums.Scenario;
 import com.example.coup_bench.model.Enums.GameState;
+import com.example.coup_bench.model.humanResponses.HumanActionRequest;
+import com.example.coup_bench.model.humanResponses.HumanChooseCardRequest;
+import com.example.coup_bench.model.humanResponses.HumanExchangeCardRequest;
+import com.example.coup_bench.model.humanResponses.HumanReactionRequest;
 import com.example.coup_bench.model.repoModels.*;
 import com.example.coup_bench.repo.GameRepository;
 import com.example.coup_bench.repo.PlayerRepository;
@@ -43,8 +47,13 @@ public class CoupService {
         deck.removeHumanCard(game, req.getCard());
         game.setState(human.getPrevious());
         human.setPrevious(null);
+    }
 
-
+    public void getHumanExchangeCard(Game game, HumanExchangeCardRequest req) {
+        deck.exchangeHumanCards(game.getPlayer("human"), req.getCardsToKeep());
+        StatsUtil.logSuccessfulAction(game, actionService.getActingPlayer(game), actionService.getActionRecord());
+       game.logGameMemory("human exchanges cards (AMBASSADOR EXCHANGE)");
+        game.setState(GameState.NEXT_TURN);
     }
 
     public Game createGame(long seed) {
@@ -67,7 +76,7 @@ public class CoupService {
         Player currentPlayer = game.getCurrentPlayer();
 
         if(currentPlayer.isHuman()){
-            HumanUtil.printGetActionPrompt(game, currentPlayer);
+            human.setCurrentPrompt(HumanUtil.printGetActionPrompt(game, currentPlayer));
             game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
             return;
         }
@@ -83,19 +92,29 @@ public class CoupService {
         declareAction(game, game.getCurrentPlayer().getId(), action);
     }
 
+    public void getHumanReaction(Game game, HumanReactionRequest humanAction){
+        String targetId;
+        if(challengeService.blockDetected()){
+            targetId = challengeService.getBlockerId();
+        }else{
+            targetId = actionService.getActingPlayerId();
+        }
+        challengeService.getHumanReaction(game, humanAction, targetId);
+    }
+
     public void resolveBlock(Game game) {
-        challengeService.resolveBlock(game, actionService.getActionRecord());
+        challengeService.resolveBlock(game, actionService.getActionRecord(), human);
     }
 
     public void getChallenge(Game game) {
         Scenario scenario = challengeService.getChallengeScenario();
         switch (scenario) {
-            case S1       -> challengeService.applyS_1(game, actionService.getActionRecord());
-            case S2_1     -> challengeService.applyS_2_1(game, actionService.getActionRecord());
-            case S3_1     -> challengeService.applyS_3_1(game, actionService.getActionRecord());
-            case S3_2     -> challengeService.applyS_3_2(game, actionService.getActionRecord());
-            case S4_1     -> challengeService.applyS_4_1(game, actionService.getActionRecord());
-            case S4_2     -> challengeService.applyS_4_2(game, actionService.getActionRecord());
+            case S1       -> challengeService.applyS_1(game, actionService.getActionRecord(), human);
+            case S2_1     -> challengeService.applyS_2_1(game, actionService.getActionRecord(), human);
+            case S3_1     -> challengeService.applyS_3_1(game, actionService.getActionRecord(), human);
+            case S3_2     -> challengeService.applyS_3_2(game, actionService.getActionRecord(), human);
+            case S4_1     -> challengeService.applyS_4_1(game, actionService.getActionRecord(), human);
+            case S4_2     -> challengeService.applyS_4_2(game, actionService.getActionRecord(), human);
             case NO_CHALLENGE -> game.setState(GameState.APPLY_ACTION);
         };
     }
@@ -108,6 +127,7 @@ public class CoupService {
         for (Player p : game.getPlayers()) {
             playerRepo.save(RepoUtil.getAgentLifetimeStats(p, playerRepo, gamesummary));
         }
+        human.setCurrentPrompt(String.join("\n", game.getGameMemory()));
         game.setState(GameState.FINISHED);
     }
 
@@ -150,7 +170,7 @@ public class CoupService {
         game.setState(GameState.WAITING_FOR_ACTION);
     };
 
-    public ChallengeService getChallengeService() {
-        return challengeService;
+    public HumanService getHuman() {
+        return human;
     }
 }

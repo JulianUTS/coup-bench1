@@ -60,8 +60,13 @@ public class StatsUtil {
         if (actionRecord.getActionIsBluff()) {
             playerStats.incrementBluffsSuccessful();
         }
-
-
+    }
+    public static void logFailedAction(Game game, ActionRecord actionRecord) {
+        GameStats gameStats = game.getGameStats();
+        gameStats.logInteraction(new InteractionRecord(
+                actionRecord.getPlayerId(),
+                actionRecord.getTargetId(),
+                actionRecord.getAction(), false));
     }
     public static void logDeclaredBlock(Game game, Player blocker, ActionRecord blockRecord){
         PlayerStats blockerStats = blocker.getPlayerStats();
