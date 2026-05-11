@@ -6,13 +6,16 @@ public class InvalidActionRecord {
     private final String playerId;
     private final ActionType action;
     private final String targetId;
+    private final Boolean actionIsBluff;
     private final String description;
     private final String errorMessage;
 
-    public InvalidActionRecord(String playerId, ActionType action, String targetId, String description, String errorMessage) {
+    public InvalidActionRecord(String playerId, ActionType action, String targetId,
+                               Boolean actionIsBluff, String description, String errorMessage) {
         this.playerId = playerId;
         this.action = action;
         this.targetId = targetId;
+        this.actionIsBluff = actionIsBluff;
         this.description = description;
         this.errorMessage = errorMessage;
 
@@ -36,5 +39,9 @@ public class InvalidActionRecord {
 
     public String getErrorMessage() {
         return errorMessage;
+    }
+
+    public Boolean getActionIsBluff() {
+        return actionIsBluff;
     }
 }

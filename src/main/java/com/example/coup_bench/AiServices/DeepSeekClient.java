@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class GeminiClient {
+public class DeepSeekClient {
 
     private final RestClient client;
-    private final String model = "gemini-2.5-flash-lite"; // choose your model
+    private final String model = "deepseek-chat"; // or deepseek-reasoner
 
-    public GeminiClient() {
+    public DeepSeekClient() {
 
         HttpClient jdk = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(20))
@@ -26,7 +26,7 @@ public class GeminiClient {
         factory.setReadTimeout(Duration.ofSeconds(60));
 
         this.client = RestClient.builder()
-                .baseUrl("https://generativelanguage.googleapis.com/v1beta")
+                .baseUrl("https://api.deepseek.com")
                 .requestFactory(factory)
                 .build();
     }
@@ -35,25 +35,27 @@ public class GeminiClient {
     public String chat(String prompt) {
 
         Map<String, Object> request = Map.of(
-                "contents", List.of(
-                        Map.of("parts", List.of(
-                                Map.of("text", prompt)
-                        ))
+                "model", model,
+                "messages", List.of(
+                        Map.of(
+                                "role", "user",
+                                "content", prompt
+                        )
                 )
         );
 
         Map<String, Object> response = client.post()
-                .uri("/models/" + model + ":generateContent?key=" + System.getenv("GEMINI_API_KEY"))
+                .uri("/v1/chat/completions")
+                .header("Authorization", "Bearer " + System.getenv("DEEPSEEK_API_KEY"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .retrieve()
                 .body(Map.class);
 
-        List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
-        Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
-        List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
+        List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+        Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
 
-        return (String) parts.get(0).get("text");
+        return (String) message.get("content");
     }
 }
 

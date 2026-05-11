@@ -1,41 +1,29 @@
 package com.example.coup_bench.model;
 
-import com.example.coup_bench.model.Enums.ActionType;
-import com.example.coup_bench.model.Enums.CardType;
 import com.example.coup_bench.model.Enums.GameState;
-import com.example.coup_bench.model.repoModels.InteractionRecord;
-import com.example.coup_bench.model.repoModels.TurnSnapshot;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class Game {
 
     private final String id;
     private final List<Player> players = new ArrayList<>();
-    private final Deque<CardType> deck = new ArrayDeque<>();
     private final List<ActionRecord> actionLog = new ArrayList<>();
     private final List<String> gameMemory = new ArrayList<>();
     private final List<InvalidActionRecord> invalidActionLog = new ArrayList<>();
-    private final long timestampStart = System.currentTimeMillis();
-    private final List<ActionRecord> bluffLog= new ArrayList<>();
-    private final List<InteractionRecord> interactionLog= new ArrayList<>();
-    private final List<TurnSnapshot> turnSnapshotLog= new ArrayList<>();
+    private long timestampStart;
+    private final GameStats gameStats = new GameStats();
+
     private final long seed;
 
     private int currentPlayerIndex = 0;
     private GameState state = GameState.WAITING_FOR_PLAYERS;
-    private int invalidAction = 0;
-    private int turn = 1;
-    private int TotalBlocks = 0;
-    private int TotalChallenges = 0;
+    private int turn = 0;
 
-    private ActionType declaredAction;
-    private String actingPlayerId;
-    private String targetId;
 
-    private String blockerId;
-    private CardType blockingRole;
-    private String challengerId;
+
 
 
     public Game(String id, long seed) {
@@ -45,19 +33,6 @@ public class Game {
 
     public int getTurn() {
         return turn;
-    }
-    public int getTotalBlocks() {
-        return TotalBlocks;
-    }
-    public int getTotalChallenges() {
-        return TotalChallenges;
-    }
-
-    public void incrementTotalBlocks() {
-        TotalBlocks++;
-    }
-    public void incrementTotalChallenges() {
-        TotalChallenges++;
     }
     public List<ActionRecord> getActionLog() {
         return actionLog;
@@ -69,25 +44,18 @@ public class Game {
     public List<String> getGameMemory() {
         return gameMemory;
     }
+    public int getPlayerIndex(String id) {
+            return  players.indexOf(getPlayer(id));
+    }
    ;
 
     public Map<String, Integer> seatOrder;
 
-    public List<ActionRecord> getBluffLog() {
-        return bluffLog;
-    }
-    public void logBluff(ActionRecord record){
-        bluffLog.add(record);
-    }
+
     public int getInvalidAction() {
-        return invalidAction;
+        return invalidActionLog.size();
     }
-    public void incrementInvalidAction() {
-        invalidAction++;
-    }
-    public void resetInvalidAction() {
-        invalidAction = 0;
-    }
+
     public void logGameMemory(String memory) {
         System.out.println(memory);
         gameMemory.add(memory);
@@ -104,18 +72,7 @@ public class Game {
     public GameState getState() { return state; }
     public void setState(GameState state) { this.state = state; }
 
-    public ActionType getDeclaredAction() { return declaredAction; }
-    public String getActingPlayerId() { return actingPlayerId; }
-    public String getTargetId() { return targetId; }
 
-    public String getBlockerId() { return blockerId; }
-    public void setBlockerId(String id) { this.blockerId = id; }
-
-    public CardType getBlockingRole() { return blockingRole; }
-    public void setBlockingRole(CardType role) { this.blockingRole = role; }
-
-    public String getChallengerId() { return challengerId; }
-    public void setChallengerId(String id) { this.challengerId = id; }
 
     public String getWinnerId(Game game) {
         return game.getPlayers()
@@ -135,61 +92,31 @@ public class Game {
     public void startGame() {
         Random rng = new Random(seed);
         Collections.shuffle(players, rng);
+        this.timestampStart = System.currentTimeMillis();
+        System.out.println("Gamestarted at: " +
+                LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        incrementTurn();
 
         this.seatOrder = new HashMap<>();
         for (int i = 0; i < players.size(); i++) {
             seatOrder.put(players.get(i).getId(), i);
         }
-
-        initializeDeck();
-        dealCards();
-        logGameMemory("Turn " + turn);
-        state = GameState.IN_PROGRESS;
     }
 
-
-    private void initializeDeck() {
-        List<CardType> cards = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            cards.add(CardType.DUKE);
-            cards.add(CardType.ASSASSIN);
-            cards.add(CardType.CAPTAIN);
-            cards.add(CardType.AMBASSADOR);
-            cards.add(CardType.CONTESSA);
-        }
-        Collections.shuffle(cards);
-        deck.addAll(cards);
-    }
-
-    private void dealCards() {
-        for (Player p : players) {
-            p.addCard(deck.pop());
-            p.addCard(deck.pop());
-        }
-    }
 
     public Player getCurrentPlayer() {
         return players.get(currentPlayerIndex);
     }
-
-    public void nextTurn() {
-        for (Player player:  players){
-            if(player.isAlive()){
-                player.incrementTurnsSurvived();
-            }
-        }
-        if (players.stream().filter(Player::isAlive).count() <= 1) {
-            state = GameState.FINISHED;
-            return;
-        }
-        do {
-            currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-        } while (!players.get(currentPlayerIndex).isAlive());
+    public void incrementTurn() {
         this.turn++;
         logGameMemory("Turn " + turn + ":");
     }
 
-    public CardType drawCard() { return deck.pop(); }
+    public void nextCurrentPlayer(){
+        do {
+            currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+        } while (!players.get(currentPlayerIndex).isAlive());
+    }
 
     public Player getPlayer(String id) {
         return players.stream()
@@ -198,74 +125,12 @@ public class Game {
                 .orElseThrow();
     }
 
-    public void switchCard(String playerID, CardType cardToRemove) {
-        logGameMemory(playerID + " switches a card" );
-        this.deck.add(getPlayer(playerID).switchCard(deck.pop(),cardToRemove));
-
-    }
-
-    public void exchangeCards(String playerID) {
-        for(int i = 0; i < getPlayer(playerID).getCards().size(); i++){
-            deck.add(getPlayer(playerID).getCards().removeFirst());
-            getPlayer(playerID).addCard(deck.pop());
-
-        }
-
-    }
-
-    public void removeCard(String playerID, CardType cardToRemove) {
-        logGameMemory(playerID + " looses a card" );
-        this.deck.add(getPlayer(playerID).removeCard(cardToRemove));
-        if(!getPlayer(playerID).isAlive()) {
-            logGameMemory(playerID + " is dead");
-        }
-
-    }
-
-    public void clearChallengeData(){
-        this.challengerId = null;
-        this.blockerId = null;
-        this.blockingRole = null;
-    }
-
-    public void declareAction(ActionRecord actionRecord) {
-        this.actingPlayerId = actionRecord.getPlayerId();
-        this.declaredAction = actionRecord.getAction();
-
-        switch(actionRecord.getAction()) {
-            case STEAL -> this.getPlayer(actingPlayerId).incrementStealAttempts();
-            case ASSASSINATE -> this.getPlayer(actingPlayerId).incrementAssassinationAttempts();
-        }
-
-
-        this.targetId = actionRecord.getTargetId();
-        this.state = GameState.ACTION_DECLARED;
-        this.actionLog.add(actionRecord);
-        if(actionRecord.getTargetId() == null){
-           logGameMemory(actionRecord.getPlayerId() + " calls " + actionRecord.getAction());
-        } else{
-            logGameMemory(actionRecord.getPlayerId() + " calls " + actionRecord.getAction() + " on " + actionRecord.getTargetId());
-        }
-
-    }
-
-
-    public List<TurnSnapshot> getTurnSnapshotLog() {
-        return turnSnapshotLog;
-    }
-
-    public List<InteractionRecord> getInteractionLog() {
-        return interactionLog;
-    }
-    public void logTurnSnapshot(TurnSnapshot turnSnapshot) {
-        this.turnSnapshotLog.add(turnSnapshot);
-    }
-    public void logInteraction(InteractionRecord interactionRecord) {
-        this.interactionLog.add(interactionRecord);
-    }
 
     public long getSeed() { return seed; }
 
     public Map<String, Integer> getSeatOrder() { return seatOrder; }
 
+    public GameStats getGameStats() {
+        return gameStats;
+    }
 }
