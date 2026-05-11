@@ -1,5 +1,8 @@
 package com.example.coup_bench.model.repoModels;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class PersonalityStats {
 
     private int totalGames;
@@ -32,8 +35,23 @@ public class PersonalityStats {
     private int assassinationSuccesses;
     private int coupsCount;
 
+    private int totalCoinGained;
+    private int totalCoinsSpent;
+    private int netCoinFlow;
+    private int averageCoinPerTurn;
+    private Map<String, Integer> causeOfDeath = new HashMap<>();
+    private Map<Integer, Integer> winsFromSeatIndex = new HashMap<>();
+    private Map<Integer, Integer> lossesFromSeatIndex = new HashMap<>();
+
+    private Map<String, Integer> actionTargets = new HashMap<>();
+    private Map<String, Integer> blockTargets = new HashMap<>();
+    private Map<String, Integer> challengeTargets = new HashMap<>();
+    private Map<String, Integer> playersKilled = new HashMap<>();
+
     private int aggressionScore;          // steal + assassinate + coup
-    private int riskScore;                // bluffs + challenges
+    private int riskScore;
+
+    // bluffs + challenges
 
     private double bluffSuccessRate;
     private double challengeSuccessRate;
@@ -148,6 +166,13 @@ public class PersonalityStats {
 
     public void setBlocksFailed(int blocksFailed) {
         this.blocksFailed = blocksFailed;
+    }
+
+    public int getTimesBlocked() {
+        return timesBlocked;
+    }
+    public void setTimesBlocked(int timesBlocked) {
+        this.timesBlocked = timesBlocked;
     }
 
     public int getIncomeCount() {
@@ -267,6 +292,94 @@ public class PersonalityStats {
     public void setAverageTurnsSurvived(double averageTurnsSurvived) { this.averageTurnsSurvived = averageTurnsSurvived; }
 
     public void setActionEntropy(double actionEntropy) { this.actionEntropy = actionEntropy; }
+
+    public int getTotalCoinGained() {
+        return totalCoinGained;
+    }
+
+    public void setTotalCoinGained(int totalCoinGained) {
+        this.totalCoinGained = totalCoinGained;
+    }
+
+    public int getTotalCoinsSpent() {
+        return totalCoinsSpent;
+    }
+
+    public void setTotalCoinsSpent(int totalCoinsSpent) {
+        this.totalCoinsSpent = totalCoinsSpent;
+    }
+
+    public int getNetCoinFlow() {
+        return netCoinFlow;
+    }
+
+    public void setNetCoinFlow(int netCoinFlow) {
+        this.netCoinFlow = netCoinFlow;
+    }
+
+    public int getAverageCoinPerTurn() {
+        return averageCoinPerTurn;
+    }
+
+    public void setAverageCoinPerTurn(int averageCoinPerTurn) {
+        this.averageCoinPerTurn = averageCoinPerTurn;
+    }
+
+    public Map<String, Integer> getCauseOfDeath() {
+        return causeOfDeath;
+    }
+
+    public void setCauseOfDeath(Map<String, Integer> causeOfDeath) {
+        this.causeOfDeath = causeOfDeath;
+    }
+
+    public Map<Integer, Integer> getWinsFromSeatIndex() {
+        return winsFromSeatIndex;
+    }
+
+    public void setWinsFromSeatIndex(Map<Integer, Integer> winsFromSeatIndex) {
+        this.winsFromSeatIndex = winsFromSeatIndex;
+    }
+
+    public Map<Integer, Integer> getLossesFromSeatIndex() {
+        return lossesFromSeatIndex;
+    }
+
+    public void setLossesFromSeatIndex(Map<Integer, Integer> lossesFromSeatIndex) {
+        this.lossesFromSeatIndex = lossesFromSeatIndex;
+    }
+
+    public Map<String, Integer> getActionTargets() {
+        return actionTargets;
+    }
+
+    public void setActionTargets(Map<String, Integer> actionTargets) {
+        this.actionTargets = actionTargets;
+    }
+
+    public Map<String, Integer> getBlockTargets() {
+        return blockTargets;
+    }
+
+    public void setBlockTargets(Map<String, Integer> blockTargets) {
+        this.blockTargets = blockTargets;
+    }
+
+    public Map<String, Integer> getChallengeTargets() {
+        return challengeTargets;
+    }
+
+    public void setChallengeTargets(Map<String, Integer> challengeTargets) {
+        this.challengeTargets = challengeTargets;
+    }
+
+    public Map<String, Integer> getPlayersKilled() {
+        return playersKilled;
+    }
+
+    public void setPlayersKilled(Map<String, Integer> playersKilled) {
+        this.playersKilled = playersKilled;
+    }
 }
 
 

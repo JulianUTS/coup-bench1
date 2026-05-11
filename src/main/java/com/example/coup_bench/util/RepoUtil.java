@@ -62,77 +62,134 @@ public class RepoUtil {
         PlayerStats playerStats = player.getPlayerStats();
         String personality = player.getPersonality();
 
-        // Load or create provider-level stats
-        AgentLifetimeStats stats =
+        // Load or create provider-level lifetimeStats
+        AgentLifetimeStats lifetimeStats =
                 playerRepo.findById(provider).orElse(new AgentLifetimeStats(provider));
 
         // -------------------------
         // 1. Provider-level updates
         // -------------------------
+        // Core outcomes
+        lifetimeStats.setTotalGames(lifetimeStats.getTotalGames() + 1);
 
-        stats.setTotalGames(stats.getTotalGames() + 1);
+        if (player.isAlive()) lifetimeStats.setWins(lifetimeStats.getWins() + 1);
+        else lifetimeStats.setLosses(lifetimeStats.getLosses() + 1);
 
-        if (player.isAlive()) stats.setWins(stats.getWins() + 1);
-        else stats.setLosses(stats.getLosses() + 1);
 
-        // Aggression
-        stats.setTotalStealAttempts(stats.getTotalStealAttempts() + playerStats.getStealAttempts());
-        stats.setTotalAssassinationAttempts(stats.getTotalAssassinationAttempts() + playerStats.getAssassinationAttempts());
-        stats.setTotalCoupCount(stats.getTotalCoupCount() + playerStats.getCoupsCount());
-        stats.setTotalTaxAttempts(stats.getTotalTaxAttempts() + playerStats.getTaxAttempts());
-        stats.setTotalForeignAidAttempts(stats.getTotalForeignAidAttempts() + playerStats.getForeignAidAttempts());
-        stats.setTotalExchangeAttempts(stats.getTotalExchangeAttempts() + playerStats.getExchangeAttempts());
-        stats.setTotalIncomeCount(stats.getTotalIncomeCount() + playerStats.getIncomeCount());
 
-        // Risk
-        stats.setTotalBluffsAttempted(stats.getTotalBluffsAttempted() + playerStats.getBluffsAttempted());
-        stats.setTotalChallengesIssued(stats.getTotalChallengesIssued() + playerStats.getChallengesIssued());
+// Aggression – attempts
+        lifetimeStats.setTotalIncomeCount(lifetimeStats.getTotalIncomeCount() + playerStats.getIncomeCount());
+        lifetimeStats.setTotalTaxAttempts(lifetimeStats.getTotalTaxAttempts() + playerStats.getTaxAttempts());
+        lifetimeStats.setTotalForeignAidAttempts(lifetimeStats.getTotalForeignAidAttempts() + playerStats.getForeignAidAttempts());
+        lifetimeStats.setTotalExchangeAttempts(lifetimeStats.getTotalExchangeAttempts() + playerStats.getExchangeAttempts());
+        lifetimeStats.setTotalStealAttempts(lifetimeStats.getTotalStealAttempts() + playerStats.getStealAttempts());
+        lifetimeStats.setTotalAssassinationAttempts(lifetimeStats.getTotalAssassinationAttempts() + playerStats.getAssassinationAttempts());
+        lifetimeStats.setTotalCoupCount(lifetimeStats.getTotalCoupCount() + playerStats.getCoupsCount());
 
-        // Defense
-        stats.setTotalBlocksIssued(stats.getTotalBlocksIssued() + playerStats.getBlocksIssued());
+// Aggression – successes
+        lifetimeStats.setTotalTaxSuccessful(lifetimeStats.getTotalTaxSuccessful() + playerStats.getTaxSuccessful());
+        lifetimeStats.setTotalForeignAidSuccessful(lifetimeStats.getTotalForeignAidSuccessful() + playerStats.getForeignAidSuccessful());
+        lifetimeStats.setTotalExchangeSuccessful(lifetimeStats.getTotalExchangeSuccessful() + playerStats.getExchangeSuccessful());
+        lifetimeStats.setTotalStealSuccesses(lifetimeStats.getTotalStealSuccesses() + playerStats.getStealSuccesses());
+        lifetimeStats.setTotalAssassinationSuccesses(lifetimeStats.getTotalAssassinationSuccesses() + playerStats.getAssassinationSuccesses());
+
+// --- AGGRESSION FAILURES (attempts - successes) ---
+        lifetimeStats.setTotalTaxFailed(
+                lifetimeStats.getTotalTaxFailed()
+                        + (playerStats.getTaxAttempts() - playerStats.getTaxSuccessful())
+        );
+
+        lifetimeStats.setTotalForeignAidBlocked(
+                lifetimeStats.getTotalForeignAidBlocked()
+                        + (playerStats.getForeignAidAttempts() - playerStats.getForeignAidSuccessful())
+        );
+
+        lifetimeStats.setTotalExchangeFailed(
+                lifetimeStats.getTotalExchangeFailed()
+                        + (playerStats.getExchangeAttempts() - playerStats.getExchangeSuccessful())
+        );
+
+        lifetimeStats.setTotalStealFailed(
+                lifetimeStats.getTotalStealFailed()
+                        + (playerStats.getStealAttempts() - playerStats.getStealSuccesses())
+        );
+
+        lifetimeStats.setTotalAssassinationFailed(
+                lifetimeStats.getTotalAssassinationFailed()
+                        + (playerStats.getAssassinationAttempts() - playerStats.getAssassinationSuccesses())
+        );
+
+
+// Risk
+        lifetimeStats.setTotalBluffsAttempted(lifetimeStats.getTotalBluffsAttempted() + playerStats.getBluffsAttempted());
+        lifetimeStats.setTotalChallengesIssued(lifetimeStats.getTotalChallengesIssued() + playerStats.getChallengesIssued());
+        lifetimeStats.setTotalChallengesWon(lifetimeStats.getTotalChallengesWon() + playerStats.getChallengesWon());
+        lifetimeStats.setTotalChallengesLost(lifetimeStats.getTotalChallengesLost() + playerStats.getChallengesLost());
+
+// Defense
+        lifetimeStats.setTotalBlocksIssued(lifetimeStats.getTotalBlocksIssued() + playerStats.getBlocksIssued());
+        lifetimeStats.setTotalBlocksSuccessful(lifetimeStats.getTotalBlocksSuccessful() + playerStats.getBlocksSuccessful());
+        lifetimeStats.setTotalBlocksFailed(lifetimeStats.getTotalBlocksFailed() + playerStats.getBlocksFailed());
+        lifetimeStats.setTotalTimesBlocked(lifetimeStats.getTotalTimesBlocked() + playerStats.getTimesBlocked());
 
         // Survival
-        stats.setTotalTurnsSurvived(stats.getTotalTurnsSurvived() + playerStats.getTurnsSurvived());
-        stats.setTotalTurnsPlayed(stats.getTotalTurnsPlayed() + gameSummary.getTotalTurns());
+        lifetimeStats.setTotalTurnsSurvived(lifetimeStats.getTotalTurnsSurvived() + playerStats.getTurnsSurvived());
+        lifetimeStats.setTotalTurnsPlayed(lifetimeStats.getTotalTurnsPlayed() + gameSummary.getTotalTurns());
+        lifetimeStats.setAverageSurvivalRate(
+                safeRate(lifetimeStats.getTotalTurnsSurvived(), lifetimeStats.getTotalTurnsPlayed())
+        );
+
+        lifetimeStats.setTotalCoinGained(lifetimeStats.getTotalCoinGained()+playerStats.getTotalCoinGained());
+        lifetimeStats.setTotalCoinsSpent(lifetimeStats.getTotalCoinsSpent()+playerStats.getTotalCoinsSpent());
 
         // Game duration
-        stats.setTotalGameDurationSec(stats.getTotalGameDurationSec() + gameSummary.getTotalGameDurationSec());
+        lifetimeStats.setTotalGameDurationSec(lifetimeStats.getTotalGameDurationSec() + gameSummary.getTotalGameDurationSec());
+        lifetimeStats.setAverageGameDurationSec(
+                (double) lifetimeStats.getTotalGameDurationSec() / lifetimeStats.getTotalGames()
+        );
 
         // Interaction heatmaps
         if (!playerStats.getActionTargets().isEmpty()) {
             playerStats.getActionTargets().forEach((key, value) ->
-                    stats.getActionTargets().merge(key, value, Integer::sum)
+                    lifetimeStats.getActionTargets().merge(key, value, Integer::sum)
             );
         }
 
         if (!playerStats.getBlockTargets().isEmpty()) {
             playerStats.getBlockTargets().forEach((key, value) ->
-                    stats.getBlockTargets().merge(key, value, Integer::sum)
+                    lifetimeStats.getBlockTargets().merge(key, value, Integer::sum)
             );
         }
         if (!playerStats.getChallengeTargets().isEmpty()) {
             playerStats.getChallengeTargets().forEach((key, value) ->
-                    stats.getChallengeTargets().merge(key, value, Integer::sum)
+                    lifetimeStats.getChallengeTargets().merge(key, value, Integer::sum)
             );
         }
         if(playerStats.getKilledBy() != null) {
-            stats.getKilledBy().merge(playerStats.getKilledBy(), 1, Integer::sum);
+            lifetimeStats.getKilledBy().merge(playerStats.getKilledBy(), 1, Integer::sum);
+        }
+        if(playerStats.getCauseOfDeath() != null) {
+            lifetimeStats.getCauseOfDeath().merge(playerStats.getCauseOfDeath().toString(), 1, Integer::sum);
+        }
+        if(!playerStats.getPlayersKilled().isEmpty()) {
+            for (String killedPlayerId : playerStats.getPlayersKilled()) {
+                lifetimeStats.getPlayersKilled().merge(killedPlayerId, 1, Integer::sum);
+            }
         }
 
-        // Recompute provider averages
-        stats.setAverageSurvivalRate(
-                safeRate(stats.getTotalTurnsSurvived(), stats.getTotalTurnsPlayed())
-        );
+        int seatIndex = gameSummary.getSeatOrder().get(provider);
+        if (player.isAlive()) lifetimeStats.setWins(
+                lifetimeStats.getWinsFromSeatIndex().merge(seatIndex, 1, Integer::sum));
+        else lifetimeStats.setLosses(
+                lifetimeStats.getLossesFromSeatIndex().merge(seatIndex, 1, Integer::sum));
 
-        stats.setAverageGameDurationSec(
-                (double) stats.getTotalGameDurationSec() / stats.getTotalGames()
-        );
+        // Recompute provider averages
 
         // -------------------------
         // 2. Personality-level updates
         // -------------------------
 
-        PersonalityStats ps = stats.getPersonalities()
+        PersonalityStats ps = lifetimeStats.getPersonalities()
                 .computeIfAbsent(personality, k -> new PersonalityStats());
 
         ps.setTotalGames(ps.getTotalGames() + 1);
@@ -140,7 +197,7 @@ public class RepoUtil {
         if (player.isAlive()) ps.setWins(ps.getWins() + 1);
         else ps.setLosses(ps.getLosses() + 1);
 
-        // Raw stats
+        // Raw lifetimeStats
         ps.setBluffsAttempted(ps.getBluffsAttempted() + playerStats.getBluffsAttempted());
         ps.setBluffsSuccessful(ps.getBluffsSuccessful() + playerStats.getBluffsSuccessful());
         ps.setBluffsFailed(ps.getBluffsFailed() + playerStats.getBluffsFailed());
@@ -152,6 +209,7 @@ public class RepoUtil {
         ps.setBlocksIssued(ps.getBlocksIssued() + playerStats.getBlocksIssued());
         ps.setBlocksSuccessful(ps.getBlocksSuccessful() + playerStats.getBlocksSuccessful());
         ps.setBlocksFailed(ps.getBlocksFailed() + playerStats.getBlocksFailed());
+        ps.setTimesBlocked(ps.getTimesBlocked() + playerStats.getTimesBlocked());
 
         ps.setIncomeCount(ps.getIncomeCount() + playerStats.getIncomeCount());
         ps.setTaxAttempts(ps.getTaxAttempts() + playerStats.getTaxAttempts());
@@ -169,6 +227,41 @@ public class RepoUtil {
         ps.setAssassinationSuccesses(ps.getAssassinationSuccesses() + playerStats.getAssassinationSuccesses());
 
         ps.setCoupsPerformed(ps.getCoupsPerformed() + playerStats.getCoupsCount());
+
+        ps.setTotalCoinGained(ps.getTotalCoinGained() + playerStats.getTotalCoinGained());
+        ps.setTotalCoinsSpent(ps.getTotalCoinsSpent() + playerStats.getTotalCoinsSpent());
+        ps.setNetCoinFlow(ps.getTotalCoinGained()-ps.getTotalCoinsSpent());
+
+        if(playerStats.getCauseOfDeath() != null) {
+            ps.getCauseOfDeath().merge(playerStats.getCauseOfDeath().toString(), 1, Integer::sum);
+        }
+
+        if (player.isAlive()) lifetimeStats.setWins(
+                ps.getWinsFromSeatIndex().merge(seatIndex, 1, Integer::sum));
+        else lifetimeStats.setLosses(
+                ps.getLossesFromSeatIndex().merge(seatIndex, 1, Integer::sum));
+
+        if (!playerStats.getActionTargets().isEmpty()) {
+            playerStats.getActionTargets().forEach((key, value) ->
+                    ps.getActionTargets().merge(key, value, Integer::sum)
+            );
+        }
+
+        if (!playerStats.getBlockTargets().isEmpty()) {
+            playerStats.getBlockTargets().forEach((key, value) ->
+                    ps.getBlockTargets().merge(key, value, Integer::sum)
+            );
+        }
+        if (!playerStats.getChallengeTargets().isEmpty()) {
+            playerStats.getChallengeTargets().forEach((key, value) ->
+                    ps.getChallengeTargets().merge(key, value, Integer::sum)
+            );
+        }
+        if(!playerStats.getPlayersKilled().isEmpty()) {
+            for (String killedPlayerId : playerStats.getPlayersKilled()) {
+                ps.getPlayersKilled().merge(killedPlayerId, 1, Integer::sum);
+            }
+        }
 
         // Survival
         ps.setTotalTurnsSurvived(ps.getTotalTurnsSurvived() + playerStats.getTurnsSurvived());
@@ -197,7 +290,7 @@ public class RepoUtil {
         // Optional: compute entropy (unpredictability)
         ps.setActionEntropy(calculateEntropy(ps));
 
-        return stats;
+        return lifetimeStats;
     }
     public static double safeRate(int success, int attempts) {
         return attempts == 0 ? 0.0 : (double) success / attempts;

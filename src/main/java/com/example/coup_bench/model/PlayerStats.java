@@ -1,5 +1,7 @@
 package com.example.coup_bench.model;
 
+import com.example.coup_bench.model.Enums.ActionType;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,10 +35,14 @@ public class PlayerStats {
     private int coupsCount = 0;
     private int turnsSurvived = 0;
     private String killedBy;
+    private ActionType causeOfDeath;
     private final List<String> playersKilled = new ArrayList<>();
     private final Map<String, Integer> actionTargets = new HashMap<>();
     private final Map<String, Integer> blockTargets = new HashMap<>();
     private final Map<String, Integer> challengeTargets = new HashMap<>();
+
+    private int totalCoinGained = 0;
+    private int totalCoinsSpent = 0;
 
     // --- Action / Block / Challenge Targets ---
     public void addActionTarget(String targetId) {
@@ -149,4 +155,27 @@ public class PlayerStats {
     public void setKilledBy(String killedBy) { this.killedBy = killedBy; }
     public String getKilledBy() { return killedBy; }
 
+    public ActionType getCauseOfDeath() {
+        return causeOfDeath;
+    }
+
+    public void setCauseOfDeath(ActionType causeOfDeath) {
+        this.causeOfDeath = causeOfDeath;
+    }
+
+    public int getTotalCoinGained() {
+        return totalCoinGained;
+    }
+
+    public void setTotalCoinGained(int totalCoinGained) {
+        this.totalCoinGained += totalCoinGained;
+    }
+
+    public int getTotalCoinsSpent() {
+        return totalCoinsSpent;
+    }
+
+    public void setTotalCoinsSpent(int totalCoinsSpent) {
+        this.totalCoinsSpent += totalCoinsSpent;
+    }
 }

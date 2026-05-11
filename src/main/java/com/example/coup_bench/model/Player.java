@@ -26,8 +26,13 @@ public class Player {
     public String getPersonality() { return personality; }
     public int getCoins() { return coins; }
     public List<CardType> getCards() { return cards; }
-    public void addCoins(int amount) { coins += amount; }
-    public void removeCoins(int amount) { coins = Math.max(0, coins - amount); }
+    public void addCoins(int amount) {
+        coins += amount;
+        playerStats.setTotalCoinGained(amount);
+    }
+    public void removeCoins(int amount) {
+        coins = Math.max(0, coins - amount);
+    playerStats.setTotalCoinsSpent(amount);}
     public boolean isAlive() {
         return !cards.isEmpty();
     }

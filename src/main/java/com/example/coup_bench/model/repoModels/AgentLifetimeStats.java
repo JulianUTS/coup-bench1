@@ -12,41 +12,102 @@ public class AgentLifetimeStats {
     @Id
     private String provider;
 
+    // ============================================================
+    //  CORE OUTCOMES
+    // ============================================================
     private int totalGames;
     private int wins;
     private int losses;
 
-    // Aggression
+    // ============================================================
+    //  ACTIONS (ATTEMPT / SUCCESS / FAIL GROUPED)
+    // ============================================================
+
+    // INCOME
     private int totalIncomeCount;
+
+    // TAX
     private int totalTaxAttempts;
+    private int totalTaxSuccessful;
+    private int totalTaxFailed;
+
+    // FOREIGN AID
     private int totalForeignAidAttempts;
+    private int totalForeignAidSuccessful;
+    private int totalForeignAidBlocked;
+
+    // EXCHANGE
     private int totalExchangeAttempts;
+    private int totalExchangeSuccessful;
+    private int totalExchangeFailed;
+
+    // STEAL
     private int totalStealAttempts;
+    private int totalStealSuccesses;
+    private int totalStealFailed;
+
+    // ASSASSINATE
     private int totalAssassinationAttempts;
+    private int totalAssassinationSuccesses;
+    private int totalAssassinationFailed;
+
+    // COUP
     private int totalCoupCount;
 
-    // Risk
+    // ============================================================
+    //  RISK BEHAVIOUR
+    // ============================================================
     private int totalBluffsAttempted;
     private int totalChallengesIssued;
+    private int totalChallengesWon;
+    private int totalChallengesLost;
 
-    // Defense
+    // ============================================================
+    //  DEFENSIVE BEHAVIOUR
+    // ============================================================
     private int totalBlocksIssued;
+    private int totalBlocksSuccessful;
+    private int totalBlocksFailed;
+    private int totalTimesBlocked;
 
-    // Survival
+    // ============================================================
+    //  SURVIVAL
+    // ============================================================
     private int totalTurnsSurvived;
     private int totalTurnsPlayed;
     private double averageSurvivalRate;
 
-    // Game flow
+    // ============================================================
+    //  ECONOMY
+    // ============================================================
+    private int totalCoinGained;
+    private int totalCoinsSpent;
+
+    // ============================================================
+    //  GAME FLOW (OPTIONAL)
+    // ============================================================
     private long totalGameDurationSec;
     private double averageGameDurationSec;
 
-    // Interaction heatmaps
+    // ============================================================
+    //  INTERACTION HEATMAPS
+    // ============================================================
     private Map<String, Integer> actionTargets = new HashMap<>();
     private Map<String, Integer> blockTargets = new HashMap<>();
     private Map<String, Integer> challengeTargets = new HashMap<>();
+    private Map<String, Integer> playersKilled = new HashMap<>();
     private Map<String, Integer> killedBy = new HashMap<>();
+    private Map<String, Integer> causeOfDeath = new HashMap<>();
 
+    // ============================================================
+    //  POSITIONAL PERFORMANCE
+    // ============================================================
+    private Map<Integer, Integer> winsFromSeatIndex = new HashMap<>();
+    private Map<Integer, Integer> lossesFromSeatIndex = new HashMap<>();
+
+    // ============================================================
+    //  PERSONALITY BREAKDOWN
+    // ============================================================
     private Map<String, PersonalityStats> personalities = new HashMap<>();
 
     public AgentLifetimeStats(String provider) {
@@ -253,6 +314,14 @@ public class AgentLifetimeStats {
         this.killedBy = killedBy;
     }
 
+    public Map<String, Integer> getCauseOfDeath() {
+        return causeOfDeath;
+    }
+
+    public void setCauseOfDeath(Map<String, Integer> causeOfDeath) {
+        this.causeOfDeath = causeOfDeath;
+    }
+
 // -------------------- Personalities --------------------
 
     public Map<String, PersonalityStats> getPersonalities() {
@@ -261,5 +330,165 @@ public class AgentLifetimeStats {
 
     public void setPersonalities(Map<String, PersonalityStats> personalities) {
         this.personalities = personalities;
+    }
+
+    public Map<Integer, Integer> getWinsFromSeatIndex() {
+        return winsFromSeatIndex;
+    }
+
+    public void setWinsFromSeatIndex(Map<Integer, Integer> winsFromSeatIndex) {
+        this.winsFromSeatIndex = winsFromSeatIndex;
+    }
+
+    public Map<Integer, Integer> getLossesFromSeatIndex() {
+        return lossesFromSeatIndex;
+    }
+
+    public void setLossesFromSeatIndex(Map<Integer, Integer> lossesFromSeatIndex) {
+        this.lossesFromSeatIndex = lossesFromSeatIndex;
+    }
+
+    public int getTotalBlocksSuccessful() {
+        return totalBlocksSuccessful;
+    }
+
+    public void setTotalBlocksSuccessful(int totalBlocksSuccessful) {
+        this.totalBlocksSuccessful = totalBlocksSuccessful;
+    }
+
+    public int getTotalBlocksFailed() {
+        return totalBlocksFailed;
+    }
+
+    public void setTotalBlocksFailed(int totalBlocksFailed) {
+        this.totalBlocksFailed = totalBlocksFailed;
+    }
+
+    public int getTotalTimesBlocked() {
+        return totalTimesBlocked;
+    }
+
+    public void setTotalTimesBlocked(int totalTimesBlocked) {
+        this.totalTimesBlocked = totalTimesBlocked;
+    }
+
+    public int getTotalChallengesWon() {
+        return totalChallengesWon;
+    }
+
+    public void setTotalChallengesWon(int totalChallengesWon) {
+        this.totalChallengesWon = totalChallengesWon;
+    }
+
+    public int getTotalChallengesLost() {
+        return totalChallengesLost;
+    }
+
+    public void setTotalChallengesLost(int totalChallengesLost) {
+        this.totalChallengesLost = totalChallengesLost;
+    }
+
+    public int getTotalTaxSuccessful() {
+        return totalTaxSuccessful;
+    }
+
+    public void setTotalTaxSuccessful(int totalTaxSuccessful) {
+        this.totalTaxSuccessful = totalTaxSuccessful;
+    }
+
+    public int getTotalForeignAidSuccessful() {
+        return totalForeignAidSuccessful;
+    }
+
+    public void setTotalForeignAidSuccessful(int totalForeignAidSuccessful) {
+        this.totalForeignAidSuccessful = totalForeignAidSuccessful;
+    }
+
+    public int getTotalExchangeSuccessful() {
+        return totalExchangeSuccessful;
+    }
+
+    public void setTotalExchangeSuccessful(int totalExchangeSuccessful) {
+        this.totalExchangeSuccessful = totalExchangeSuccessful;
+    }
+
+    public int getTotalStealSuccesses() {
+        return totalStealSuccesses;
+    }
+
+    public void setTotalStealSuccesses(int totalStealSuccesses) {
+        this.totalStealSuccesses = totalStealSuccesses;
+    }
+
+    public int getTotalAssassinationSuccesses() {
+        return totalAssassinationSuccesses;
+    }
+
+    public void setTotalAssassinationSuccesses(int totalAssassinationSuccesses) {
+        this.totalAssassinationSuccesses = totalAssassinationSuccesses;
+    }
+
+    public int getTotalTaxFailed() {
+        return totalTaxFailed;
+    }
+
+    public void setTotalTaxFailed(int totalTaxFailed) {
+        this.totalTaxFailed = totalTaxFailed;
+    }
+
+    public int getTotalForeignAidBlocked() {
+        return totalForeignAidBlocked;
+    }
+
+    public void setTotalForeignAidBlocked(int totalForeignAidBlocked) {
+        this.totalForeignAidBlocked = totalForeignAidBlocked;
+    }
+
+    public int getTotalExchangeFailed() {
+        return totalExchangeFailed;
+    }
+
+    public void setTotalExchangeFailed(int totalExchangeFailed) {
+        this.totalExchangeFailed = totalExchangeFailed;
+    }
+
+    public int getTotalStealFailed() {
+        return totalStealFailed;
+    }
+
+    public void setTotalStealFailed(int totalStealFailed) {
+        this.totalStealFailed = totalStealFailed;
+    }
+
+    public int getTotalAssassinationFailed() {
+        return totalAssassinationFailed;
+    }
+
+    public void setTotalAssassinationFailed(int totalAssassinationFailed) {
+        this.totalAssassinationFailed = totalAssassinationFailed;
+    }
+
+    public Map<String, Integer> getPlayersKilled() {
+        return playersKilled;
+    }
+
+    public void setPlayersKilled(Map<String, Integer> playersKilled) {
+        this.playersKilled = playersKilled;
+    }
+
+    public int getTotalCoinGained() {
+        return totalCoinGained;
+    }
+
+    public void setTotalCoinGained(int totalCoinGained) {
+        this.totalCoinGained = totalCoinGained;
+    }
+
+    public int getTotalCoinsSpent() {
+        return totalCoinsSpent;
+    }
+
+    public void setTotalCoinsSpent(int totalCoinsSpent) {
+        this.totalCoinsSpent = totalCoinsSpent;
     }
 }

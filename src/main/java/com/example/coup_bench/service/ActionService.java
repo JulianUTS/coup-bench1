@@ -138,7 +138,7 @@ public class ActionService {
         }
 
         if(!targetAlive){
-            StatsUtil.logPlayerKilled(player, game.getPlayer(targetId));
+            StatsUtil.logPlayerKilled(player, game.getPlayer(targetId), action);
             game.logGameMemory(targetId + " has lost all their cards");
         }
 

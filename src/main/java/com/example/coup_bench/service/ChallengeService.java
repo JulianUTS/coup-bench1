@@ -127,7 +127,7 @@ public class ChallengeService {
         }
 
         if(!deckService.removePlayerCard(game, challenged)){
-            StatsUtil.logPlayerKilled(challenger, challenged);
+            StatsUtil.logPlayerKilled(challenger, challenged, ActionType.CHALLENGE);
             game.logGameMemory(challenged.getId() + " has lost all their cards");
         }
 
@@ -159,7 +159,7 @@ public class ChallengeService {
         }
 
         if(!deckService.removePlayerCard(game, challenger)){
-            StatsUtil.logPlayerKilled(challenged, challenger);
+            StatsUtil.logPlayerKilled(challenged, challenger, ActionType.CHALLENGE);
             game.logGameMemory(challenger.getId() + " has lost all their cards");
             if(challengedRecord.getAction() == ActionType.ASSASSINATE && challenger.getId().equals(challengedRecord.getTargetId())){
                 StatsUtil.logFailedAction(game, challengedRecord);

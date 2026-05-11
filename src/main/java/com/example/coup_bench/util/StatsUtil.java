@@ -180,12 +180,14 @@ public class StatsUtil {
         }
     }
 
-    public static void logPlayerKilled(Player killer, Player killed){
+    public static void logPlayerKilled(Player killer, Player killed, ActionType killAction){
         PlayerStats killerStats = killer.getPlayerStats();
         PlayerStats killedStats = killed.getPlayerStats();
 
         killerStats.addPlayersKilled(killed.getId());
         killedStats.setKilledBy(killer.getId());
+        killedStats.setCauseOfDeath(killAction);
+
     }
 
 

@@ -27,8 +27,6 @@ public class GameStats {
         this.interactionLog.add(interactionRecord);
     }
 
-
-
     public List<ActionRecord> getBluffLog() {
         return this.bluffLog;
     }
