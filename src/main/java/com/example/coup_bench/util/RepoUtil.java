@@ -33,8 +33,8 @@ public class RepoUtil {
         summary.setWinnerId(game.getWinnerId(game));
         summary.setTotalTurns(game.getTurn());
         summary.setTotalActions(game.getActionLog().size());
-        summary.setTotalChallenges(gameStats.getTotalBlocks());
-        summary.setTotalBlocks(gameStats.getTotalChallenges());
+        summary.setTotalChallenges(gameStats.getTotalChallenges());
+        summary.setTotalBlocks(gameStats.getTotalBlocks());
         summary.setTotalInvalidActions(game.getInvalidActionLog().size());
 
 // Game memory (if you store AI thoughts or logs)
@@ -183,10 +183,9 @@ public class RepoUtil {
         }
 
         int seatIndex = gameSummary.getSeatOrder().get(provider);
-        if (player.isAlive()) lifetimeStats.setWins(
-                lifetimeStats.getWinsFromSeatIndex().merge(seatIndex, 1, Integer::sum));
-        else lifetimeStats.setLosses(
-                lifetimeStats.getLossesFromSeatIndex().merge(seatIndex, 1, Integer::sum));
+        if (player.isAlive())
+                lifetimeStats.getWinsFromSeatIndex().merge(seatIndex, 1, Integer::sum);
+        else lifetimeStats.getLossesFromSeatIndex().merge(seatIndex, 1, Integer::sum);
 
         // Recompute provider averages
 
@@ -241,10 +240,9 @@ public class RepoUtil {
             ps.getCauseOfDeath().merge(playerStats.getCauseOfDeath().toString(), 1, Integer::sum);
         }
 
-        if (player.isAlive()) lifetimeStats.setWins(
-                ps.getWinsFromSeatIndex().merge(seatIndex, 1, Integer::sum));
-        else lifetimeStats.setLosses(
-                ps.getLossesFromSeatIndex().merge(seatIndex, 1, Integer::sum));
+        if (player.isAlive())
+            ps.getWinsFromSeatIndex().merge(seatIndex, 1, Integer::sum);
+        else ps.getLossesFromSeatIndex().merge(seatIndex, 1, Integer::sum);
 
         if (!playerStats.getActionTargets().isEmpty()) {
             playerStats.getActionTargets().forEach((key, value) ->

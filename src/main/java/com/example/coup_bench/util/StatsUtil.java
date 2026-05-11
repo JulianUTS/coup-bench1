@@ -208,8 +208,6 @@ public class StatsUtil {
         gameStats.addCoinsPerTurn(game.getPlayers().stream()
                 .mapToInt(Player::getCoins)
                 .sum());
-
-        System.out.println(gameStats.getCoinsPerTurn().stream().toList());
     }
 
     public static void incrementTurnsSurvived(List<Player> players){

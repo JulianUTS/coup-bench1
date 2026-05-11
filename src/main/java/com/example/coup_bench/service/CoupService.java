@@ -161,14 +161,15 @@ public class CoupService {
     }
 
     public void nextTurn(Game game){
+        StatsUtil.logTurnSnapshot(game, actionService.getActionRecord(), challengeService.getBlockRecord(), challengeService.getChallengeRecord());
+
         if(PlayerUtil.onlyOneLeft(game.getPlayers())){
             game.setState(GameState.ENDGAME);
             return;
         }
-        StatsUtil.logTurnSnapshot(game, actionService.getActionRecord(), challengeService.getBlockRecord(), challengeService.getChallengeRecord());
+
         challengeService.clearChallengeService();
         actionService.clearActionService();
-
         game.nextCurrentPlayer();
         game.incrementTurn();
         StatsUtil.incrementTurnsSurvived(game.getPlayers());

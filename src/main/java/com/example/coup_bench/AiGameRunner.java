@@ -27,15 +27,18 @@ public class AiGameRunner {
         GameState lastState = game.getState();
         int stateRepeated = 0;
         while(!gameFinished(game) && !gameWaitingForHuman(game) && stateRepeated < 10) {
-            System.out.println(game.getState().toString());
+            //System.out.println(game.getState().toString());
             nextMove(game);
-            
+
             if(game.getState() == lastState){
                 stateRepeated++;
             }else{
                 stateRepeated = 0;
                 lastState = game.getState();
             }
+        }
+        if(stateRepeated == 10){
+            System.err.println("Game in infinite loop");
         }
     }
     public void nextMove(Game game){
