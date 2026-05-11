@@ -190,6 +190,26 @@ public class StatsUtil {
         );
 
         gameStats.logTurnSnapshot(snap);
+
+        int bluffCount = 0;
+        if(actionRecord != null){
+            if(actionRecord.getActionIsBluff() != null &&
+                    actionRecord.getActionIsBluff() == true){
+                bluffCount++;
+            }
+        }
+
+        if(blockRecord != null){
+            if(blockRecord.getActionIsBluff() == true){
+                bluffCount++;
+            }
+        }
+        gameStats.addBluffsPerTurn(bluffCount);
+        gameStats.addCoinsPerTurn(game.getPlayers().stream()
+                .mapToInt(Player::getCoins)
+                .sum());
+
+        System.out.println(gameStats.getCoinsPerTurn().stream().toList());
     }
 
     public static void incrementTurnsSurvived(List<Player> players){

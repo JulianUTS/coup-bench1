@@ -96,7 +96,6 @@ public class Game {
         System.out.println("Gamestarted at: " +
                 LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         incrementTurn();
-
         this.seatOrder = new HashMap<>();
         for (int i = 0; i < players.size(); i++) {
             seatOrder.put(players.get(i).getId(), i);

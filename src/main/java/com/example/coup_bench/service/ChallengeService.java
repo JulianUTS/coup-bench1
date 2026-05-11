@@ -179,8 +179,8 @@ public class ChallengeService {
         Predicate<Player> filter = p -> p.isAlive() &&
                 !p.getId().equals(actionRecord.getPlayerId()) &&
                 !p.getId().equals(blockRecord.getPlayerId());
-        loopChallengers(game, blockRecord, challengeScenario, filter, human);
-        if(noChallenge()){
+
+        if(!loopChallengers(game, blockRecord, challengeScenario, filter, human)){
             StatsUtil.logSuccessfulBlock(game,
                     getBlocker(game),
                     game.getPlayer(actionRecord.getPlayerId()),
@@ -192,21 +192,22 @@ public class ChallengeService {
 
     public void applyS_1(Game game, ActionRecord actionRecord, HumanService human) {
         Predicate<Player> filter = p -> p.isAlive() && !p.getId().equals(actionRecord.getPlayerId());
-        loopChallengers(game, actionRecord, Scenario.S1, filter, human);
+
+        boolean challengeDetected = loopChallengers(game, actionRecord, Scenario.S1, filter, human);
         if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
             return;
         }
-        if(noChallenge()){
+        if(!challengeDetected){
             game.setState(GameState.APPLY_ACTION);
         }
     }
     public void applyS_2_1(Game game, ActionRecord actionRecord, HumanService human) {
         Predicate<Player> filter = p -> p.isAlive() && !p.getId().equals(actionRecord.getPlayerId());
-        loopChallengers(game, actionRecord, Scenario.S2_1, filter, human);
+        boolean challengeDetected = loopChallengers(game, actionRecord, Scenario.S2_1, filter, human);
         if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
             return;
         }
-        if(!blockDetected()){
+        if(!challengeDetected){
             game.setState(GameState.APPLY_ACTION);
         } else{
             setChallengeScenario(Scenario.S2_2);
@@ -217,11 +218,11 @@ public class ChallengeService {
         Predicate<Player> filter  = p -> p.isAlive() &&
                 !p.getId().equals(actionRecord.getPlayerId()) &&
                 !p.getId().equals(actionRecord.getTargetId());
-        loopChallengers(game, actionRecord, Scenario.S3_1, filter, human);
+        boolean challengeDetected = loopChallengers(game, actionRecord, Scenario.S3_1, filter, human);
         if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
             return;
         }
-        if(noChallenge()){
+        if(!challengeDetected){
             setChallengeScenario(Scenario.S3_2);
         }
 
@@ -248,11 +249,11 @@ public class ChallengeService {
     public void applyS_4_1(Game game, ActionRecord actionRecord, HumanService human) {
         Predicate<Player> filter  = p -> p.isAlive() &&
                 !p.getId().equals(actionRecord.getPlayerId());
-        loopChallengers(game, actionRecord, Scenario.S4_1, filter, human);
+        boolean challengeDetected = loopChallengers(game, actionRecord, Scenario.S4_1, filter, human);
         if(game.getState() == GameState.WAITING_FOR_HUMAN_ACTION){
             return;
         }
-        if(noChallenge()){
+        if(!challengeDetected){
             setChallengeScenario(Scenario.S4_2);
         }
     }
@@ -277,7 +278,7 @@ public class ChallengeService {
         }
     }
 
-    private void loopChallengers(Game game, ActionRecord challengedRecord, Scenario scenario, Predicate<Player> filter,
+    private boolean loopChallengers(Game game, ActionRecord challengedRecord, Scenario scenario, Predicate<Player> filter,
                                  HumanService human){
         String challengedPlayerId = challengedRecord.getPlayerId();
 
@@ -293,7 +294,7 @@ public class ChallengeService {
             if (challenger.isHuman()) {
                 human.setCurrentPrompt(HumanUtil.printGetReactionPrompt(game, challengedRecord, this, challenger, scenario));
                 game.setState(GameState.WAITING_FOR_HUMAN_ACTION);
-                return;
+                return true;
             }
 
             AiReaction challenge = askChallenger(game, challengedRecord, challenger, scenario);
@@ -303,17 +304,18 @@ public class ChallengeService {
                     challenge.id = challenger.getId();
                     challenge.targetId = challengedPlayerId;
                     declareChallenge(game, challenge);
-                    return;
+                    return true;
                 case BLOCK_USING_DUKE:
                     challenge.id = challenger.getId();
                     challenge.targetId = challengedPlayerId;
                     declareBlock(game, challenge);
-                    return;
+                    return true;
                 default:
                     game.logAction(new ActionRecord(challenger.getId(), ActionType.DO_NOTHING, null, null, challenge.reason));
             }
         }
         resetShiftIndex();
+        return false;
     }
     private AiReaction askChallenger(Game game, ActionRecord actionRecord, Player player, Scenario scenario) {
         return AiReaction.getReaction(game, actionRecord, this, player, scenario);
@@ -326,7 +328,7 @@ public class ChallengeService {
 
     public void logNewChallenge(Game game, ActionRecord challengeRecord) {
         game.logAction(challengeRecord);
-        this.challengeRecord = challengeRecord;
+        setChallengeRecord(challengeRecord);
         game.logGameMemory(challengerId + " declares CHALLENGE on " + challengeRecord.getTargetId());
     }
 
@@ -344,20 +346,9 @@ public class ChallengeService {
         this.challengeLoser = loser;
     }
 
-    public boolean noChallenge(){
-        return challengerId == null;
-    }
 
     public boolean blockDetected(){
         return this.blockRecord != null;
-    }
-
-    public Player getChallengeWinner() {
-        return challengeWinner;
-    }
-
-    public Player getChallengeLoser() {
-        return challengeLoser;
     }
 
     public void clearChallengeService(){
@@ -367,6 +358,7 @@ public class ChallengeService {
         this.challengeWinner = null;
         this.challengeLoser  = null;
         this.shiftIndex =0;
+        this.challengeRecord = null;
     }
 
     public ActionRecord getBlockRecord() {

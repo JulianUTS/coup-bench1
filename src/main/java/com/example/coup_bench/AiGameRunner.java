@@ -24,10 +24,18 @@ public class AiGameRunner {
     }
 
     public void runGame(Game game) {
-
-        while(!gameFinished(game) && !gameWaitingForHuman(game)) {
+        GameState lastState = game.getState();
+        int stateRepeated = 0;
+        while(!gameFinished(game) && !gameWaitingForHuman(game) && stateRepeated < 10) {
             System.out.println(game.getState().toString());
             nextMove(game);
+            
+            if(game.getState() == lastState){
+                stateRepeated++;
+            }else{
+                stateRepeated = 0;
+                lastState = game.getState();
+            }
         }
     }
     public void nextMove(Game game){

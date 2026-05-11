@@ -5,6 +5,7 @@ import com.example.coup_bench.model.Player;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +34,8 @@ public class GameSummary {
     private List<ActionRecord> challengeLog;
     private List<InteractionRecord> interactions;
     private List<TurnSnapshot> turnSnapshots;
+    private List<Integer> coinsPerTurn = new ArrayList<>();
+    private List<Integer> bluffsPerTurn = new ArrayList<>();
     private List<Player>  players;
 
 
@@ -195,5 +198,19 @@ public class GameSummary {
 
     public void setChallengeLog(List<ActionRecord> challengeLog) {
         this.challengeLog = challengeLog;
+    }
+
+    public List<Integer> getCoinsPerTurn() {
+        return coinsPerTurn;
+    }
+    public void setCoinsPerTurn(List<Integer> coinsPerTurn) {
+        this.coinsPerTurn = coinsPerTurn;
+    }
+
+    public List<Integer> getBluffsPerTurn() {
+        return bluffsPerTurn;
+    }
+    public void setBluffsPerTurn(List<Integer> bluffsPerTurn) {
+        this.bluffsPerTurn = bluffsPerTurn;
     }
 }

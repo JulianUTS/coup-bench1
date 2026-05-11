@@ -54,6 +54,8 @@ public class RepoUtil {
         summary.setSeed(game.getSeed());
         summary.setSeatOrder(game.getSeatOrder());
         summary.setChallengeLog(gameStats.getChallengeLog());
+        summary.setCoinsPerTurn(gameStats.getCoinsPerTurn());
+        summary.setBluffsPerTurn(gameStats.getBluffsPerTurn());
 
         return summary;
     }

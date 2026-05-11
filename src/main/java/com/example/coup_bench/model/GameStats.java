@@ -14,6 +14,8 @@ public class GameStats {
     private final List<TurnSnapshot> turnSnapshotLog= new ArrayList<>();
     private int TotalBlocks = 0;
     private int TotalChallenges = 0;
+    private final List<Integer> coinsPerTurn = new ArrayList<>();
+    private final List<Integer> bluffsPerTurn = new ArrayList<>();
 
     public List<TurnSnapshot> getTurnSnapshotLog() {
         return turnSnapshotLog;
@@ -58,4 +60,18 @@ public class GameStats {
     }
 
 
+    public List<Integer> getCoinsPerTurn() {
+        return coinsPerTurn;
+    }
+    public void addCoinsPerTurn(int totalCoins){
+        coinsPerTurn.add(totalCoins);
+    }
+
+    public List<Integer> getBluffsPerTurn() {
+        return bluffsPerTurn;
+    }
+
+    public void addBluffsPerTurn(int totalBluffs){
+        bluffsPerTurn.add(totalBluffs);
+    }
 }

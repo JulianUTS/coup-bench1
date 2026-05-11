@@ -77,7 +77,7 @@ public class AiActionService {
                 }
                 
                 ### EXPLANATION RULES
-                - "reason" MUST be a short explanation (max 12 words).
+                - "reason" MUST be a short explanation (max 30 words).
                 - No markdown, no quotes, no special characters.
                 - Explanation MUST reflect your personality.
                 
