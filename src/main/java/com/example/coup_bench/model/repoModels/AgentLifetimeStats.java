@@ -58,6 +58,8 @@ public class AgentLifetimeStats {
     //  RISK BEHAVIOUR
     // ============================================================
     private int totalBluffsAttempted;
+    private int totalBluffsSuccessful;
+    private int totalBluffsFailed;
     private int totalChallengesIssued;
     private int totalChallengesWon;
     private int totalChallengesLost;
@@ -490,5 +492,21 @@ public class AgentLifetimeStats {
 
     public void setTotalCoinsSpent(int totalCoinsSpent) {
         this.totalCoinsSpent = totalCoinsSpent;
+    }
+
+    public int getTotalBluffsSuccessful() {
+        return totalBluffsSuccessful;
+    }
+
+    public void setTotalBluffsSuccessful(int totalBluffsSuccessful) {
+        this.totalBluffsSuccessful = totalBluffsSuccessful;
+    }
+
+    public int getTotalBluffsFailed() {
+        return totalBluffsFailed;
+    }
+
+    public void setTotalBluffsFailed(int totalBluffsFailed) {
+        this.totalBluffsFailed = totalBluffsFailed;
     }
 }

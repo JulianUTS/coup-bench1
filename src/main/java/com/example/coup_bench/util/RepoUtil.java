@@ -53,6 +53,7 @@ public class RepoUtil {
         summary.setTurnSnapshots(gameStats.getTurnSnapshotLog());
         summary.setSeed(game.getSeed());
         summary.setSeatOrder(game.getSeatOrder());
+        summary.setChallengeLog(gameStats.getChallengeLog());
 
         return summary;
     }
@@ -122,6 +123,8 @@ public class RepoUtil {
 
 // Risk
         lifetimeStats.setTotalBluffsAttempted(lifetimeStats.getTotalBluffsAttempted() + playerStats.getBluffsAttempted());
+        lifetimeStats.setTotalBluffsSuccessful(lifetimeStats.getTotalBluffsSuccessful() + playerStats.getBluffsSuccessful());
+        lifetimeStats.setTotalBluffsFailed(lifetimeStats.getTotalBluffsFailed() + playerStats.getBluffsFailed());
         lifetimeStats.setTotalChallengesIssued(lifetimeStats.getTotalChallengesIssued() + playerStats.getChallengesIssued());
         lifetimeStats.setTotalChallengesWon(lifetimeStats.getTotalChallengesWon() + playerStats.getChallengesWon());
         lifetimeStats.setTotalChallengesLost(lifetimeStats.getTotalChallengesLost() + playerStats.getChallengesLost());

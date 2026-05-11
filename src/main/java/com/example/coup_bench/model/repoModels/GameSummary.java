@@ -30,6 +30,7 @@ public class GameSummary {
     private List<InvalidActionRecord> invalidActions;
     private List<ActionRecord> actions;
     private List<ActionRecord> bluffLog;
+    private List<ActionRecord> challengeLog;
     private List<InteractionRecord> interactions;
     private List<TurnSnapshot> turnSnapshots;
     private List<Player>  players;
@@ -188,4 +189,11 @@ public class GameSummary {
     }
 
 
+    public List<ActionRecord> getChallengeLog() {
+        return challengeLog;
+    }
+
+    public void setChallengeLog(List<ActionRecord> challengeLog) {
+        this.challengeLog = challengeLog;
+    }
 }

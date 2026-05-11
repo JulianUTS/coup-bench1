@@ -2,11 +2,15 @@ package com.example.coup_bench.util;
 
 import com.example.coup_bench.model.*;
 import com.example.coup_bench.model.Enums.ActionType;
+import com.example.coup_bench.model.Enums.CardType;
 import com.example.coup_bench.model.repoModels.InteractionRecord;
 import com.example.coup_bench.model.repoModels.TurnSnapshot;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -42,6 +46,7 @@ public class StatsUtil {
 
         if (ActionUtil.isTargetedAction(actionRecord.getAction())) {
             gameStats.logInteraction(new InteractionRecord(
+                    game.getTurn(),
                     actionRecord.getPlayerId(),
                     actionRecord.getTargetId(),
                     actionRecord.getAction(), true));
@@ -64,6 +69,7 @@ public class StatsUtil {
     public static void logFailedAction(Game game, ActionRecord actionRecord) {
         GameStats gameStats = game.getGameStats();
         gameStats.logInteraction(new InteractionRecord(
+                game.getTurn(),
                 actionRecord.getPlayerId(),
                 actionRecord.getTargetId(),
                 actionRecord.getAction(), false));
@@ -77,6 +83,7 @@ public class StatsUtil {
 
         if(blockRecord.getActionIsBluff()) {
             blockerStats.incrementBluffsAttempted();
+            gameStats.logBluff(blockRecord);
         }
 
         gameStats.incrementTotalBlocks();
@@ -92,6 +99,7 @@ public class StatsUtil {
 
         if(ActionUtil.isTargetedAction(blockedAction.getAction())) {
             gameStats.logInteraction(new InteractionRecord(
+                    game.getTurn(),
                     blockedAction.getPlayerId(),
                     blockedAction.getTargetId(),
                     blockedAction.getAction(), false));
@@ -106,11 +114,12 @@ public class StatsUtil {
         }
     }
 
-    public static void logDeclaredChallenge(Game game, Player challenger, String challengedId){
+    public static void logDeclaredChallenge(Game game, Player challenger, String challengedId, ActionRecord challengeRecord){
         PlayerStats challengerStats = challenger.getPlayerStats();
         GameStats gameStats = game.getGameStats();
 
         gameStats.incrementTotalChallenges();
+        gameStats.logChallenge(challengeRecord);
         challengerStats.incrementChallengesIssued();
         challengerStats.addChallengeTarget(challengedId);
 
@@ -126,6 +135,7 @@ public class StatsUtil {
         challengerStats.incrementChallengesWon();
 
         gameStats.logInteraction(new InteractionRecord(
+                game.getTurn(),
                 challenger.getId(),
                 challenged.getId(),
                 ActionType.CHALLENGE,
@@ -138,6 +148,7 @@ public class StatsUtil {
         //If challenge is targeted (includes block) create new failed interaction
         if(ActionUtil.isTargetedAction(challengeRecord.getAction())) {
             gameStats.logInteraction(new InteractionRecord(
+                    game.getTurn(),
                     challengeRecord.getPlayerId(),
                     challengeRecord.getTargetId(),
                     challengeRecord.getAction(), false));
@@ -149,23 +160,33 @@ public class StatsUtil {
 
         challengerStats.incrementChallengesLost();
         gameStats.logInteraction(new InteractionRecord(
+                game.getTurn(),
                 challenger.getId(),
                 challenged.getId(),
                 ActionType.CHALLENGE,
                 false));
     }
 
-    public static void logTurnSnapshot(Game game, ActionRecord actionRecord){
+    public static void logTurnSnapshot(Game game, ActionRecord actionRecord, ActionRecord blockRecord,
+                                       ActionRecord challengeRecord){
         GameStats gameStats = game.getGameStats();
+        Map<String, List<CardType>> playerCards = new HashMap<String, List<CardType>>();
+        Map<String, Boolean> aliveStatus = new HashMap<String, Boolean>();
+        for(Player player : game.getPlayers()){
+            playerCards.put(player.getId(), new ArrayList<>(player.getCards()));
+            aliveStatus.put(player.getId(), player.isAlive());
+        }
         TurnSnapshot snap = new TurnSnapshot(
                 game.getTurn(),
+                aliveStatus,
                 game.getPlayers().stream()
                         .collect(Collectors.toMap(Player::getId, Player::getCoins)),
                 game.getPlayers().stream()
                         .collect(Collectors.toMap(Player::getId, p -> p.getCards().size())),
-                actionRecord.getAction(),
-                actionRecord.getPlayerId(),
-                actionRecord.getTargetId()
+                playerCards,
+                actionRecord,
+                blockRecord,
+                challengeRecord
         );
 
         gameStats.logTurnSnapshot(snap);

@@ -32,7 +32,8 @@ public class AiGameController {
             "openai",
             "claude",
             "gemini",
-            "grok"
+            "grok",
+            "deepseek"
     );
     private static final List<String> PERSONALITIES = List.of(
             "aggressive",
@@ -101,13 +102,9 @@ public class AiGameController {
             }
 
             coup.startGame(game);
-            System.out.println("Game "+ i + " started at: " +
-                    LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
             runner.runGame(game);
 
             results.add(game);
-            System.out.println("Game "+ i + " completed at: " +
-                    LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         }
 
         return results;

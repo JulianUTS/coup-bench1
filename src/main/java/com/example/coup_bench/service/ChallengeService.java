@@ -20,6 +20,7 @@ import java.util.function.Predicate;
 @Service
 public class ChallengeService {
     private ActionRecord blockRecord;
+    private ActionRecord challengeRecord;
     private String challengerId;
     private Player challengeWinner;
     private Player challengeLoser;
@@ -87,7 +88,7 @@ public class ChallengeService {
 
         setCurrentChallenger(challenge.id);
         logNewChallenge(game, challengeRecord);
-        StatsUtil.logDeclaredChallenge(game, challenger, challenge.targetId);
+        StatsUtil.logDeclaredChallenge(game, challenger, challenge.targetId, challengeRecord);
         game.setState(GameState.CHALLENGE_DECLARED);
     }
 
@@ -325,6 +326,7 @@ public class ChallengeService {
 
     public void logNewChallenge(Game game, ActionRecord challengeRecord) {
         game.logAction(challengeRecord);
+        this.challengeRecord = challengeRecord;
         game.logGameMemory(challengerId + " declares CHALLENGE on " + challengeRecord.getTargetId());
     }
 
@@ -399,8 +401,11 @@ public class ChallengeService {
     }
 
 
+    public ActionRecord getChallengeRecord() {
+        return challengeRecord;
+    }
 
-
-
-
+    public void setChallengeRecord(ActionRecord challengeRecord) {
+        this.challengeRecord = challengeRecord;
+    }
 }

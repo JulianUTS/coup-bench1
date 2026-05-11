@@ -33,7 +33,7 @@ public class PlayerStats {
     private int assassinationAttempts = 0;
     private int assassinationSuccesses = 0;
     private int coupsCount = 0;
-    private int turnsSurvived = 0;
+    private int turnsSurvived = 1;
     private String killedBy;
     private ActionType causeOfDeath;
     private final List<String> playersKilled = new ArrayList<>();

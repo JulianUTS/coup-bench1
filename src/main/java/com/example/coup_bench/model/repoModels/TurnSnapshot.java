@@ -1,30 +1,41 @@
 package com.example.coup_bench.model.repoModels;
 
+import com.example.coup_bench.model.ActionRecord;
 import com.example.coup_bench.model.Enums.ActionType;
+import com.example.coup_bench.model.Enums.CardType;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TurnSnapshot {
 
     private final int turnNumber;
+    private final Map<String, Boolean> aliveStatus;
     private final Map<String, Integer> coins;
     private final Map<String, Integer> influence;
-    private final ActionType actionTaken;
-    private final String actorId;
-    private final String targetId;
+    private final Map<String, List<CardType>> cards;
+    private final ActionRecord action;
+    private final ActionRecord block;
+    private final ActionRecord challenge;
+
 
     public TurnSnapshot(int turnNumber,
+                        Map<String, Boolean> aliveStatus,
                         Map<String, Integer> coins,
                         Map<String, Integer> influence,
-                        ActionType actionTaken,
-                        String actorId,
-                        String targetId) {
+                        Map<String, List<CardType>> cards,
+                        ActionRecord action,
+                        ActionRecord block,
+                        ActionRecord challenge) {
         this.turnNumber = turnNumber;
+        this.aliveStatus = aliveStatus;
         this.coins = coins;
         this.influence = influence;
-        this.actionTaken = actionTaken;
-        this.actorId = actorId;
-        this.targetId = targetId;
+        this.cards = cards;
+        this.action = action;
+        this.block = block;
+        this.challenge = challenge;
     }
 
     public int getTurnNumber() {
@@ -39,16 +50,24 @@ public class TurnSnapshot {
         return influence;
     }
 
-    public ActionType getActionTaken() {
-        return actionTaken;
+    public Map<String, List<CardType>> getCards() {
+        return cards;
     }
 
-    public String getActorId() {
-        return actorId;
+    public ActionRecord getAction() {
+        return action;
     }
 
-    public String getTargetId() {
-        return targetId;
+    public Map<String, Boolean> getAliveStatus() {
+        return aliveStatus;
+    }
+
+    public ActionRecord getBlock() {
+        return block;
+    }
+
+    public ActionRecord getChallenge() {
+        return challenge;
     }
 }
 

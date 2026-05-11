@@ -2,6 +2,8 @@ package com.example.coup_bench.model;
 
 import com.example.coup_bench.model.Enums.GameState;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class Game {
@@ -11,7 +13,7 @@ public class Game {
     private final List<ActionRecord> actionLog = new ArrayList<>();
     private final List<String> gameMemory = new ArrayList<>();
     private final List<InvalidActionRecord> invalidActionLog = new ArrayList<>();
-    private final long timestampStart = System.currentTimeMillis();
+    private long timestampStart;
     private final GameStats gameStats = new GameStats();
 
     private final long seed;
@@ -90,6 +92,9 @@ public class Game {
     public void startGame() {
         Random rng = new Random(seed);
         Collections.shuffle(players, rng);
+        this.timestampStart = System.currentTimeMillis();
+        System.out.println("Gamestarted at: " +
+                LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         incrementTurn();
 
         this.seatOrder = new HashMap<>();

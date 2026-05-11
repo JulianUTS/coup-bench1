@@ -17,6 +17,8 @@ import com.example.coup_bench.util.RepoUtil;
 import com.example.coup_bench.util.StatsUtil;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Service
@@ -66,9 +68,10 @@ public class CoupService {
     }
 
     public void startGame(Game game) {
-        game.startGame();
         deck.initializeDeck();
         deck.dealCards(game.getPlayers());
+        StatsUtil.logTurnSnapshot(game, actionService.getActionRecord(), challengeService.getBlockRecord(), challengeService.getChallengeRecord());
+        game.startGame();
         game.setState(GameState.WAITING_FOR_ACTION);
     }
 
@@ -128,6 +131,8 @@ public class CoupService {
             playerRepo.save(RepoUtil.getAgentLifetimeStats(p, playerRepo, gamesummary));
         }
         human.setCurrentPrompt(String.join("\n", game.getGameMemory()));
+        System.out.println("Game completed at: " +
+                LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         game.setState(GameState.FINISHED);
     }
 
@@ -160,7 +165,7 @@ public class CoupService {
             game.setState(GameState.ENDGAME);
             return;
         }
-        StatsUtil.logTurnSnapshot(game, actionService.getActionRecord());
+        StatsUtil.logTurnSnapshot(game, actionService.getActionRecord(), challengeService.getBlockRecord(), challengeService.getChallengeRecord());
         challengeService.clearChallengeService();
         actionService.clearActionService();
 
