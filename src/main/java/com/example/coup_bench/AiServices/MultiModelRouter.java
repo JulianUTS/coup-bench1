@@ -11,24 +11,28 @@ public class MultiModelRouter {
         OPENAI,
         CLAUDE,
         GEMINI,
-        GROK
+        GROK,
+        DEEPSEEK
     }
 
     private final ChatClient openai;
     private final ChatClient claude;
     private final GeminiClient gemini;
     private final GrokClient grok;
+    private final DeepSeekClient deepSeek;
 
     public MultiModelRouter(
             ChatClient openAiChatClient,
             ChatClient claudeChatClient,
             GeminiClient geminiChatClient,
-            GrokClient grokClient
+            GrokClient grokClient,
+            DeepSeekClient deepSeekClient
     ) {
         this.openai = openAiChatClient;
         this.claude = claudeChatClient;
         this.gemini = geminiChatClient;
         this.grok = grokClient;
+        this.deepSeek = deepSeekClient;
     }
 
     // -------------------------------
@@ -50,6 +54,9 @@ public class MultiModelRouter {
             case "grok":
                 p = Provider.GROK;
                 break;
+            case "deepseek":
+                p = Provider.DEEPSEEK;
+                break;
             default:
                 throw new IllegalArgumentException("Unknown provider: " + provider);
         }
@@ -66,6 +73,7 @@ public class MultiModelRouter {
             case CLAUDE -> claude.prompt().user(prompt).call().content();
             case GEMINI -> gemini.chat(prompt);
             case GROK -> grok.chat(prompt);
+            case DEEPSEEK -> deepSeek.chat(prompt);
         };
     }
 }
