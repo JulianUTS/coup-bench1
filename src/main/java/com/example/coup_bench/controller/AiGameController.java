@@ -56,62 +56,61 @@ public class AiGameController {
     }
 
     @PostMapping("/simulate")
-    public List<Game> simulate(@RequestBody SimulationRequest req) {
+    public void simulate(@RequestBody SimulationRequests simulationRequests) {
+        //List<Game> results = new ArrayList<>();
+        for (SimulationRequest req : simulationRequests.getSimulationRequests()) {
+            for (int i = 0; i < req.getGames(); i++) {
 
-        List<Game> results = new ArrayList<>();
+                long seed = (req.getSeed() == 0)
+                        ? System.currentTimeMillis()
+                        : req.getSeed();
 
-        for (int i = 0; i < req.getGames(); i++) {
+                Game game = coup.createGame(seed, req.getTrial());
+                System.out.println("Game "+ i + " created with seed " + seed);
 
-            long seed = (req.getSeed() == 0)
-                    ? System.currentTimeMillis()
-                    : req.getSeed();
+                // Track which providers are already used
+                Set<String> usedProviders = new HashSet<>();
 
-            Game game = coup.createGame(seed, req.getTrial());
-            System.out.println("Game "+ i + " created with seed " + seed);
+                for (PlayerConfig pc : req.getPlayers()) {
 
-            // Track which providers are already used
-            Set<String> usedProviders = new HashSet<>();
+                    // -----------------------------
+                    // 1. Resolve provider
+                    // -----------------------------
+                    String provider = pc.getProvider();
 
-            for (PlayerConfig pc : req.getPlayers()) {
+                    if (provider.equalsIgnoreCase("random")) {
+                        provider = pickRandomProvider(usedProviders);
+                    }
 
-                // -----------------------------
-                // 1. Resolve provider
-                // -----------------------------
-                String provider = pc.getProvider();
+                    usedProviders.add(provider);
 
-                if (provider.equalsIgnoreCase("random")) {
-                    provider = pickRandomProvider(usedProviders);
+                    // -----------------------------
+                    // 2. Resolve personality
+                    // -----------------------------
+                    String personality = pc.getPersonality();
+
+                    if (personality.equalsIgnoreCase("random")) {
+                        personality = pickRandomPersonality();
+                    }
+
+                    // -----------------------------
+                    // 3. Join player
+                    // -----------------------------
+
+                    game = coup.joinGame(game, provider, personality);
+                    System.out.println("Player " + provider + " joined with " + personality + " personality");
                 }
 
-                usedProviders.add(provider);
-
-                // -----------------------------
-                // 2. Resolve personality
-                // -----------------------------
-                String personality = pc.getPersonality();
-
-                if (personality.equalsIgnoreCase("random")) {
-                    personality = pickRandomPersonality();
+                coup.startGame(game);
+                runner.runGame(game);
+                if(game.getState() == GameState.INVALID){
+                    System.out.println("Restarting game "+ i);
+                    i--;
                 }
-
-                // -----------------------------
-                // 3. Join player
-                // -----------------------------
-
-                game = coup.joinGame(game, provider, personality);
-                System.out.println("Player " + provider + " joined with " + personality + " personality");
+             //   results.add(game);
             }
-
-            coup.startGame(game);
-            runner.runGame(game);
-            if(game.getState() == GameState.INVALID){
-                System.out.println("Restarting game "+ i);
-                i--;
-            }
-            results.add(game);
         }
-
-        return results;
+        //return results;
     }
     private String pickRandomProvider(Set<String> used) {
         List<String> available = PROVIDERS.stream()
