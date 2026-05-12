@@ -62,9 +62,8 @@ public class AiGameController {
         String current = "No trial completed";
         for (SimulationRequest req : simulationRequests.getSimulationRequests()) {
             System.out.println("Trial " + req.getTrial() + " starting:");
-            int buffer = 0;
             int i = req.getGamesCompleted();
-            while (i < req.getGames() + buffer) {
+            while (i < req.getGames()) {
                 long seed = (req.getSeed() == 0)
                         ? System.currentTimeMillis()
                         : req.getSeed();
@@ -107,14 +106,16 @@ public class AiGameController {
                 }
 
                 coup.startGame(game);
+
                 try {
                     runner.runGame(game);
-                    i++;
+                    if (game.getState() == GameState.INVALID) {
+                        System.out.println("Restarting game " + i);
+                    } else{
+                        i++;
+                    }
                 } catch (Throwable t) {
                     System.err.println(t.getMessage());
-                }
-                if (game.getState() == GameState.INVALID) {
-                    System.out.println("Restarting game " + i);
                 }
             }
             System.out.println("Trial " + req.getTrial() + " finished |");
