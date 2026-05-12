@@ -85,6 +85,7 @@ public class ActionService {
         if(action == ActionType.ASSASSINATE && !game.getPlayer(targetId).isAlive()){
             StatsUtil.logFailedAction(game, actionRecord);
             game.setState(GameState.NEXT_TURN);
+            return;
         }
 
         boolean targetAlive = true;
