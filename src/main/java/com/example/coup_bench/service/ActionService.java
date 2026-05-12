@@ -77,9 +77,16 @@ public class ActionService {
 
     public void applyAction(Game game, DeckService deckService, HumanService human) {
 
+
         ActionType action = actionRecord.getAction();
         Player player = game.getPlayer(actionRecord.getPlayerId());
         String targetId = actionRecord.getTargetId();
+
+        if(action == ActionType.ASSASSINATE && !game.getPlayer(targetId).isAlive()){
+            StatsUtil.logFailedAction(game, actionRecord);
+            game.setState(GameState.NEXT_TURN);
+        }
+
         boolean targetAlive = true;
 
 
