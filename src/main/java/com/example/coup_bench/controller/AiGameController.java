@@ -56,17 +56,20 @@ public class AiGameController {
     }
 
     @PostMapping("/simulate")
-    public void simulate(@RequestBody SimulationRequests simulationRequests) {
-        //List<Game> results = new ArrayList<>();
+    public String simulate(@RequestBody SimulationRequests simulationRequests) {
+        String current = "No trial completed";
         for (SimulationRequest req : simulationRequests.getSimulationRequests()) {
-            for (int i = 0; i < req.getGames(); i++) {
-
+            System.out.println("Trial " + req.getTrial() + " starting:");
+            int buffer = 0;
+            int i = req.getGamesCompleted();
+            while (i < req.getGames() + buffer) {
                 long seed = (req.getSeed() == 0)
                         ? System.currentTimeMillis()
                         : req.getSeed();
-
-                Game game = coup.createGame(seed, req.getTrial());
-                System.out.println("Game "+ i + " created with seed " + seed);
+                String trial = req.getTrial() + "-" + (i + 1);
+                current = "Last started trial: " + trial;
+                Game game = coup.createGame(seed, trial);
+                System.out.println("Game " + trial + " created with seed " + seed);
 
                 // Track which providers are already used
                 Set<String> usedProviders = new HashSet<>();
@@ -102,15 +105,22 @@ public class AiGameController {
                 }
 
                 coup.startGame(game);
-                runner.runGame(game);
-                if(game.getState() == GameState.INVALID){
-                    System.out.println("Restarting game "+ i);
-                    i--;
+                try {
+                    runner.runGame(game);
+                    System.out.println("Trial " + req.getTrial() + " finished |");
+                    i++;
+                } catch (Throwable t) {
+                    System.err.println(t.getMessage());
                 }
-             //   results.add(game);
+                if (game.getState() == GameState.INVALID) {
+                    System.out.println("Restarting game " + i);
+                    buffer++;
+
+                }
+
             }
         }
-        //return results;
+        return current;
     }
     private String pickRandomProvider(Set<String> used) {
         List<String> available = PROVIDERS.stream()

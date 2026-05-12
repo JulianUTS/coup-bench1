@@ -10,10 +10,7 @@ import com.example.coup_bench.util.PromptUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @Service
 public class AiChooseCardService {
@@ -33,10 +30,11 @@ public class AiChooseCardService {
                 AiChooseCard chosenCard = mapper.readValue(response, AiChooseCard.class);
                 if (player.hasCard(chosenCard.card)) {
                     return chosenCard.card;
-                } else {
-                    System.err.println(player.getId() + "- Invalid Cards:\n" + response);
-                    game.logGameMemory(player.getId() + "has chosen invalid cards, try again");
+                } else if(chosenCard.card == null){
+                    return player.getCards().get(new Random().nextInt(2));
                 }
+                System.err.println(player.getId() + "- Invalid Cards:\n" + response);
+                game.logGameMemory(player.getId() + "has chosen invalid cards, try again");
             } catch (Exception e) {
                 System.err.println(player.getId() + "- Invalid JSON:\n" + response);
                 game.logGameMemory(player.getId() + "has chosen invalid cards, try again");
@@ -55,11 +53,14 @@ public class AiChooseCardService {
             try {
                 AiExchange chosen = mapper.readValue(response, AiExchange.class);
                 // Validate
+                List<CardType> validCards = new ArrayList<>(player.getCards());
+                validCards.addAll(cardsToChooseFrom);
                 if (chosen.CardsToKeep != null && chosen.CardsToKeep.size() == cardsToExchange) {
-                    boolean allValid = chosen.CardsToKeep.stream().allMatch(player::hasCard);
+                    boolean allValid = new HashSet<>(validCards).containsAll(chosen.CardsToKeep);
                     if (allValid) return chosen.CardsToKeep;
                 }
                 System.err.println(player.getId() + " - Invalid cards:\n" + response);
+                System.err.println(validCards.stream().toList());
                 game.logGameMemory(player.getId() + "has chosen an invalid card, try again");
             } catch (Exception e) {
                 System.err.println(player.getId() + " - Invalid JSON:\n" + response);
@@ -197,9 +198,9 @@ public class AiChooseCardService {
 
     private String correctListFormat(int cardsToExchange) {
         if(cardsToExchange == 2){
-            return("[card, card]");
+            return("[string, string]");
         }
-        return("[card]");
+        return("[string]");
     }
     private String cleanResponse(String response) {
         return response
@@ -211,7 +212,7 @@ public class AiChooseCardService {
     }
 
     private String getResponse(String provider, String prompt) {
-        // System.out.println(prompt);
+         //System.out.println(prompt);
         String response = router.ask(provider, prompt);
        // System.out.println(provider + ": " + response);
         return cleanResponse(response);

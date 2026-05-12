@@ -68,7 +68,8 @@ public class RepoUtil {
 
         // Load or create provider-level lifetimeStats
         AgentLifetimeStats lifetimeStats =
-                playerRepo.findById(provider).orElse(new AgentLifetimeStats(provider));
+                playerRepo.findByProviderAndPlayerCount(provider, gameSummary.getNumberOfPlayers())
+                        .orElse(new AgentLifetimeStats(provider, gameSummary.getNumberOfPlayers()));
 
         // -------------------------
         // 1. Provider-level updates

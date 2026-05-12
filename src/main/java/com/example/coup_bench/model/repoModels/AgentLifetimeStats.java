@@ -11,6 +11,7 @@ public class AgentLifetimeStats {
 
     @Id
     private String provider;
+    private int playerCount;
 
     // ============================================================
     //  CORE OUTCOMES
@@ -112,8 +113,9 @@ public class AgentLifetimeStats {
     // ============================================================
     private Map<String, PersonalityStats> personalities = new HashMap<>();
 
-    public AgentLifetimeStats(String provider) {
+    public AgentLifetimeStats(String provider, int  playerCount) {
         this.provider = provider;
+        this.playerCount = playerCount;
     }
 
     // -------- Getters & Setters --------
@@ -508,5 +510,13 @@ public class AgentLifetimeStats {
 
     public void setTotalBluffsFailed(int totalBluffsFailed) {
         this.totalBluffsFailed = totalBluffsFailed;
+    }
+
+    public int getPlayerCount() {
+        return playerCount;
+    }
+
+    public void setPlayerCount(int playerCount) {
+        this.playerCount = playerCount;
     }
 }

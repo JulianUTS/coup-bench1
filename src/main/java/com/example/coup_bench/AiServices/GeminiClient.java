@@ -14,7 +14,7 @@ import java.util.Map;
 public class GeminiClient {
 
     private final RestClient client;
-    private final String model = "gemini-2.5-flash-lite"; // choose your model
+    private final String model = "gemini-3.1-flash-lite"; // choose your model
 
     public GeminiClient() {
 

@@ -4,6 +4,7 @@ import java.util.List;
 
 public class SimulationRequest {
     private int games;
+    private int gamesCompleted;
     private long seed;
     private String trial;
     private List<PlayerConfig> players;
@@ -38,6 +39,14 @@ public class SimulationRequest {
 
     public void setTrial(String trial) {
         this.trial = trial;
+    }
+
+    public int getGamesCompleted() {
+        return gamesCompleted;
+    }
+
+    public void setGamesCompleted(int gamesCompleted) {
+        this.gamesCompleted = gamesCompleted;
     }
 }
 
