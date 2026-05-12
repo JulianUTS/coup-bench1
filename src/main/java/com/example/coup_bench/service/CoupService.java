@@ -86,6 +86,9 @@ public class CoupService {
         AiAction action= actionService.getAction(game, currentPlayer);
 
         declareAction(game, game.getCurrentPlayer().getId(), action);
+        if(game.getState() == GameState.INVALID){
+            invalidGame(game);
+        }
 
     }
     public void getHumanAction(Game game, HumanActionRequest humanAction){
@@ -130,11 +133,12 @@ public class CoupService {
         human.setCurrentPrompt(String.join("\n", game.getGameMemory()));
         System.out.println("Game completed at: " +
                 LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-        if(game.getState() != GameState.INVALID) {
-            game.logGameMemory(game.getWinnerId(game) + " wins!!!");
-            for (Player p : game.getPlayers()) {
-                playerRepo.save(RepoUtil.getAgentLifetimeStats(p, playerRepo, gamesummary));
-            }
+        if(game.getState() == GameState.INVALID) {
+           return;
+        }
+        game.logGameMemory(game.getWinnerId(game) + " wins!!!");
+        for (Player p : game.getPlayers()) {
+            playerRepo.save(RepoUtil.getAgentLifetimeStats(p, playerRepo, gamesummary));
         }
         game.setState(GameState.FINISHED);
 

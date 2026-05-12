@@ -2,6 +2,7 @@ package com.example.coup_bench.controller;
 
 import com.example.coup_bench.AiGameRunner;
 import com.example.coup_bench.model.*;
+import com.example.coup_bench.model.Enums.GameState;
 import com.example.coup_bench.model.humanResponses.HumanActionRequest;
 import com.example.coup_bench.model.humanResponses.HumanChooseCardRequest;
 import com.example.coup_bench.model.humanResponses.HumanExchangeCardRequest;
@@ -103,7 +104,10 @@ public class AiGameController {
 
             coup.startGame(game);
             runner.runGame(game);
-
+            if(game.getState() == GameState.INVALID){
+                System.out.println("Restarting game "+ i);
+                i--;
+            }
             results.add(game);
         }
 

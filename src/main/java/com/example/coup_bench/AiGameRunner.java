@@ -26,10 +26,10 @@ public class AiGameRunner {
     public void runGame(Game game) {
         GameState lastState = game.getState();
         int stateRepeated = 0;
-        while(!gameFinished(game) && !gameWaitingForHuman(game) && stateRepeated < 10) {
+        while(!gameFinished(game) && !gameWaitingForHuman(game) && stateRepeated < 10 &&
+        game.getState() != GameState.INVALID) {
             //System.out.println(game.getState().toString());
             nextMove(game);
-
             if(game.getState() == lastState){
                 stateRepeated++;
             }else{
