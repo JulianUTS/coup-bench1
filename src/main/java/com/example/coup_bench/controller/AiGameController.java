@@ -107,7 +107,6 @@ public class AiGameController {
                 coup.startGame(game);
                 try {
                     runner.runGame(game);
-                    System.out.println("Trial " + req.getTrial() + " finished |");
                     i++;
                 } catch (Throwable t) {
                     System.err.println(t.getMessage());
@@ -115,10 +114,9 @@ public class AiGameController {
                 if (game.getState() == GameState.INVALID) {
                     System.out.println("Restarting game " + i);
                     buffer++;
-
                 }
-
             }
+            System.out.println("Trial " + req.getTrial() + " finished |");
         }
         return current;
     }
