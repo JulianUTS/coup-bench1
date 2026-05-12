@@ -32,7 +32,7 @@ public class AiActionService {
             System.err.println(player.getId() + "- Invalid JSON:\n" + response );
 
             AiAction fallback = new AiAction();
-            fallback.action = ActionType.INVALID;
+            fallback.action = ActionType.DO_NOTHING;
             return fallback;
         }
 
@@ -49,7 +49,7 @@ public class AiActionService {
                 Your coins: %d
                 Your cards: %s
                 
-                ### MEMORY
+                ### RECENT MEMORY
                 %s
                 
                 Other players:
@@ -95,7 +95,12 @@ public class AiActionService {
                 player.getId(),
                 player.getCoins(),
                 player.getCards().stream().toList(),
-                String.join("\n", game.getGameMemory()),
+                String.join("\n",
+                        game.getGameMemory()
+                                .stream()
+                                .skip(Math.max(0, game.getGameMemory().size() - 30))
+                                .toList()
+                ),
                 game.getPlayers().stream()
                         .filter(p -> !p.getId().equals(player.getId()))
                         .map(p -> p.getId() + " (" + p.getCoins() + " coins, " + p.getCards().size() + " cards)")

@@ -22,6 +22,7 @@ public class RepoUtil {
 // Basic identifiers
         summary.setId(null); // MongoDB will generate this
         summary.setGameId(game.getId());
+        summary.setTrial(game.getTrial());
 
 // Timestamps
 

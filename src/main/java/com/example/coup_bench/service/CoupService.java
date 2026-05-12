@@ -58,8 +58,8 @@ public class CoupService {
         game.setState(GameState.NEXT_TURN);
     }
 
-    public Game createGame(long seed) {
-        return new Game(UUID.randomUUID().toString(), seed);
+    public Game createGame(long seed, String trial) {
+        return new Game(UUID.randomUUID().toString(), trial, seed);
     }
 
     public Game joinGame(Game game, String playerId, String personality) {
@@ -124,21 +124,27 @@ public class CoupService {
 
 
     public void endGame(Game game) {
-        game.logGameMemory(game.getWinnerId(game) + " wins!!!");
+
         GameSummary gamesummary = RepoUtil.getGameSummary(game);
         gameRepo.save(gamesummary);
-        for (Player p : game.getPlayers()) {
-            playerRepo.save(RepoUtil.getAgentLifetimeStats(p, playerRepo, gamesummary));
-        }
         human.setCurrentPrompt(String.join("\n", game.getGameMemory()));
         System.out.println("Game completed at: " +
                 LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        if(game.getState() != GameState.INVALID) {
+            game.logGameMemory(game.getWinnerId(game) + " wins!!!");
+            for (Player p : game.getPlayers()) {
+                playerRepo.save(RepoUtil.getAgentLifetimeStats(p, playerRepo, gamesummary));
+            }
+        }
         game.setState(GameState.FINISHED);
+
+
     }
 
     public void invalidGame(Game game) {
+        game.killAllPlayers();
         game.logGameMemory("3 Invalid Actions used in a row, game is invalid");
-        game.setState(GameState.ENDGAME);
+        endGame(game);
     }
 
     public void declareAction(Game game, String playerId, AiAction action) {

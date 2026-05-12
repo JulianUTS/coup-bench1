@@ -15,6 +15,7 @@ public class Game {
     private final List<InvalidActionRecord> invalidActionLog = new ArrayList<>();
     private long timestampStart;
     private final GameStats gameStats = new GameStats();
+    private final String trial;
 
     private final long seed;
 
@@ -26,8 +27,9 @@ public class Game {
 
 
 
-    public Game(String id, long seed) {
+    public Game(String id, String trial, long seed) {
         this.id = id;
+        this.trial = trial;
         this.seed = seed;
     }
 
@@ -124,6 +126,12 @@ public class Game {
                 .orElseThrow();
     }
 
+    public void killAllPlayers() {
+        for(Player p : players){
+            p.getCards().removeAll(p.getCards());
+        }
+    }
+
 
     public long getSeed() { return seed; }
 
@@ -131,5 +139,9 @@ public class Game {
 
     public GameStats getGameStats() {
         return gameStats;
+    }
+
+    public String getTrial() {
+        return trial;
     }
 }

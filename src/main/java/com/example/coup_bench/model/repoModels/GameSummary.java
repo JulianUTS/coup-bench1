@@ -15,6 +15,7 @@ public class GameSummary {
     @Id
     private String id;
     private String gameId;
+    private String trial;
     private long totalGameDurationSec;
 
     private int numberOfPlayers;
@@ -212,5 +213,13 @@ public class GameSummary {
     }
     public void setBluffsPerTurn(List<Integer> bluffsPerTurn) {
         this.bluffsPerTurn = bluffsPerTurn;
+    }
+
+    public String getTrial() {
+        return trial;
+    }
+
+    public void setTrial(String trial) {
+        this.trial = trial;
     }
 }

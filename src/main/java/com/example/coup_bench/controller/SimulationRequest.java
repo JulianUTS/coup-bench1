@@ -5,6 +5,7 @@ import java.util.List;
 public class SimulationRequest {
     private int games;
     private long seed;
+    private String trial;
     private List<PlayerConfig> players;
 
     public int getGames() {
@@ -29,6 +30,14 @@ public class SimulationRequest {
 
     public void setPlayers(List<PlayerConfig> players) {
         this.players = players;
+    }
+
+    public String getTrial() {
+        return trial;
+    }
+
+    public void setTrial(String trial) {
+        this.trial = trial;
     }
 }
 

@@ -48,6 +48,9 @@ public class ActionUtil {
                 if (targetId != null)
                     return false;
             }
+            case DO_NOTHING -> {
+                return  false;
+            }
         }
         return true;
     }
@@ -91,6 +94,9 @@ public class ActionUtil {
             case TAX, FOREIGN_AID, INCOME, EXCHANGE -> {
                 if (targetId != null)
                     return action + " must not have a target";
+            }
+            default -> {
+                return("Invalid action, try again");
             }
         }
         return null;

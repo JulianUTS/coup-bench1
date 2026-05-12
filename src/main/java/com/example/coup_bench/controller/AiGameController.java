@@ -65,7 +65,7 @@ public class AiGameController {
                     ? System.currentTimeMillis()
                     : req.getSeed();
 
-            Game game = coup.createGame(seed);
+            Game game = coup.createGame(seed, req.getTrial());
             System.out.println("Game "+ i + " created with seed " + seed);
 
             // Track which providers are already used
@@ -132,7 +132,7 @@ public class AiGameController {
                 ? System.currentTimeMillis()
                 : req.getSeed();
 
-        Game game = coup.createGame(seed);
+        Game game = coup.createGame(seed, req.getTrial());
         System.out.println("Game with human created with seed " + seed);
 
         // Track which providers are already used
