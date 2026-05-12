@@ -8,7 +8,9 @@ import com.example.coup_bench.model.humanResponses.HumanChooseCardRequest;
 import com.example.coup_bench.model.humanResponses.HumanExchangeCardRequest;
 import com.example.coup_bench.model.humanResponses.HumanReactionRequest;
 import com.example.coup_bench.repo.CurrentGameRepository;
+import com.example.coup_bench.repo.InvalidGameRepository;
 import com.example.coup_bench.service.CoupService;
+import com.example.coup_bench.util.RepoUtil;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,7 +51,7 @@ public class AiGameController {
 
 
 
-    public AiGameController(CoupService coup, AiGameRunner runner,  CurrentGameRepository currentGame) {
+    public AiGameController(CoupService coup, AiGameRunner runner, CurrentGameRepository currentGame) {
         this.coup = coup;
         this.runner = runner;
         this.currentGame = currentGame;
@@ -113,7 +115,6 @@ public class AiGameController {
                 }
                 if (game.getState() == GameState.INVALID) {
                     System.out.println("Restarting game " + i);
-                    buffer++;
                 }
             }
             System.out.println("Trial " + req.getTrial() + " finished |");

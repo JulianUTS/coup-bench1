@@ -6,6 +6,7 @@ import com.example.coup_bench.model.Player;
 import com.example.coup_bench.model.PlayerStats;
 import com.example.coup_bench.model.repoModels.AgentLifetimeStats;
 import com.example.coup_bench.model.repoModels.GameSummary;
+import com.example.coup_bench.model.repoModels.InvalidGameSummary;
 import com.example.coup_bench.model.repoModels.PersonalityStats;
 import com.example.coup_bench.repo.PlayerRepository;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,51 @@ public class RepoUtil {
 // Game stats
         summary.setNumberOfPlayers(game.getPlayers().size());
         summary.setWinnerId(game.getWinnerId(game));
+        summary.setTotalTurns(game.getTurn());
+        summary.setTotalActions(game.getActionLog().size());
+        summary.setTotalChallenges(gameStats.getTotalChallenges());
+        summary.setTotalBlocks(gameStats.getTotalBlocks());
+        summary.setTotalInvalidActions(game.getInvalidActionLog().size());
+
+// Game memory (if you store AI thoughts or logs)
+        summary.setGameMemory(new ArrayList<>(game.getGameMemory()));
+
+// Invalid actions
+        summary.setInvalidActions(new ArrayList<>(game.getInvalidActionLog()));
+
+// Full action log
+        summary.setActions(new ArrayList<>(game.getActionLog()));
+
+// Final player states
+        summary.setPlayers(game.getPlayers());
+        summary.setBluffLog(gameStats.getBluffLog());
+        summary.setInteractions(gameStats.getInteractionLog());
+        summary.setTurnSnapshots(gameStats.getTurnSnapshotLog());
+        summary.setSeed(game.getSeed());
+        summary.setSeatOrder(game.getSeatOrder());
+        summary.setChallengeLog(gameStats.getChallengeLog());
+        summary.setCoinsPerTurn(gameStats.getCoinsPerTurn());
+        summary.setBluffsPerTurn(gameStats.getBluffsPerTurn());
+
+        return summary;
+    }
+    public static InvalidGameSummary getInvalidGameSummary(Game game) {
+        GameStats gameStats = game.getGameStats();
+        InvalidGameSummary summary = new InvalidGameSummary();
+
+// Basic identifiers
+        summary.setId(null); // MongoDB will generate this
+        summary.setGameId(game.getId());
+        summary.setTrial(game.getTrial());
+
+// Timestamps
+
+        summary.setTotalGameDurationSec(diffSeconds(game.getTimestampStart()));
+
+
+// Game stats
+        summary.setNumberOfPlayers(game.getPlayers().size());
+        summary.setWinnerId(null);
         summary.setTotalTurns(game.getTurn());
         summary.setTotalActions(game.getActionLog().size());
         summary.setTotalChallenges(gameStats.getTotalChallenges());

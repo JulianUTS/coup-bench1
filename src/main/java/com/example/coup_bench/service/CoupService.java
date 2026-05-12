@@ -10,6 +10,7 @@ import com.example.coup_bench.model.humanResponses.HumanExchangeCardRequest;
 import com.example.coup_bench.model.humanResponses.HumanReactionRequest;
 import com.example.coup_bench.model.repoModels.*;
 import com.example.coup_bench.repo.GameRepository;
+import com.example.coup_bench.repo.InvalidGameRepository;
 import com.example.coup_bench.repo.PlayerRepository;
 import com.example.coup_bench.util.HumanUtil;
 import com.example.coup_bench.util.PlayerUtil;
@@ -26,18 +27,20 @@ public class CoupService {
 
     private final GameRepository gameRepo;
     private final PlayerRepository playerRepo;
+    private final InvalidGameRepository invalidGameRepo;
     private final ChallengeService challengeService;
     private final ActionService actionService;
     private final DeckService deck;
     private final HumanService human;
 
-    public CoupService(GameRepository repo, PlayerRepository playerRepo,
+    public CoupService(GameRepository repo, PlayerRepository playerRepo, InvalidGameRepository invalidGameRepo,
                        ChallengeService challengeService,
                        ActionService actionService,
                        DeckService deckService,
                        HumanService humanDecisionService) {
         this.gameRepo = repo;
         this.playerRepo = playerRepo;
+        this.invalidGameRepo = invalidGameRepo;
         this.challengeService = challengeService;
         this.actionService = actionService;
         this.deck = deckService;
@@ -130,25 +133,25 @@ public class CoupService {
 
         GameSummary gamesummary = RepoUtil.getGameSummary(game);
         gameRepo.save(gamesummary);
-        human.setCurrentPrompt(String.join("\n", game.getGameMemory()));
-        System.out.println("Game completed at: " +
-                LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-        if(game.getState() == GameState.INVALID) {
-           return;
-        }
+
         game.logGameMemory(game.getWinnerId(game) + " wins!!!");
         for (Player p : game.getPlayers()) {
             playerRepo.save(RepoUtil.getAgentLifetimeStats(p, playerRepo, gamesummary));
         }
+
+        System.out.println("Game completed at: " +
+                LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        human.setCurrentPrompt(String.join("\n", game.getGameMemory()));
+
         game.setState(GameState.FINISHED);
 
 
     }
 
     public void invalidGame(Game game) {
-        game.killAllPlayers();
         game.logGameMemory("3 Invalid Actions used in a row, game is invalid");
-        endGame(game);
+        invalidGameRepo.save(RepoUtil.getInvalidGameSummary(game));
+        game.setState(GameState.FINISHED);
     }
 
     public void declareAction(Game game, String playerId, AiAction action) {

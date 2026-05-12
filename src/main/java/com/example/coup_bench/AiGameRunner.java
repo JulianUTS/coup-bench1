@@ -24,21 +24,9 @@ public class AiGameRunner {
     }
 
     public void runGame(Game game) {
-        GameState lastState = game.getState();
-        int stateRepeated = 0;
-        while(!gameFinished(game) && !gameWaitingForHuman(game) && stateRepeated < 10 &&
-        game.getState() != GameState.INVALID) {
+        while(!gameFinished(game) && !gameWaitingForHuman(game)) {
             //System.out.println(game.getState().toString());
             nextMove(game);
-            if(game.getState() == lastState){
-                stateRepeated++;
-            }else{
-                stateRepeated = 0;
-                lastState = game.getState();
-            }
-        }
-        if(stateRepeated == 10){
-            System.err.println("Game in infinite loop");
         }
     }
     public void nextMove(Game game){
