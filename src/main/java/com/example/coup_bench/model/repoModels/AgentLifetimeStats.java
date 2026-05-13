@@ -11,6 +11,7 @@ public class AgentLifetimeStats {
 
     @Id
     private String provider;
+    private int numberOfPlayers;
 
     // ============================================================
     //  CORE OUTCOMES
@@ -510,4 +511,11 @@ public class AgentLifetimeStats {
         this.totalBluffsFailed = totalBluffsFailed;
     }
 
+    public int getNumberOfPlayers() {
+        return numberOfPlayers;
+    }
+
+    public void setNumberOfPlayers(int numberOfPlayers) {
+        this.numberOfPlayers = numberOfPlayers;
+    }
 }

@@ -111,6 +111,7 @@ public class RepoUtil {
         String provider = player.getId();
         String id = provider+"-"+gameSummary.getNumberOfPlayers();
 
+
         PlayerStats playerStats = player.getPlayerStats();
         String personality = player.getPersonality();
 
@@ -118,6 +119,8 @@ public class RepoUtil {
         AgentLifetimeStats lifetimeStats =
                 playerRepo.findById(id)
                         .orElse(new AgentLifetimeStats(id));
+
+        lifetimeStats.setNumberOfPlayers(gameSummary.getNumberOfPlayers());
 
         // -------------------------
         // 1. Provider-level updates
@@ -308,7 +311,6 @@ public class RepoUtil {
                 ps.getPlayersKilled().merge(killedPlayerId, 1, Integer::sum);
             }
         }
-        System.err.println("Flag3");
         // Survival
         ps.setTotalTurnsSurvived(ps.getTotalTurnsSurvived() + playerStats.getTurnsSurvived());
         ps.setAverageTurnsSurvived(
