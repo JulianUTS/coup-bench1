@@ -1,0 +1,255 @@
+{
+  "simulationRequests": [
+
+    /* ---------- T6: openai, gemini, grok ---------- */
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T6-1",
+      "players": [
+        { "provider": "openai", "personality": "aggressive" },
+        { "provider": "gemini", "personality": "defensive" },
+        { "provider": "grok", "personality": "analytical" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T6-2",
+      "players": [
+        { "provider": "openai", "personality": "defensive" },
+        { "provider": "gemini", "personality": "analytical" },
+        { "provider": "grok", "personality": "chaotic" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T6-3",
+      "players": [
+        { "provider": "openai", "personality": "analytical" },
+        { "provider": "gemini", "personality": "chaotic" },
+        { "provider": "grok", "personality": "default" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T6-4",
+      "players": [
+        { "provider": "openai", "personality": "chaotic" },
+        { "provider": "gemini", "personality": "default" },
+        { "provider": "grok", "personality": "opportunistic" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T6-5",
+      "players": [
+        { "provider": "openai", "personality": "default" },
+        { "provider": "gemini", "personality": "opportunistic" },
+        { "provider": "grok", "personality": "aggressive" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T6-6",
+      "players": [
+        { "provider": "openai", "personality": "opportunistic" },
+        { "provider": "gemini", "personality": "aggressive" },
+        { "provider": "grok", "personality": "defensive" }
+      ]
+    },
+
+    /* ---------- T7: claude, deepseek, gemini ---------- */
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T7-1",
+      "players": [
+        { "provider": "claude", "personality": "aggressive" },
+        { "provider": "deepseek", "personality": "defensive" },
+        { "provider": "gemini", "personality": "analytical" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T7-2",
+      "players": [
+        { "provider": "claude", "personality": "defensive" },
+        { "provider": "deepseek", "personality": "analytical" },
+        { "provider": "gemini", "personality": "chaotic" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T7-3",
+      "players": [
+        { "provider": "claude", "personality": "analytical" },
+        { "provider": "deepseek", "personality": "chaotic" },
+        { "provider": "gemini", "personality": "default" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T7-4",
+      "players": [
+        { "provider": "claude", "personality": "chaotic" },
+        { "provider": "deepseek", "personality": "default" },
+        { "provider": "gemini", "personality": "opportunistic" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T7-5",
+      "players": [
+        { "provider": "claude", "personality": "default" },
+        { "provider": "deepseek", "personality": "opportunistic" },
+        { "provider": "gemini", "personality": "aggressive" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T7-6",
+      "players": [
+        { "provider": "claude", "personality": "opportunistic" },
+        { "provider": "deepseek", "personality": "aggressive" },
+        { "provider": "gemini", "personality": "defensive" }
+      ]
+    },
+
+    /* ---------- T8: claude, deepseek, grok ---------- */
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T8-1",
+      "players": [
+        { "provider": "claude", "personality": "aggressive" },
+        { "provider": "deepseek", "personality": "defensive" },
+        { "provider": "grok", "personality": "analytical" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T8-2",
+      "players": [
+        { "provider": "claude", "personality": "defensive" },
+        { "provider": "deepseek", "personality": "analytical" },
+        { "provider": "grok", "personality": "chaotic" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T8-3",
+      "players": [
+        { "provider": "claude", "personality": "analytical" },
+        { "provider": "deepseek", "personality": "chaotic" },
+        { "provider": "grok", "personality": "default" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T8-4",
+      "players": [
+        { "provider": "claude", "personality": "chaotic" },
+        { "provider": "deepseek", "personality": "default" },
+        { "provider": "grok", "personality": "opportunistic" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T8-5",
+      "players": [
+        { "provider": "claude", "personality": "default" },
+        { "provider": "deepseek", "personality": "opportunistic" },
+        { "provider": "grok", "personality": "aggressive" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T8-6",
+      "players": [
+        { "provider": "claude", "personality": "opportunistic" },
+        { "provider": "deepseek", "personality": "aggressive" },
+        { "provider": "grok", "personality": "defensive" }
+      ]
+    },
+
+    /* ---------- T9: claude, gemini, grok ---------- */
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T9-1",
+      "players": [
+        { "provider": "claude", "personality": "aggressive" },
+        { "provider": "gemini", "personality": "defensive" },
+        { "provider": "grok", "personality": "analytical" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T9-2",
+      "players": [
+        { "provider": "claude", "personality": "defensive" },
+        { "provider": "gemini", "personality": "analytical" },
+        { "provider": "grok", "personality": "chaotic" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T9-3",
+      "players": [
+        { "provider": "claude", "personality": "analytical" },
+        { "provider": "gemini", "personality": "chaotic" },
+        { "provider": "grok", "personality": "default" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T9-4",
+      "players": [
+        { "provider": "claude", "personality": "chaotic" },
+        { "provider": "gemini", "personality": "default" },
+        { "provider": "grok", "personality": "opportunistic" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T9-5",
+      "players": [
+        { "provider": "claude", "personality": "default" },
+        { "provider": "gemini", "personality": "opportunistic" },
+        { "provider": "grok", "personality": "aggressive" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T9-6",
+      "players": [
+        { "provider": "claude", "personality": "opportunistic" },
+        { "provider": "gemini", "personality": "aggressive" },
+        { "provider": "grok", "personality": "defensive" }
+      ]
+    },
+
+    /* ---------- T10: deepseek, gemini, grok ---------- */
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T10-1",
+      "players": [
+        { "provider": "deepseek", "personality": "aggressive" },
+        { "provider": "gemini", "personality": "defensive" },
+        { "provider": "grok", "personality": "analytical" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T10-2",
+      "players": [
+        { "provider": "deepseek", "personality": "defensive" },
+        { "provider": "gemini", "personality": "analytical" },
+        { "provider": "grok", "personality": "chaotic" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T10-3",
+      "players": [
+        { "provider": "deepseek", "personality": "analytical" },
+        { "provider": "gemini", "personality": "chaotic" },
+        { "provider": "grok", "personality": "default" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T10-4",
+      "players": [
+        { "provider": "deepseek", "personality": "chaotic" },
+        { "provider": "gemini", "personality": "default" },
+        { "provider": "grok", "personality": "opportunistic" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T10-5",
+      "players": [
+        { "provider": "deepseek", "personality": "default" },
+        { "provider": "gemini", "personality": "opportunistic" },
+        { "provider": "grok", "personality": "aggressive" }
+      ]
+    },
+    {
+      "games": 4, "gamesCompleted": 0, "seed": 0, "trial": "P3-T10-6",
+      "players": [
+        { "provider": "deepseek", "personality": "opportunistic" },
+        { "provider": "gemini", "personality": "aggressive" },
+        { "provider": "grok", "personality": "defensive" }
+      ]
+    }
+
+  ]
+}

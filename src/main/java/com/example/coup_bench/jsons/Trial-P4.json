@@ -1,0 +1,65 @@
+{
+  "simulationRequests": [
+    {
+      "games": 8,
+      "gamesCompleted": 4,
+      "seed": 0,
+      "trial": "P4-1",
+      "players": [
+        { "provider": "openai", "personality": "default" },
+        { "provider": "claude", "personality": "default" },
+        { "provider": "gemini", "personality": "default" },
+        { "provider": "grok", "personality": "default" }
+      ]
+    },
+    {
+      "games": 8,
+      "gamesCompleted": 4,
+      "seed": 0,
+      "trial": "P4-2",
+      "players": [
+        { "provider": "openai", "personality": "default" },
+        { "provider": "claude", "personality": "default" },
+        { "provider": "gemini", "personality": "default" },
+        { "provider": "deepseek", "personality": "default" }
+      ]
+    },
+    {
+      "games": 8,
+      "gamesCompleted": 4,
+      "seed": 0,
+      "trial": "P4-3",
+      "players": [
+        { "provider": "openai", "personality": "default" },
+        { "provider": "claude", "personality": "default" },
+        { "provider": "grok", "personality": "default" },
+        { "provider": "deepseek", "personality": "default" }
+      ]
+    },
+    {
+      "games": 8,
+      "gamesCompleted": 4,
+      "seed": 0,
+      "trial": "P4-4",
+      "players": [
+        { "provider": "openai", "personality": "default" },
+        { "provider": "gemini", "personality": "default" },
+        { "provider": "grok", "personality": "default" },
+        { "provider": "deepseek", "personality": "default" }
+      ]
+    },
+    {
+      "games": 8,
+      "gamesCompleted": 4,
+      "seed": 0,
+      "trial": "P4-5",
+      "players": [
+        { "provider": "claude", "personality": "default" },
+        { "provider": "gemini", "personality": "default" },
+        { "provider": "grok", "personality": "default" },
+        { "provider": "deepseek", "personality": "default" }
+      ]
+    }
+  ]
+}
+
