@@ -10,5 +10,4 @@ import java.util.Optional;
 
 @Repository
 public interface PlayerRepository extends MongoRepository<AgentLifetimeStats, String> {
-    Optional<AgentLifetimeStats> findByProviderAndPlayerCount(String provider, int playerCount);
 }

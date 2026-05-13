@@ -134,11 +134,10 @@ public class CoupService {
         GameSummary gamesummary = RepoUtil.getGameSummary(game);
         gameRepo.save(gamesummary);
 
-        game.logGameMemory(game.getWinnerId(game) + " wins!!!");
         for (Player p : game.getPlayers()) {
             playerRepo.save(RepoUtil.getAgentLifetimeStats(p, playerRepo, gamesummary));
         }
-
+        game.logGameMemory(game.getWinnerId(game) + " wins!!!");
         System.out.println("Game completed at: " +
                 LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         human.setCurrentPrompt(String.join("\n", game.getGameMemory()));
