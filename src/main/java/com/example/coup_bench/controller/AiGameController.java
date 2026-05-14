@@ -63,7 +63,8 @@ public class AiGameController {
         for (SimulationRequest req : simulationRequests.getSimulationRequests()) {
             System.out.println("Trial " + req.getTrial() + " starting:");
             int i = req.getGamesCompleted();
-            while (i < req.getGames()) {
+            int failedGames = 0;
+            while (i < req.getGames() && failedGames < 3 ) {
                 long seed = (req.getSeed() == 0)
                         ? System.currentTimeMillis()
                         : req.getSeed();
@@ -116,6 +117,7 @@ public class AiGameController {
                     }
                 } catch (Throwable t) {
                     System.err.println(t.getMessage());
+                    failedGames++;
                 }
             }
             System.out.println("Trial " + req.getTrial() + " finished |");
