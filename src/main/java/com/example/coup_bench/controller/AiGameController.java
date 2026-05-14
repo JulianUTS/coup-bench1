@@ -64,7 +64,7 @@ public class AiGameController {
             System.out.println("Trial " + req.getTrial() + " starting:");
             int i = req.getGamesCompleted();
             int failedGames = 0;
-            while (i < req.getGames() && failedGames < 3 ) {
+            while (i < req.getGames()) {
                 long seed = (req.getSeed() == 0)
                         ? System.currentTimeMillis()
                         : req.getSeed();
@@ -110,7 +110,7 @@ public class AiGameController {
 
                 try {
                     runner.runGame(game);
-                    if (game.getState() == GameState.INVALID) {
+                    if (game.getWinnerId(game) == null) {
                         System.out.println("Restarting game " + i);
                     } else{
                         i++;
@@ -118,6 +118,9 @@ public class AiGameController {
                 } catch (Throwable t) {
                     System.err.println(t.getMessage());
                     failedGames++;
+                    if(failedGames == 3){
+                        return current;
+                    }
                 }
             }
             System.out.println("Trial " + req.getTrial() + " finished |");
