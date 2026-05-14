@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AiChooseCardService {
@@ -45,37 +46,69 @@ public class AiChooseCardService {
         game.logGameMemory(player.getId() + "has chosen invalid cards 3 times, cards will be exchange at random");
         return player.getCards().get(new Random().nextInt(2));
     }
-    public List<CardType> getCardsToExchange(Game game, Player player, List<CardType> cardsToChooseFrom,int cardsToExchange) {
+    public List<CardType> getCardsToExchange(
+            Game game,
+            Player player,
+            List<CardType> cardsToChooseFrom,
+            int cardsToExchange
+    ) {
         int tries = 0;
-        while(tries < 3) {
-            String prompt = buildExchangeCardsPrompt(game, player, cardsToChooseFrom,cardsToExchange);
+
+        while (tries < 3) {
+            String prompt = buildExchangeCardsPrompt(game, player, cardsToChooseFrom, cardsToExchange);
             String response = getResponse(player.getId(), prompt);
+
             try {
                 AiExchange chosen = mapper.readValue(response, AiExchange.class);
-                // Validate
-                List<CardType> validCards = new ArrayList<>(player.getCards());
-                validCards.addAll(cardsToChooseFrom);
-                if (chosen.CardsToKeep != null && chosen.CardsToKeep.size() == cardsToExchange) {
-                    boolean allValid = new HashSet<>(validCards).containsAll(chosen.CardsToKeep);
-                    if (allValid) return chosen.CardsToKeep;
+
+                if (chosen.CardsToKeep != null &&
+                        chosen.CardsToKeep.size() == cardsToExchange &&
+                        isValidChoice(cardsToChooseFrom, chosen.CardsToKeep)) {
+
+                    return chosen.CardsToKeep;
                 }
-                System.err.println(player.getId() + " - Invalid cards:\n" + response);
-                System.err.println(validCards.stream().toList());
-                game.logGameMemory(player.getId() + "has chosen an invalid card, try again");
+
+                System.err.println(player.getId() + " - Invalid choice: " + chosen.CardsToKeep);
+                System.err.println("Valid pool: " + cardsToChooseFrom);
+                game.logGameMemory(player.getId() + " has chosen an invalid card, try again");
+
             } catch (Exception e) {
                 System.err.println(player.getId() + " - Invalid JSON:\n" + response);
-                game.logGameMemory(player.getId() + "has chosen an invalid card, try again");
+                game.logGameMemory(player.getId() + " has chosen an invalid card, try again");
             }
+
             tries++;
         }
-        game.logGameMemory(player.getId() + "has chosen invalid cards 3 times, cards will be exchange at random");
-        return getRandomFallback(player, cardsToExchange);
+
+        game.logGameMemory(player.getId() + " has chosen invalid cards 3 times, cards will be exchanged at random");
+        return getRandomFallback(cardsToChooseFrom, cardsToExchange);
     }
 
-    private List<CardType> getRandomFallback(Player player, int count) {
-        List<CardType> pool = new ArrayList<>(player.getCards());
-        Collections.shuffle(pool);
-        return pool.subList(0, Math.min(count, pool.size()));
+    private boolean isValidChoice(List<CardType> pool, List<CardType> chosen) {
+        Map<CardType, Long> poolCounts = pool.stream()
+                .collect(Collectors.groupingBy(c -> c, Collectors.counting()));
+
+        Map<CardType, Long> chosenCounts = chosen.stream()
+                .collect(Collectors.groupingBy(c -> c, Collectors.counting()));
+
+        for (var entry : chosenCounts.entrySet()) {
+            CardType type = entry.getKey();
+            long count = entry.getValue();
+
+            if (!poolCounts.containsKey(type) || poolCounts.get(type) < count) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+
+    private List<CardType> getRandomFallback(List<CardType> pool, int count) {
+        List<CardType> copy = new ArrayList<>(pool);
+        Collections.shuffle(copy);
+        return copy.subList(0, Math.min(count, copy.size()));
     }
 
 
