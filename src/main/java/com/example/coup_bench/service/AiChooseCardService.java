@@ -184,7 +184,7 @@ public class AiChooseCardService {
                 Other players:
                 %s
                 
-                Game state: You have chosen to exchange your cards. Pick %s cards you would like to keep for the 
+                Game state: You have chosen to exchange your cards. Pick %s cards you would like to keep for the
                 selection below.
                 
                 ### CARDS SELECTION
@@ -200,6 +200,8 @@ public class AiChooseCardService {
                 }
                 
                 ### OUTPUT RULES
+                - If choosing one card, output exactly one card like: ["DUKE"]
+                - If choosing two cards, output exactly two cards like: ["DUKE", "CAPTAIN"]
                 - Respond with ONLY the JSON object.
                 - No markdown, no backticks, no text outside JSON.
                 - Never output the string "null". Use actual null for targetId only.
