@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.HashMap;
 import java.util.Map;
 
-@Document(collection = "agent_stats_personality_trials")
+@Document(collection = "agent_stats_mirror_trials")
 public class AgentLifetimeStats {
 
     @Id
